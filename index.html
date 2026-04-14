@@ -176,18 +176,30 @@
             function handleKeyPress(key) {
                 if (key === ' ') {
                     if (gameState === STATES.MENU) {
+                        currentLevel = 0;
+                        GRAVITY = levels[currentLevel].gravity;
                         resetShip();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.LANDED) {
-                        // Future: next level
+                        // Advance to next level (or game over if no more levels)
+                        currentLevel++;
+                        if (currentLevel >= levels.length) {
+                            currentLevel = 0;
+                            gameState = STATES.GAMEOVER;
+                            return;
+                        }
+                        GRAVITY = levels[currentLevel].gravity;
                         resetShip();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.GAMEOVER) {
+                        currentLevel = 0;
+                        GRAVITY = levels[currentLevel].gravity;
                         gameState = STATES.MENU;
                     }
                 }
                 if (key === 'r' || key === 'R') {
                     if (gameState === STATES.PLAYING || gameState === STATES.CRASHED) {
+                        GRAVITY = levels[currentLevel].gravity;
                         resetShip();
                         gameState = STATES.PLAYING;
                     }
