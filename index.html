@@ -39,7 +39,10 @@
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
             }
-            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('resize', function() {
+                resizeCanvas();
+                generateStars();
+            });
             resizeCanvas();
 
             // --- Game State ---
@@ -68,6 +71,33 @@
             var GRAVITY = levels[currentLevel].gravity;  // m/s^2, configurable per level
             var THRUST_POWER = 1.6;     // m/s^2, matches gravity at level 1 for hover equilibrium
             var PIXELS_PER_METER = 50;  // scale factor: 1 m/s = 50 px/s
+
+            // --- Stars ---
+            var stars = [];
+
+            function generateStars() {
+                stars = [];
+                var count = 200;
+                for (var i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: 0.5 + Math.random() * 2,
+                        brightness: 0.3 + Math.random() * 0.7
+                    });
+                }
+            }
+
+            function drawStars() {
+                for (var i = 0; i < stars.length; i++) {
+                    var s = stars[i];
+                    var alpha = s.brightness;
+                    ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
 
             // --- Terrain ---
             var terrain = [];       // array of {x, y} points
@@ -909,6 +939,9 @@
                 ctx.fillStyle = '#111';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                // Draw starfield background
+                drawStars();
+
                 // Apply screen shake offset
                 var shaking = screenShake > 0;
                 if (shaking) {
@@ -957,6 +990,9 @@
 
                 requestAnimationFrame(gameLoop);
             }
+
+            // Generate initial starfield
+            generateStars();
 
             // Start the loop
             requestAnimationFrame(function (timestamp) {
