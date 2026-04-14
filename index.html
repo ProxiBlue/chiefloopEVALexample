@@ -461,20 +461,31 @@
                 // Draw thrust flame when thrusting
                 if (thrusting) {
                     var flameLen = s * (0.4 + Math.random() * 0.25);
+                    var flameWidth = halfW * (0.35 + Math.random() * 0.08);
+
+                    // Outer flame — orange/yellow gradient
+                    var flameGrad = ctx.createLinearGradient(0, halfH, 0, halfH + flameLen);
+                    flameGrad.addColorStop(0, '#ff8800');
+                    flameGrad.addColorStop(0.5, '#ffaa00');
+                    flameGrad.addColorStop(1, '#ffdd00');
                     ctx.beginPath();
-                    ctx.moveTo(-halfW * 0.35, halfH);
+                    ctx.moveTo(-flameWidth, halfH);
                     ctx.lineTo(0, halfH + flameLen);
-                    ctx.lineTo(halfW * 0.35, halfH);
-                    ctx.fillStyle = '#ff0';
+                    ctx.lineTo(flameWidth, halfH);
+                    ctx.fillStyle = flameGrad;
                     ctx.fill();
 
-                    // Inner flame
-                    var innerLen = flameLen * 0.6;
+                    // Inner flame — yellow core
+                    var innerLen = flameLen * (0.55 + Math.random() * 0.1);
+                    var innerWidth = flameWidth * 0.5;
+                    var innerGrad = ctx.createLinearGradient(0, halfH, 0, halfH + innerLen);
+                    innerGrad.addColorStop(0, '#ffcc00');
+                    innerGrad.addColorStop(1, '#ffee66');
                     ctx.beginPath();
-                    ctx.moveTo(-halfW * 0.18, halfH);
+                    ctx.moveTo(-innerWidth, halfH);
                     ctx.lineTo(0, halfH + innerLen);
-                    ctx.lineTo(halfW * 0.18, halfH);
-                    ctx.fillStyle = '#fff';
+                    ctx.lineTo(innerWidth, halfH);
+                    ctx.fillStyle = innerGrad;
                     ctx.fill();
                 }
 
