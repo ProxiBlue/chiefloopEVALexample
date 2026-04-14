@@ -210,10 +210,10 @@
             function update(dt) {
                 if (gameState === STATES.PLAYING) {
                     // Ship rotation
-                    if (keys['ArrowLeft']) {
+                    if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
                         ship.angle -= ship.rotationSpeed * dt;
                     }
-                    if (keys['ArrowRight']) {
+                    if (keys['ArrowRight'] || keys['d'] || keys['D']) {
                         ship.angle += ship.rotationSpeed * dt;
                     }
 
