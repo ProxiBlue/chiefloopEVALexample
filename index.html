@@ -53,21 +53,32 @@
 
             var gameState = STATES.MENU;
 
+            // --- Physics Constants ---
+            var GRAVITY = 1.6;          // m/s^2, lunar-like gravity pulling downward
+            var THRUST_POWER = 3.2;     // m/s^2, thrust acceleration (2x gravity so ship can climb)
+            var PIXELS_PER_METER = 50;  // scale factor: 1 m/s = 50 px/s
+
             // --- Ship ---
             var ship = {
                 x: 0,
                 y: 0,
+                vx: 0,              // velocity in pixels/s
+                vy: 0,              // velocity in pixels/s
                 angle: 0,           // radians, 0 = upright
-                rotationSpeed: 3    // radians per second
+                rotationSpeed: 3,   // radians per second
+                thrusting: false    // whether thrust is currently active
             };
 
             function resetShip() {
                 ship.x = canvas.width / 2;
                 ship.y = canvas.height / 3;
+                ship.vx = 0;
+                ship.vy = 0;
                 ship.angle = 0;
+                ship.thrusting = false;
             }
 
-            function drawShip(x, y, angle, size) {
+            function drawShip(x, y, angle, size, thrusting) {
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(angle);
@@ -114,6 +125,26 @@
                 ctx.strokeStyle = '#f26322';
                 ctx.lineWidth = s * 0.04;
                 ctx.stroke();
+
+                // Draw thrust flame when thrusting
+                if (thrusting) {
+                    var flameLen = s * (0.4 + Math.random() * 0.25);
+                    ctx.beginPath();
+                    ctx.moveTo(-halfW * 0.35, halfH);
+                    ctx.lineTo(0, halfH + flameLen);
+                    ctx.lineTo(halfW * 0.35, halfH);
+                    ctx.fillStyle = '#ff0';
+                    ctx.fill();
+
+                    // Inner flame
+                    var innerLen = flameLen * 0.6;
+                    ctx.beginPath();
+                    ctx.moveTo(-halfW * 0.18, halfH);
+                    ctx.lineTo(0, halfH + innerLen);
+                    ctx.lineTo(halfW * 0.18, halfH);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                }
 
                 ctx.restore();
             }
@@ -165,6 +196,29 @@
                     if (keys['ArrowRight']) {
                         ship.angle += ship.rotationSpeed * dt;
                     }
+
+                    // Gravity — accelerates downward (positive Y is down in canvas)
+                    ship.vy += GRAVITY * PIXELS_PER_METER * dt;
+
+                    // Thrust — applied in the direction the ship is facing (nose = -Y when angle=0)
+                    ship.thrusting = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+                    if (ship.thrusting) {
+                        ship.vx += Math.sin(ship.angle) * (-THRUST_POWER) * PIXELS_PER_METER * dt;
+                        ship.vy += Math.cos(ship.angle) * (THRUST_POWER) * PIXELS_PER_METER * dt * -1;
+                    }
+
+                    // Update position
+                    ship.x += ship.vx * dt;
+                    ship.y += ship.vy * dt;
+
+                    // Clamp left/right edges — ship cannot leave the viewport
+                    if (ship.x < 0) {
+                        ship.x = 0;
+                        ship.vx = 0;
+                    } else if (ship.x > canvas.width) {
+                        ship.x = canvas.width;
+                        ship.vx = 0;
+                    }
                 }
             }
 
@@ -185,13 +239,13 @@
 
             function renderPlaying() {
                 // Draw ship
-                drawShip(ship.x, ship.y, ship.angle, 40);
+                drawShip(ship.x, ship.y, ship.angle, 40, ship.thrusting);
 
                 // HUD hint
                 ctx.fillStyle = '#555';
                 ctx.font = '14px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('Arrow keys to steer', canvas.width / 2, canvas.height - 30);
+                ctx.fillText('Arrow keys to steer | UP or W for thrust', canvas.width / 2, canvas.height - 30);
             }
 
             function renderLanded() {
