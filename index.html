@@ -53,9 +53,17 @@
 
             var gameState = STATES.MENU;
 
+            // --- Level Configuration ---
+            var levels = [
+                { gravity: 1.6 },   // Level 1: lunar-like gravity (~1.6 m/s^2)
+                { gravity: 2.0 },   // Level 2: slightly stronger gravity
+                { gravity: 2.5 }    // Level 3: heavier world
+            ];
+            var currentLevel = 0;
+
             // --- Physics Constants ---
-            var GRAVITY = 1.6;          // m/s^2, lunar-like gravity pulling downward
-            var THRUST_POWER = 3.2;     // m/s^2, thrust acceleration (2x gravity so ship can climb)
+            var GRAVITY = levels[currentLevel].gravity;  // m/s^2, configurable per level
+            var THRUST_POWER = 1.6;     // m/s^2, matches gravity at level 1 for hover equilibrium
             var PIXELS_PER_METER = 50;  // scale factor: 1 m/s = 50 px/s
 
             // --- Ship ---
@@ -203,8 +211,8 @@
                     // Thrust — applied in the direction the ship is facing (nose = -Y when angle=0)
                     ship.thrusting = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
                     if (ship.thrusting) {
-                        ship.vx += Math.sin(ship.angle) * (-THRUST_POWER) * PIXELS_PER_METER * dt;
-                        ship.vy += Math.cos(ship.angle) * (THRUST_POWER) * PIXELS_PER_METER * dt * -1;
+                        ship.vx += Math.sin(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
+                        ship.vy += -Math.cos(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
                     }
 
                     // Update position
