@@ -55,9 +55,9 @@
 
             // --- Level Configuration ---
             var levels = [
-                { gravity: 1.6 },   // Level 1: lunar-like gravity (~1.6 m/s^2)
-                { gravity: 2.0 },   // Level 2: slightly stronger gravity
-                { gravity: 2.5 }    // Level 3: heavier world
+                { gravity: 1.6, padCount: 3 },   // Level 1: lunar-like gravity, 3 pads (easy)
+                { gravity: 2.0, padCount: 2 },   // Level 2: slightly stronger gravity, 2 pads
+                { gravity: 2.5, padCount: 1 }    // Level 3: heavier world, 1 pad (hard)
             ];
             var currentLevel = 0;
 
@@ -68,34 +68,102 @@
 
             // --- Terrain ---
             var terrain = [];       // array of {x, y} points
-            var landingPadIndex = -1; // index into terrain[] where the flat landing pad starts
+            var landingPadIndex = -1; // index into terrain[] where the first flat landing pad starts (kept for backward compat)
+            var landingPads = [];    // array of {index, width, points} for all landing pads
 
             function generateTerrain() {
                 terrain = [];
+                landingPads = [];
                 var w = canvas.width;
                 var h = canvas.height;
                 var segmentCount = 40;
                 var segWidth = w / segmentCount;
 
-                // Pick a random segment for the landing pad (flat section)
-                // Keep it away from edges so it's reachable
-                landingPadIndex = 5 + Math.floor(Math.random() * (segmentCount - 12));
-                var padWidth = 2; // number of segments that are flat
+                // Determine pad count from level config
+                var padCount = levels[currentLevel].padCount || 1;
+
+                // Define pad widths: wider pads are worth fewer points
+                // Available pad sizes: 3 segments (wide, 50pts), 2 segments (medium, 100pts), 1 segment (narrow, 200pts)
+                var padSizes = [
+                    { width: 3, points: 50 },
+                    { width: 2, points: 100 },
+                    { width: 1, points: 200 }
+                ];
+
+                // Place pads: distribute them across the terrain, avoiding edges and overlap
+                var usedSegments = {};  // track which segments are occupied by pads
+                var placedPads = [];
+
+                for (var p = 0; p < padCount; p++) {
+                    // Pick a random pad size — bias toward wider on easy levels, narrower on hard
+                    var sizeIdx;
+                    if (padCount >= 3) {
+                        // Easy level: mix of sizes
+                        sizeIdx = p % padSizes.length;
+                    } else if (padCount === 2) {
+                        // Medium level: medium and narrow
+                        sizeIdx = p === 0 ? 1 : 2;
+                    } else {
+                        // Hard level: narrow only
+                        sizeIdx = 2;
+                    }
+                    var padSize = padSizes[sizeIdx];
+
+                    // Find a valid random position that doesn't overlap existing pads
+                    var attempts = 0;
+                    var padIdx = -1;
+                    while (attempts < 50) {
+                        var candidate = 3 + Math.floor(Math.random() * (segmentCount - 6 - padSize.width));
+                        var overlap = false;
+                        for (var s = candidate - 1; s <= candidate + padSize.width + 1; s++) {
+                            if (usedSegments[s]) { overlap = true; break; }
+                        }
+                        if (!overlap) {
+                            padIdx = candidate;
+                            break;
+                        }
+                        attempts++;
+                    }
+
+                    if (padIdx >= 0) {
+                        // Mark segments as used
+                        for (var s = padIdx; s <= padIdx + padSize.width; s++) {
+                            usedSegments[s] = true;
+                        }
+                        placedPads.push({ index: padIdx, width: padSize.width, points: padSize.points });
+                    }
+                }
+
+                // Sort pads by index for terrain generation
+                placedPads.sort(function(a, b) { return a.index - b.index; });
+                landingPads = placedPads;
+                landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
 
                 // Base terrain height range (bottom 40% of screen)
                 var minY = h * 0.55;
                 var maxY = h * 0.85;
 
+                // Build a lookup: for each segment index, which pad does it belong to?
+                var segmentPadMap = {};
+                for (var p = 0; p < landingPads.length; p++) {
+                    var pad = landingPads[p];
+                    for (var s = pad.index; s <= pad.index + pad.width; s++) {
+                        segmentPadMap[s] = p;
+                    }
+                }
+
                 for (var i = 0; i <= segmentCount; i++) {
                     var x = i * segWidth;
                     var y;
 
-                    if (i >= landingPadIndex && i <= landingPadIndex + padWidth) {
-                        // Flat landing pad section — all at the same height
-                        if (i === landingPadIndex) {
+                    if (segmentPadMap[i] !== undefined) {
+                        var padRef = landingPads[segmentPadMap[i]];
+                        if (i === padRef.index) {
+                            // First point of pad: pick a random height
                             y = minY + Math.random() * (maxY - minY) * 0.6 + (maxY - minY) * 0.2;
                         } else {
-                            y = terrain[landingPadIndex].y;
+                            // Subsequent points: match the pad's starting height
+                            y = terrain[padRef.index].y;
                         }
                     } else {
                         // Jagged terrain with varied peaks and valleys
@@ -105,6 +173,9 @@
                     terrain.push({ x: x, y: y });
                 }
             }
+
+            // Animation time tracker for pad glow pulse
+            var animTime = 0;
 
             function drawTerrain() {
                 if (terrain.length === 0) return;
@@ -133,16 +204,52 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Highlight landing pad
-                if (landingPadIndex >= 0 && landingPadIndex < terrain.length - 1) {
-                    var padStart = terrain[landingPadIndex];
-                    var padEnd = terrain[landingPadIndex + 2] || terrain[terrain.length - 1];
-                    ctx.beginPath();
-                    ctx.moveTo(padStart.x, padStart.y);
-                    ctx.lineTo(padEnd.x, padEnd.y);
-                    ctx.strokeStyle = '#0f0';
-                    ctx.lineWidth = 3;
-                    ctx.stroke();
+                // Highlight all landing pads with glow/pulse animation
+                var pulseAlpha = 0.5 + 0.5 * Math.sin(animTime * 3);  // oscillates between 0 and 1
+                for (var p = 0; p < landingPads.length; p++) {
+                    var pad = landingPads[p];
+                    if (pad.index >= 0 && pad.index < terrain.length) {
+                        var padStart = terrain[pad.index];
+                        var padEnd = terrain[pad.index + pad.width] || terrain[terrain.length - 1];
+
+                        // Color based on point value: green for easy, yellow for medium, red/orange for hard
+                        var padColor;
+                        if (pad.points <= 50) {
+                            padColor = '#0f0';        // wide pad — green
+                        } else if (pad.points <= 100) {
+                            padColor = '#ff0';        // medium pad — yellow
+                        } else {
+                            padColor = '#f60';        // narrow pad — orange
+                        }
+
+                        // Glow effect (drawn behind the line)
+                        ctx.save();
+                        ctx.shadowColor = padColor;
+                        ctx.shadowBlur = 8 + 6 * pulseAlpha;
+                        ctx.beginPath();
+                        ctx.moveTo(padStart.x, padStart.y);
+                        ctx.lineTo(padEnd.x, padEnd.y);
+                        ctx.strokeStyle = padColor;
+                        ctx.globalAlpha = 0.5 + 0.5 * pulseAlpha;
+                        ctx.lineWidth = 4;
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Solid pad line on top
+                        ctx.beginPath();
+                        ctx.moveTo(padStart.x, padStart.y);
+                        ctx.lineTo(padEnd.x, padEnd.y);
+                        ctx.strokeStyle = padColor;
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+
+                        // Point value label
+                        var midX = (padStart.x + padEnd.x) / 2;
+                        ctx.fillStyle = padColor;
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(pad.points + 'pts', midX, padStart.y - 8);
+                    }
                 }
             }
 
@@ -291,6 +398,9 @@
 
             // --- Update ---
             function update(dt) {
+                // Update animation timer for pad glow pulse
+                animTime += dt;
+
                 if (gameState === STATES.PLAYING) {
                     // Ship rotation
                     if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
