@@ -579,6 +579,7 @@
                         generateTerrain();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.CRASHED && explosionFinished) {
+                        saveHighScore(score);
                         gameState = STATES.GAMEOVER;
                     } else if (gameState === STATES.GAMEOVER) {
                         currentLevel = 0;
@@ -800,18 +801,60 @@
             }
 
             // --- Render ---
-            function renderMenu() {
-                // Draw ship logo on menu
-                drawShip(canvas.width / 2, canvas.height / 2 - 100, 0, 60);
+            function getHighScore() {
+                try {
+                    var hs = localStorage.getItem('mageLanderHighScore');
+                    return hs ? parseInt(hs, 10) : 0;
+                } catch (e) {
+                    return 0;
+                }
+            }
 
+            function saveHighScore(s) {
+                try {
+                    var current = getHighScore();
+                    if (s > current) {
+                        localStorage.setItem('mageLanderHighScore', s);
+                    }
+                } catch (e) {
+                    // localStorage not available
+                }
+            }
+
+            function renderMenu() {
+                var cx = canvas.width / 2;
+                var baseY = canvas.height / 2 - 120;
+
+                // Draw ship logo on menu (Mage-OS "M" logo)
+                drawShip(cx, baseY, 0, 60);
+
+                // Title
                 ctx.fillStyle = '#f26322';
                 ctx.font = 'bold 48px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('MAGE LANDER', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('MAGE LANDER', cx, baseY + 100);
 
+                // Controls
+                ctx.fillStyle = '#ccc';
+                ctx.font = '16px monospace';
+                var controlsY = baseY + 145;
+                ctx.fillText('Up / W  =  Thrust', cx, controlsY);
+                ctx.fillText('Left / A  =  Rotate Left', cx, controlsY + 24);
+                ctx.fillText('Right / D  =  Rotate Right', cx, controlsY + 48);
+                ctx.fillText('R  =  Restart', cx, controlsY + 72);
+
+                // "Press Space to Start" prompt
                 ctx.fillStyle = '#888';
                 ctx.font = '20px sans-serif';
-                ctx.fillText('Press SPACE to start', canvas.width / 2, canvas.height / 2 + 50);
+                ctx.fillText('Press SPACE to Start', cx, controlsY + 120);
+
+                // High score
+                var highScore = getHighScore();
+                if (highScore > 0) {
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 20px sans-serif';
+                    ctx.fillText('High Score: ' + highScore, cx, controlsY + 155);
+                }
             }
 
             function renderPlaying() {
