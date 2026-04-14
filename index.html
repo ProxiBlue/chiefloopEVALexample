@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mage Lander</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #111;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        (function () {
+            'use strict';
+
+            // --- Canvas Setup ---
+            var canvas = document.getElementById('gameCanvas');
+            var ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // --- Game State ---
+            var STATES = {
+                MENU: 'menu',
+                PLAYING: 'playing',
+                LANDED: 'landed',
+                CRASHED: 'crashed',
+                GAMEOVER: 'gameover'
+            };
+
+            var gameState = STATES.MENU;
+
+            // --- Timing ---
+            var lastTime = 0;
+
+            // --- Input ---
+            var keys = {};
+            window.addEventListener('keydown', function (e) {
+                keys[e.key] = true;
+                if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                }
+                handleKeyPress(e.key);
+            });
+            window.addEventListener('keyup', function (e) {
+                keys[e.key] = false;
+            });
+
+            function handleKeyPress(key) {
+                if (key === ' ') {
+                    if (gameState === STATES.MENU) {
+                        gameState = STATES.PLAYING;
+                    } else if (gameState === STATES.LANDED) {
+                        // Future: next level
+                        gameState = STATES.PLAYING;
+                    } else if (gameState === STATES.GAMEOVER) {
+                        gameState = STATES.MENU;
+                    }
+                }
+                if (key === 'r' || key === 'R') {
+                    if (gameState === STATES.PLAYING || gameState === STATES.CRASHED) {
+                        gameState = STATES.PLAYING;
+                    }
+                }
+            }
+
+            // --- Update ---
+            function update(dt) {
+                if (gameState === STATES.PLAYING) {
+                    // Future: physics, ship movement, collision detection
+                }
+            }
+
+            // --- Render ---
+            function renderMenu() {
+                ctx.fillStyle = '#f26322';
+                ctx.font = 'bold 48px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('MAGE LANDER', canvas.width / 2, canvas.height / 2 - 40);
+
+                ctx.fillStyle = '#888';
+                ctx.font = '20px sans-serif';
+                ctx.fillText('Press SPACE to start', canvas.width / 2, canvas.height / 2 + 20);
+            }
+
+            function renderPlaying() {
+                // Future: draw terrain, ship, HUD
+                ctx.fillStyle = '#888';
+                ctx.font = '16px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game is running...', canvas.width / 2, canvas.height / 2);
+            }
+
+            function renderLanded() {
+                ctx.fillStyle = '#4CAF50';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('LANDED!', canvas.width / 2, canvas.height / 2 - 20);
+
+                ctx.fillStyle = '#888';
+                ctx.font = '20px sans-serif';
+                ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + 30);
+            }
+
+            function renderCrashed() {
+                ctx.fillStyle = '#f44336';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('CRASHED!', canvas.width / 2, canvas.height / 2 - 20);
+
+                ctx.fillStyle = '#888';
+                ctx.font = '20px sans-serif';
+                ctx.fillText('Press R to retry', canvas.width / 2, canvas.height / 2 + 30);
+            }
+
+            function renderGameOver() {
+                ctx.fillStyle = '#f44336';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
+
+                ctx.fillStyle = '#888';
+                ctx.font = '20px sans-serif';
+                ctx.fillText('Press SPACE to return to menu', canvas.width / 2, canvas.height / 2 + 30);
+            }
+
+            function render() {
+                // Clear canvas with dark background
+                ctx.fillStyle = '#111';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                switch (gameState) {
+                    case STATES.MENU:
+                        renderMenu();
+                        break;
+                    case STATES.PLAYING:
+                        renderPlaying();
+                        break;
+                    case STATES.LANDED:
+                        renderLanded();
+                        break;
+                    case STATES.CRASHED:
+                        renderCrashed();
+                        break;
+                    case STATES.GAMEOVER:
+                        renderGameOver();
+                        break;
+                }
+            }
+
+            // --- Game Loop ---
+            function gameLoop(timestamp) {
+                var dt = (timestamp - lastTime) / 1000;
+                lastTime = timestamp;
+
+                // Clamp delta time to avoid spiral of death on tab switch
+                if (dt > 0.1) {
+                    dt = 0.1;
+                }
+
+                update(dt);
+                render();
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            // Start the loop
+            requestAnimationFrame(function (timestamp) {
+                lastTime = timestamp;
+                gameLoop(timestamp);
+            });
+        })();
+    </script>
+</body>
+</html>
