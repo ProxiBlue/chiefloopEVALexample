@@ -552,23 +552,47 @@
                 if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                     e.preventDefault();
                 }
+                if (gameState === STATES.GAMEOVER && gameOverEnteringName && e.key === 'Backspace') {
+                    e.preventDefault();
+                }
                 handleKeyPress(e.key);
             });
             window.addEventListener('keyup', function (e) {
                 keys[e.key] = false;
             });
 
+            function startNewGame() {
+                currentLevel = 0;
+                score = 0;
+                GRAVITY = getLevelConfig(currentLevel).gravity;
+                THRUST_POWER = GRAVITY;
+                resetShip();
+                resetWind();
+                generateTerrain();
+                gameState = STATES.PLAYING;
+            }
+
             function handleKeyPress(key) {
+                // Handle name entry in game over state
+                if (gameState === STATES.GAMEOVER && gameOverEnteringName) {
+                    if (key === 'Enter') {
+                        var name = gameOverName.trim() || 'AAA';
+                        addToLeaderboard(name, score);
+                        gameOverEnteringName = false;
+                        return;
+                    } else if (key === 'Backspace') {
+                        gameOverName = gameOverName.slice(0, -1);
+                        return;
+                    } else if (key.length === 1 && gameOverName.length < 10) {
+                        gameOverName += key;
+                        return;
+                    }
+                    return;
+                }
+
                 if (key === ' ') {
                     if (gameState === STATES.MENU) {
-                        currentLevel = 0;
-                        score = 0;
-                        GRAVITY = getLevelConfig(currentLevel).gravity;
-                        THRUST_POWER = GRAVITY;
-                        resetShip();
-                        resetWind();
-                        generateTerrain();
-                        gameState = STATES.PLAYING;
+                        startNewGame();
                     } else if (gameState === STATES.LANDED && celebrationReady) {
                         // Advance to next level (endless progression)
                         currentLevel++;
@@ -579,13 +603,16 @@
                         generateTerrain();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.CRASHED && explosionFinished) {
-                        saveHighScore(score);
+                        gameOverLevel = currentLevel + 1;
+                        if (isHighScore(score)) {
+                            gameOverEnteringName = true;
+                            gameOverName = '';
+                        } else {
+                            gameOverEnteringName = false;
+                        }
                         gameState = STATES.GAMEOVER;
-                    } else if (gameState === STATES.GAMEOVER) {
-                        currentLevel = 0;
-                        GRAVITY = getLevelConfig(currentLevel).gravity;
-                        THRUST_POWER = GRAVITY;
-                        gameState = STATES.MENU;
+                    } else if (gameState === STATES.GAMEOVER && !gameOverEnteringName) {
+                        startNewGame();
                     }
                 }
                 if (key === 'r' || key === 'R') {
@@ -800,26 +827,68 @@
                 }
             }
 
-            // --- Render ---
-            function getHighScore() {
+            // --- Leaderboard ---
+            var LEADERBOARD_KEY = 'mageLanderLeaderboard';
+            var LEADERBOARD_MAX = 10;
+
+            function getLeaderboard() {
                 try {
-                    var hs = localStorage.getItem('mageLanderHighScore');
-                    return hs ? parseInt(hs, 10) : 0;
-                } catch (e) {
-                    return 0;
-                }
+                    var data = localStorage.getItem(LEADERBOARD_KEY);
+                    if (data) {
+                        var parsed = JSON.parse(data);
+                        if (Array.isArray(parsed)) return parsed;
+                    }
+                } catch (e) {}
+                return [];
             }
 
-            function saveHighScore(s) {
+            function saveLeaderboard(board) {
                 try {
-                    var current = getHighScore();
-                    if (s > current) {
-                        localStorage.setItem('mageLanderHighScore', s);
-                    }
-                } catch (e) {
-                    // localStorage not available
-                }
+                    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board));
+                } catch (e) {}
             }
+
+            function isHighScore(s) {
+                if (s <= 0) return false;
+                var board = getLeaderboard();
+                if (board.length < LEADERBOARD_MAX) return true;
+                return s > board[board.length - 1].score;
+            }
+
+            function addToLeaderboard(name, s) {
+                var board = getLeaderboard();
+                board.push({ name: name, score: s });
+                board.sort(function(a, b) { return b.score - a.score; });
+                if (board.length > LEADERBOARD_MAX) {
+                    board = board.slice(0, LEADERBOARD_MAX);
+                }
+                saveLeaderboard(board);
+                return board;
+            }
+
+            // Backward compat: migrate old single high score to leaderboard
+            (function migrateOldHighScore() {
+                try {
+                    var old = localStorage.getItem('mageLanderHighScore');
+                    if (old) {
+                        var val = parseInt(old, 10);
+                        if (val > 0) {
+                            var board = getLeaderboard();
+                            if (board.length === 0) {
+                                addToLeaderboard('???', val);
+                            }
+                        }
+                        localStorage.removeItem('mageLanderHighScore');
+                    }
+                } catch (e) {}
+            })();
+
+            // --- Game Over State ---
+            var gameOverEnteringName = false;
+            var gameOverName = '';
+            var gameOverLevel = 0;  // level reached (stored on game over)
+
+            // --- Render ---
 
             function renderMenu() {
                 var cx = canvas.width / 2;
@@ -848,12 +917,10 @@
                 ctx.font = '20px sans-serif';
                 ctx.fillText('Press SPACE to Start', cx, controlsY + 120);
 
-                // High score
-                var highScore = getHighScore();
-                if (highScore > 0) {
-                    ctx.fillStyle = '#FFD700';
-                    ctx.font = 'bold 20px sans-serif';
-                    ctx.fillText('High Score: ' + highScore, cx, controlsY + 155);
+                // Leaderboard on start screen
+                var board = getLeaderboard();
+                if (board.length > 0) {
+                    drawLeaderboard(cx, controlsY + 150, null);
                 }
             }
 
@@ -1040,19 +1107,95 @@
                 }
             }
 
+            function drawLeaderboard(cx, startY, highlight) {
+                var board = getLeaderboard();
+                if (board.length === 0) return startY;
+
+                ctx.fillStyle = '#ccc';
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('--- HIGH SCORES ---', cx, startY);
+
+                var y = startY + 24;
+                ctx.font = '14px monospace';
+                for (var i = 0; i < board.length; i++) {
+                    var entry = board[i];
+                    var rank = (i + 1) + '.';
+                    var padding = i < 9 ? '  ' : ' ';
+                    var line = rank + padding + entry.name;
+                    // Pad name to align scores
+                    while (line.length < 18) line += ' ';
+                    line += entry.score;
+
+                    if (highlight && entry.score === score && entry.name === highlight) {
+                        ctx.fillStyle = '#FFD700';
+                        highlight = null; // only highlight first match
+                    } else {
+                        ctx.fillStyle = '#aaa';
+                    }
+                    ctx.fillText(line, cx, y);
+                    y += 20;
+                }
+                return y;
+            }
+
             function renderGameOver() {
+                var cx = canvas.width / 2;
+                var y = canvas.height / 2 - 120;
+
                 ctx.fillStyle = '#f44336';
                 ctx.font = 'bold 36px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 40);
+                ctx.fillText('GAME OVER', cx, y);
 
+                y += 40;
                 ctx.fillStyle = '#FFD700';
                 ctx.font = 'bold 28px sans-serif';
-                ctx.fillText('Score: ' + score, canvas.width / 2, canvas.height / 2 + 5);
+                ctx.fillText('Score: ' + score, cx, y);
 
-                ctx.fillStyle = '#888';
-                ctx.font = '20px sans-serif';
-                ctx.fillText('Press SPACE to return to menu', canvas.width / 2, canvas.height / 2 + 45);
+                y += 30;
+                ctx.fillStyle = '#ccc';
+                ctx.font = '18px sans-serif';
+                ctx.fillText('Level Reached: ' + gameOverLevel, cx, y);
+
+                y += 30;
+
+                if (gameOverEnteringName) {
+                    // Name entry prompt
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 18px sans-serif';
+                    ctx.fillText('NEW HIGH SCORE!', cx, y);
+                    y += 28;
+                    ctx.fillStyle = '#ccc';
+                    ctx.font = '16px sans-serif';
+                    ctx.fillText('Enter your name:', cx, y);
+                    y += 28;
+                    // Draw input box
+                    var boxW = 200;
+                    var boxH = 30;
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(cx - boxW / 2, y - 20, boxW, boxH);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 18px monospace';
+                    var displayName = gameOverName;
+                    // Blinking cursor
+                    if (Math.floor(Date.now() / 500) % 2 === 0) {
+                        displayName += '_';
+                    }
+                    ctx.fillText(displayName, cx, y + 2);
+                    y += 24;
+                    ctx.fillStyle = '#888';
+                    ctx.font = '14px sans-serif';
+                    ctx.fillText('Press ENTER to confirm (max 10 chars)', cx, y);
+                } else {
+                    // Show leaderboard
+                    y = drawLeaderboard(cx, y, gameOverName.trim() || null);
+                    y += 15;
+                    ctx.fillStyle = '#888';
+                    ctx.font = '20px sans-serif';
+                    ctx.fillText('Press Space to Play Again', cx, y);
+                }
             }
 
             function render() {
