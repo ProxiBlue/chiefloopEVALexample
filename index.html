@@ -380,6 +380,10 @@
             }
 
             // --- Ship ---
+            // --- Fuel ---
+            var FUEL_MAX = 100;         // fuel units per level
+            var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
+
             var ship = {
                 x: 0,
                 y: 0,
@@ -387,7 +391,8 @@
                 vy: 0,              // velocity in pixels/s
                 angle: 0,           // radians, 0 = upright
                 rotationSpeed: 3,   // radians per second
-                thrusting: false    // whether thrust is currently active
+                thrusting: false,   // whether thrust is currently active
+                fuel: FUEL_MAX      // remaining fuel
             };
 
             function resetShip() {
@@ -397,6 +402,7 @@
                 ship.vy = 0;
                 ship.angle = 0;
                 ship.thrusting = false;
+                ship.fuel = FUEL_MAX;
             }
 
             function drawShip(x, y, angle, size, thrusting) {
@@ -667,8 +673,12 @@
                     ship.vy += GRAVITY * PIXELS_PER_METER * dt;
 
                     // Thrust — applied in the direction the ship is facing (nose = -Y when angle=0)
-                    ship.thrusting = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+                    // Thrust requires fuel; pressing thrust with no fuel does nothing
+                    var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+                    ship.thrusting = wantsThrust && ship.fuel > 0;
                     if (ship.thrusting) {
+                        ship.fuel -= FUEL_BURN_RATE * dt;
+                        if (ship.fuel < 0) ship.fuel = 0;
                         ship.vx += Math.sin(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
                         ship.vy += -Math.cos(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
                     }
@@ -735,6 +745,40 @@
                 ctx.fillText(Math.abs(vxMs) >= 1 ? '▲' : '●', 170, 45);
                 ctx.fillStyle = Math.abs(angleDeg) >= 15 ? '#f44336' : '#4CAF50';
                 ctx.fillText(Math.abs(angleDeg) >= 15 ? '▲' : '●', 170, 65);
+
+                // Fuel bar
+                var fuelPct = ship.fuel / FUEL_MAX;
+                var fuelBarW = 120;
+                var fuelBarH = 14;
+                var fuelBarX = 10;
+                var fuelBarY = 80;
+
+                // Bar background
+                ctx.fillStyle = '#333';
+                ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+                // Bar fill — color changes: green > yellow > red
+                var fuelColor;
+                if (fuelPct > 0.5) {
+                    fuelColor = '#4CAF50'; // green
+                } else if (fuelPct > 0.25) {
+                    fuelColor = '#FFC107'; // yellow
+                } else {
+                    fuelColor = '#f44336'; // red
+                }
+                ctx.fillStyle = fuelColor;
+                ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+
+                // Bar border
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+                // Fuel percentage text
+                ctx.fillStyle = '#aaa';
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
 
                 // HUD hint
                 ctx.fillStyle = '#555';
