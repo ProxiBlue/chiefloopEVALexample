@@ -177,6 +177,73 @@
             // Animation time tracker for pad glow pulse
             var animTime = 0;
 
+            // --- Explosion Particles ---
+            var explosionParticles = [];
+            var explosionTimer = 0;
+            var EXPLOSION_DURATION = 1.5; // seconds for explosion to finish
+            var explosionFinished = false;
+
+            function spawnExplosion(x, y) {
+                explosionParticles = [];
+                explosionTimer = 0;
+                explosionFinished = false;
+                var colors = ['#ff4500', '#ff6600', '#ff8800', '#ffaa00', '#ffcc00', '#ff2200', '#ff0000'];
+                for (var i = 0; i < 60; i++) {
+                    var angle = Math.random() * Math.PI * 2;
+                    var speed = 50 + Math.random() * 200;
+                    var life = 0.5 + Math.random() * 1.0;
+                    explosionParticles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: life,
+                        maxLife: life,
+                        size: 2 + Math.random() * 4,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+            }
+
+            function updateExplosion(dt) {
+                explosionTimer += dt;
+                for (var i = explosionParticles.length - 1; i >= 0; i--) {
+                    var p = explosionParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 80 * dt; // slight gravity on particles
+                    p.life -= dt;
+                    if (p.life <= 0) {
+                        explosionParticles.splice(i, 1);
+                    }
+                }
+                if (explosionTimer >= EXPLOSION_DURATION) {
+                    explosionFinished = true;
+                }
+            }
+
+            function drawExplosion() {
+                for (var i = 0; i < explosionParticles.length; i++) {
+                    var p = explosionParticles[i];
+                    var alpha = Math.max(0, p.life / p.maxLife);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // --- Screen Shake ---
+            var screenShake = 0;
+            var SCREEN_SHAKE_DURATION = 0.3;
+            var SCREEN_SHAKE_INTENSITY = 8;
+
+            function startScreenShake() {
+                screenShake = SCREEN_SHAKE_DURATION;
+            }
+
             function drawTerrain() {
                 if (terrain.length === 0) return;
 
@@ -380,6 +447,8 @@
                         resetShip();
                         generateTerrain();
                         gameState = STATES.PLAYING;
+                    } else if (gameState === STATES.CRASHED && explosionFinished) {
+                        gameState = STATES.GAMEOVER;
                     } else if (gameState === STATES.GAMEOVER) {
                         currentLevel = 0;
                         GRAVITY = levels[currentLevel].gravity;
@@ -494,6 +563,8 @@
                             ship.vy = 0;
                             ship.vx = 0;
                             landingResult = reasons.join('\n');
+                            spawnExplosion(ship.x, ship.y);
+                            startScreenShake();
                             gameState = STATES.CRASHED;
                         }
                         return;
@@ -505,6 +576,17 @@
             function update(dt) {
                 // Update animation timer for pad glow pulse
                 animTime += dt;
+
+                // Update screen shake timer
+                if (screenShake > 0) {
+                    screenShake -= dt;
+                    if (screenShake < 0) screenShake = 0;
+                }
+
+                // Update explosion particles during crash
+                if (gameState === STATES.CRASHED) {
+                    updateExplosion(dt);
+                }
 
                 if (gameState === STATES.PLAYING) {
                     // Ship rotation
@@ -611,26 +693,31 @@
 
             function renderCrashed() {
                 drawTerrain();
-                drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false);
 
-                ctx.fillStyle = '#f44336';
-                ctx.font = 'bold 36px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('CRASHED!', canvas.width / 2, canvas.height / 2 - 40);
+                // During explosion, show particles instead of ship
+                if (!explosionFinished) {
+                    drawExplosion();
+                } else {
+                    // After explosion finishes, show "Crashed!" message
+                    ctx.fillStyle = '#f44336';
+                    ctx.font = 'bold 36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('CRASHED!', canvas.width / 2, canvas.height / 2 - 40);
 
-                // Show crash reasons
-                if (landingResult) {
-                    var reasons = landingResult.split('\n');
-                    ctx.fillStyle = '#ccc';
-                    ctx.font = '16px sans-serif';
-                    for (var i = 0; i < reasons.length; i++) {
-                        ctx.fillText(reasons[i], canvas.width / 2, canvas.height / 2 + i * 22);
+                    // Show crash reasons
+                    if (landingResult) {
+                        var reasons = landingResult.split('\n');
+                        ctx.fillStyle = '#ccc';
+                        ctx.font = '16px sans-serif';
+                        for (var i = 0; i < reasons.length; i++) {
+                            ctx.fillText(reasons[i], canvas.width / 2, canvas.height / 2 + i * 22);
+                        }
                     }
-                }
 
-                ctx.fillStyle = '#888';
-                ctx.font = '20px sans-serif';
-                ctx.fillText('Press R to retry', canvas.width / 2, canvas.height / 2 + (landingResult ? landingResult.split('\n').length * 22 + 15 : 30));
+                    ctx.fillStyle = '#888';
+                    ctx.font = '20px sans-serif';
+                    ctx.fillText('Press R to retry | Press SPACE for game over', canvas.width / 2, canvas.height / 2 + (landingResult ? landingResult.split('\n').length * 22 + 15 : 30));
+                }
             }
 
             function renderGameOver() {
@@ -649,6 +736,15 @@
                 ctx.fillStyle = '#111';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+                // Apply screen shake offset
+                var shaking = screenShake > 0;
+                if (shaking) {
+                    var shakeX = (Math.random() - 0.5) * 2 * SCREEN_SHAKE_INTENSITY * (screenShake / SCREEN_SHAKE_DURATION);
+                    var shakeY = (Math.random() - 0.5) * 2 * SCREEN_SHAKE_INTENSITY * (screenShake / SCREEN_SHAKE_DURATION);
+                    ctx.save();
+                    ctx.translate(shakeX, shakeY);
+                }
+
                 switch (gameState) {
                     case STATES.MENU:
                         renderMenu();
@@ -665,6 +761,11 @@
                     case STATES.GAMEOVER:
                         renderGameOver();
                         break;
+                }
+
+                // Restore screen shake offset
+                if (shaking) {
+                    ctx.restore();
                 }
             }
 
