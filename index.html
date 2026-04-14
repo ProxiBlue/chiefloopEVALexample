@@ -616,12 +616,11 @@
                     }
                 }
                 if (key === 'r' || key === 'R') {
-                    if (gameState === STATES.PLAYING || gameState === STATES.CRASHED) {
+                    if (gameState === STATES.PLAYING || gameState === STATES.CRASHED || gameState === STATES.LANDED) {
                         GRAVITY = getLevelConfig(currentLevel).gravity;
                         THRUST_POWER = GRAVITY;
                         resetShip();
                         resetWind();
-                        generateTerrain();
                         gameState = STATES.PLAYING;
                     }
                 }
