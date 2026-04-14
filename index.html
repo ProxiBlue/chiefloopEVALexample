@@ -387,6 +387,8 @@
 
                 // Highlight all landing pads with glow/pulse animation
                 var pulseAlpha = 0.5 + 0.5 * Math.sin(animTime * 3);  // oscillates between 0 and 1
+                // Scale glow based on viewport size so pads remain visible on large/zoomed-out displays
+                var glowScale = Math.max(1, Math.min(canvas.width, canvas.height) / 800);
                 for (var p = 0; p < landingPads.length; p++) {
                     var pad = landingPads[p];
                     if (pad.index >= 0 && pad.index < terrain.length) {
@@ -403,44 +405,44 @@
                             padColor = '#f60';        // narrow pad — orange
                         }
 
-                        // Wide outer glow for distance visibility
+                        // Wide outer glow for distance visibility (scales with viewport)
                         ctx.save();
                         ctx.shadowColor = padColor;
-                        ctx.shadowBlur = 20 + 12 * pulseAlpha;
+                        ctx.shadowBlur = (20 + 12 * pulseAlpha) * glowScale;
                         ctx.beginPath();
                         ctx.moveTo(padStart.x, padStart.y);
                         ctx.lineTo(padEnd.x, padEnd.y);
                         ctx.strokeStyle = padColor;
                         ctx.globalAlpha = 0.25 + 0.2 * pulseAlpha;
-                        ctx.lineWidth = 6;
+                        ctx.lineWidth = 6 * glowScale;
                         ctx.stroke();
                         ctx.restore();
 
-                        // Inner glow effect (drawn behind the solid line)
+                        // Inner glow effect (scales with viewport)
                         ctx.save();
                         ctx.shadowColor = padColor;
-                        ctx.shadowBlur = 10 + 8 * pulseAlpha;
+                        ctx.shadowBlur = (10 + 8 * pulseAlpha) * glowScale;
                         ctx.beginPath();
                         ctx.moveTo(padStart.x, padStart.y);
                         ctx.lineTo(padEnd.x, padEnd.y);
                         ctx.strokeStyle = padColor;
                         ctx.globalAlpha = 0.6 + 0.4 * pulseAlpha;
-                        ctx.lineWidth = 4;
+                        ctx.lineWidth = 4 * glowScale;
                         ctx.stroke();
                         ctx.restore();
 
-                        // Solid pad line on top
+                        // Solid pad line on top (scales with viewport)
                         ctx.beginPath();
                         ctx.moveTo(padStart.x, padStart.y);
                         ctx.lineTo(padEnd.x, padEnd.y);
                         ctx.strokeStyle = padColor;
-                        ctx.lineWidth = 3;
+                        ctx.lineWidth = 3 * glowScale;
                         ctx.stroke();
 
-                        // Point value label
+                        // Point value label (scales with viewport)
                         var midX = (padStart.x + padEnd.x) / 2;
                         ctx.fillStyle = padColor;
-                        ctx.font = 'bold 12px sans-serif';
+                        ctx.font = 'bold ' + Math.round(12 * glowScale) + 'px sans-serif';
                         ctx.textAlign = 'center';
                         ctx.fillText(pad.points + 'pts', midX, padStart.y - 8);
                     }
