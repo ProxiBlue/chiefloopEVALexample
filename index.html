@@ -53,6 +53,71 @@
 
             var gameState = STATES.MENU;
 
+            // --- Ship ---
+            var ship = {
+                x: 0,
+                y: 0,
+                angle: 0,           // radians, 0 = upright
+                rotationSpeed: 3    // radians per second
+            };
+
+            function resetShip() {
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 3;
+                ship.angle = 0;
+            }
+
+            function drawShip(x, y, angle, size) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+
+                // Mage-OS "M" logo as a spacecraft
+                // The M is drawn centered at (0,0) with the given size
+                var s = size;
+                var halfW = s * 0.5;
+                var halfH = s * 0.6;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#f26322';
+                ctx.fillStyle = '#f26322';
+                ctx.lineWidth = s * 0.08;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+
+                // Outer M shape — five points forming the M
+                // Left leg base
+                ctx.moveTo(-halfW, halfH);
+                // Left leg top
+                ctx.lineTo(-halfW, -halfH);
+                // Center valley — down to middle
+                ctx.lineTo(-halfW * 0.35, -halfH * 0.15);
+                // Peak tip (top center) — the nose of the ship
+                ctx.lineTo(0, -halfH);
+                // Right inner valley
+                ctx.lineTo(halfW * 0.35, -halfH * 0.15);
+                // Right leg top
+                ctx.lineTo(halfW, -halfH);
+                // Right leg base
+                ctx.lineTo(halfW, halfH);
+
+                ctx.stroke();
+
+                // Draw small accent marks at the base to suggest thrusters
+                ctx.beginPath();
+                ctx.moveTo(-halfW * 0.5, halfH);
+                ctx.lineTo(-halfW * 0.5, halfH + s * 0.08);
+                ctx.moveTo(0, halfH);
+                ctx.lineTo(0, halfH + s * 0.08);
+                ctx.moveTo(halfW * 0.5, halfH);
+                ctx.lineTo(halfW * 0.5, halfH + s * 0.08);
+                ctx.strokeStyle = '#f26322';
+                ctx.lineWidth = s * 0.04;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
             // --- Timing ---
             var lastTime = 0;
 
@@ -72,9 +137,11 @@
             function handleKeyPress(key) {
                 if (key === ' ') {
                     if (gameState === STATES.MENU) {
+                        resetShip();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.LANDED) {
                         // Future: next level
+                        resetShip();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.GAMEOVER) {
                         gameState = STATES.MENU;
@@ -82,6 +149,7 @@
                 }
                 if (key === 'r' || key === 'R') {
                     if (gameState === STATES.PLAYING || gameState === STATES.CRASHED) {
+                        resetShip();
                         gameState = STATES.PLAYING;
                     }
                 }
@@ -90,28 +158,40 @@
             // --- Update ---
             function update(dt) {
                 if (gameState === STATES.PLAYING) {
-                    // Future: physics, ship movement, collision detection
+                    // Ship rotation
+                    if (keys['ArrowLeft']) {
+                        ship.angle -= ship.rotationSpeed * dt;
+                    }
+                    if (keys['ArrowRight']) {
+                        ship.angle += ship.rotationSpeed * dt;
+                    }
                 }
             }
 
             // --- Render ---
             function renderMenu() {
+                // Draw ship logo on menu
+                drawShip(canvas.width / 2, canvas.height / 2 - 100, 0, 60);
+
                 ctx.fillStyle = '#f26322';
                 ctx.font = 'bold 48px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('MAGE LANDER', canvas.width / 2, canvas.height / 2 - 40);
+                ctx.fillText('MAGE LANDER', canvas.width / 2, canvas.height / 2);
 
                 ctx.fillStyle = '#888';
                 ctx.font = '20px sans-serif';
-                ctx.fillText('Press SPACE to start', canvas.width / 2, canvas.height / 2 + 20);
+                ctx.fillText('Press SPACE to start', canvas.width / 2, canvas.height / 2 + 50);
             }
 
             function renderPlaying() {
-                // Future: draw terrain, ship, HUD
-                ctx.fillStyle = '#888';
-                ctx.font = '16px sans-serif';
+                // Draw ship
+                drawShip(ship.x, ship.y, ship.angle, 40);
+
+                // HUD hint
+                ctx.fillStyle = '#555';
+                ctx.font = '14px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('Game is running...', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('Arrow keys to steer', canvas.width / 2, canvas.height - 30);
             }
 
             function renderLanded() {
