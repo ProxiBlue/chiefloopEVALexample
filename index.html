@@ -61,9 +61,9 @@
 
             // --- Level Configuration ---
             var levels = [
-                { gravity: 1.6, padCount: 3 },   // Level 1: lunar-like gravity, 3 pads (easy)
-                { gravity: 2.0, padCount: 2 },   // Level 2: slightly stronger gravity, 2 pads
-                { gravity: 2.5, padCount: 1 }    // Level 3: heavier world, 1 pad (hard)
+                { gravity: 1.6, padCount: 3, maxWind: 0 },     // Level 1: no wind
+                { gravity: 2.0, padCount: 2, maxWind: 1.5 },   // Level 2: moderate wind
+                { gravity: 2.5, padCount: 1, maxWind: 3.0 }    // Level 3: strong wind
             ];
             var currentLevel = 0;
 
@@ -71,6 +71,22 @@
             var GRAVITY = levels[currentLevel].gravity;  // m/s^2, configurable per level
             var THRUST_POWER = 1.6;     // m/s^2, matches gravity at level 1 for hover equilibrium
             var PIXELS_PER_METER = 50;  // scale factor: 1 m/s = 50 px/s
+
+            // --- Wind ---
+            var wind = {
+                strength: 0,        // current wind strength in m/s^2 (positive = right, negative = left)
+                maxStrength: 0,     // max wind strength for current level
+                gustTimer: 0,       // time until next gust change
+                gustInterval: 2,    // seconds between gust changes (randomized)
+                targetStrength: 0   // wind lerps toward this value
+            };
+
+            function resetWind() {
+                wind.maxStrength = levels[currentLevel].maxWind || 0;
+                wind.strength = 0;
+                wind.targetStrength = 0;
+                wind.gustTimer = 1 + Math.random() * 2;
+            }
 
             // --- Stars ---
             var stars = [];
@@ -545,6 +561,7 @@
                         score = 0;
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
+                        resetWind();
                         generateTerrain();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.LANDED && celebrationReady) {
@@ -557,6 +574,7 @@
                         }
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
+                        resetWind();
                         generateTerrain();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.CRASHED && explosionFinished) {
@@ -571,6 +589,7 @@
                     if (gameState === STATES.PLAYING || gameState === STATES.CRASHED) {
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
+                        resetWind();
                         generateTerrain();
                         gameState = STATES.PLAYING;
                     }
@@ -731,6 +750,20 @@
                         ship.angle += ship.rotationSpeed * dt;
                     }
 
+                    // Wind — update gusts and apply horizontal force
+                    if (wind.maxStrength > 0) {
+                        wind.gustTimer -= dt;
+                        if (wind.gustTimer <= 0) {
+                            // Pick a new random target wind strength and direction
+                            wind.targetStrength = (Math.random() * 2 - 1) * wind.maxStrength;
+                            wind.gustTimer = 1.5 + Math.random() * 2.5;
+                        }
+                        // Smoothly lerp toward target
+                        wind.strength += (wind.targetStrength - wind.strength) * dt * 2;
+                        // Apply wind as horizontal acceleration
+                        ship.vx += wind.strength * PIXELS_PER_METER * dt;
+                    }
+
                     // Gravity — accelerates downward (positive Y is down in canvas)
                     ship.vy += GRAVITY * PIXELS_PER_METER * dt;
 
@@ -849,6 +882,48 @@
                 ctx.textAlign = 'left';
                 ctx.fillText('Score: ' + score, 10, fuelBarY + 36);
                 ctx.fillText('Level: ' + (currentLevel + 1), 10, fuelBarY + 56);
+
+                // Wind indicator (only shown when wind is active)
+                if (wind.maxStrength > 0) {
+                    var windY = fuelBarY + 76;
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '14px monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Wind:', 10, windY);
+
+                    // Draw wind arrow — length proportional to strength, direction shows left/right
+                    var arrowBaseX = 70;
+                    var arrowY = windY - 5;
+                    var maxArrowLen = 60;
+                    var arrowLen = (wind.strength / wind.maxStrength) * maxArrowLen;
+                    var absArrowLen = Math.abs(arrowLen);
+
+                    if (absArrowLen > 1) {
+                        var arrowEndX = arrowBaseX + arrowLen;
+                        // Arrow shaft
+                        ctx.strokeStyle = '#4FC3F7';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(arrowBaseX, arrowY);
+                        ctx.lineTo(arrowEndX, arrowY);
+                        ctx.stroke();
+                        // Arrowhead
+                        var headDir = arrowLen > 0 ? 1 : -1;
+                        ctx.beginPath();
+                        ctx.moveTo(arrowEndX, arrowY);
+                        ctx.lineTo(arrowEndX - headDir * 6, arrowY - 4);
+                        ctx.lineTo(arrowEndX - headDir * 6, arrowY + 4);
+                        ctx.closePath();
+                        ctx.fillStyle = '#4FC3F7';
+                        ctx.fill();
+                    } else {
+                        // Calm — show a dot
+                        ctx.fillStyle = '#4FC3F7';
+                        ctx.beginPath();
+                        ctx.arc(arrowBaseX, arrowY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
 
                 // HUD hint
                 ctx.fillStyle = '#555';
