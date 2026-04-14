@@ -53,6 +53,9 @@
 
             var gameState = STATES.MENU;
 
+            // --- Score ---
+            var score = 0;
+
             // --- Level Configuration ---
             var levels = [
                 { gravity: 1.6, padCount: 3 },   // Level 1: lunar-like gravity, 3 pads (easy)
@@ -496,6 +499,7 @@
                 if (key === ' ') {
                     if (gameState === STATES.MENU) {
                         currentLevel = 0;
+                        score = 0;
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
                         generateTerrain();
@@ -561,6 +565,17 @@
                 return null;
             }
 
+            // Get altitude: distance from ship bottom to terrain directly below
+            function getAltitude() {
+                var bottomEdge = getShipBottomEdge();
+                var centerX = (bottomEdge[0].x + bottomEdge[1].x) / 2;
+                var bottomY = Math.max(bottomEdge[0].y, bottomEdge[1].y);
+                var hit = getTerrainYAtX(centerX);
+                if (!hit) return 0;
+                var altPixels = hit.y - bottomY;
+                return Math.max(0, altPixels / PIXELS_PER_METER);
+            }
+
             // Check if a terrain segment index is part of a landing pad
             function getPadAtSegment(segIndex) {
                 for (var p = 0; p < landingPads.length; p++) {
@@ -618,6 +633,7 @@
                             ship.vx = 0;
                             landingResult = 'SUCCESS';
                             landedPadPoints = (pad0 || pad1).points;
+                            score += landedPadPoints;
                             spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
                             gameState = STATES.LANDED;
                         } else {
@@ -723,62 +739,70 @@
                 // Draw ship
                 drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting);
 
-                // HUD — speed and angle indicators
+                // --- HUD ---
                 var vyMs = ship.vy / PIXELS_PER_METER;
                 var vxMs = ship.vx / PIXELS_PER_METER;
                 var angleDeg = ship.angle % (2 * Math.PI);
                 if (angleDeg > Math.PI) angleDeg -= 2 * Math.PI;
                 if (angleDeg < -Math.PI) angleDeg += 2 * Math.PI;
                 angleDeg = angleDeg * (180 / Math.PI);
+                var altitude = getAltitude();
+                var fuelPct = ship.fuel / FUEL_MAX;
 
-                ctx.fillStyle = '#aaa';
                 ctx.font = '14px monospace';
                 ctx.textAlign = 'left';
-                ctx.fillText('V-Speed: ' + vyMs.toFixed(1) + ' m/s', 10, 25);
-                ctx.fillText('H-Speed: ' + vxMs.toFixed(1) + ' m/s', 10, 45);
-                ctx.fillText('Angle:   ' + angleDeg.toFixed(1) + '°', 10, 65);
 
-                // Color-coded warnings
+                // Altitude
+                ctx.fillStyle = '#fff';
+                ctx.fillText('Alt:     ' + altitude.toFixed(1) + ' m', 10, 25);
+
+                // Vertical velocity — color-coded: green if safe (<2), red if too fast
                 ctx.fillStyle = vyMs >= 2 ? '#f44336' : '#4CAF50';
-                ctx.fillText(vyMs >= 2 ? '▲' : '●', 170, 25);
+                ctx.fillText('V-Speed: ' + vyMs.toFixed(1) + ' m/s', 10, 45);
+
+                // Horizontal velocity — color-coded: green if safe (<1), red if too fast
                 ctx.fillStyle = Math.abs(vxMs) >= 1 ? '#f44336' : '#4CAF50';
-                ctx.fillText(Math.abs(vxMs) >= 1 ? '▲' : '●', 170, 45);
+                ctx.fillText('H-Speed: ' + vxMs.toFixed(1) + ' m/s', 10, 65);
+
+                // Angle
                 ctx.fillStyle = Math.abs(angleDeg) >= 15 ? '#f44336' : '#4CAF50';
-                ctx.fillText(Math.abs(angleDeg) >= 15 ? '▲' : '●', 170, 65);
+                ctx.fillText('Angle:   ' + angleDeg.toFixed(1) + '\u00B0', 10, 85);
 
                 // Fuel bar
-                var fuelPct = ship.fuel / FUEL_MAX;
                 var fuelBarW = 120;
                 var fuelBarH = 14;
                 var fuelBarX = 10;
-                var fuelBarY = 80;
+                var fuelBarY = 98;
 
-                // Bar background
                 ctx.fillStyle = '#333';
                 ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
 
-                // Bar fill — color changes: green > yellow > red
                 var fuelColor;
                 if (fuelPct > 0.5) {
-                    fuelColor = '#4CAF50'; // green
+                    fuelColor = '#4CAF50';
                 } else if (fuelPct > 0.25) {
-                    fuelColor = '#FFC107'; // yellow
+                    fuelColor = '#FFC107';
                 } else {
-                    fuelColor = '#f44336'; // red
+                    fuelColor = '#f44336';
                 }
                 ctx.fillStyle = fuelColor;
                 ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
 
-                // Bar border
                 ctx.strokeStyle = '#888';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
 
-                // Fuel percentage text
-                ctx.fillStyle = '#aaa';
+                ctx.fillStyle = '#fff';
                 ctx.font = '14px monospace';
                 ctx.textAlign = 'left';
                 ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+
+                // Score and Level
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('Score: ' + score, 10, fuelBarY + 36);
+                ctx.fillText('Level: ' + (currentLevel + 1), 10, fuelBarY + 56);
 
                 // HUD hint
                 ctx.fillStyle = '#555';
@@ -848,11 +872,15 @@
                 ctx.fillStyle = '#f44336';
                 ctx.font = 'bold 36px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 40);
+
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 28px sans-serif';
+                ctx.fillText('Score: ' + score, canvas.width / 2, canvas.height / 2 + 5);
 
                 ctx.fillStyle = '#888';
                 ctx.font = '20px sans-serif';
-                ctx.fillText('Press SPACE to return to menu', canvas.width / 2, canvas.height / 2 + 30);
+                ctx.fillText('Press SPACE to return to menu', canvas.width / 2, canvas.height / 2 + 45);
             }
 
             function render() {
