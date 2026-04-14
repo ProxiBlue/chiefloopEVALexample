@@ -177,6 +177,65 @@
             // Animation time tracker for pad glow pulse
             var animTime = 0;
 
+            // --- Celebration Particles ---
+            var celebrationParticles = [];
+            var celebrationTimer = 0;
+            var CELEBRATION_DELAY = 1.5; // seconds before "Press Space" prompt appears
+            var celebrationReady = false; // true when prompt should show
+            var landedPadPoints = 0; // points earned from the landed pad
+
+            function spawnCelebration(x, y) {
+                celebrationParticles = [];
+                celebrationTimer = 0;
+                celebrationReady = false;
+                var colors = ['#4CAF50', '#66BB6A', '#A5D6A7', '#FFD700', '#FFC107', '#FFEB3B', '#81C784', '#C8E6C9'];
+                for (var i = 0; i < 50; i++) {
+                    var angle = Math.random() * Math.PI * 2;
+                    var speed = 30 + Math.random() * 120;
+                    var life = 1.0 + Math.random() * 1.5;
+                    celebrationParticles.push({
+                        x: x + (Math.random() - 0.5) * 40,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: -Math.abs(Math.sin(angle) * speed) - 20, // bias upward
+                        life: life,
+                        maxLife: life,
+                        size: 1.5 + Math.random() * 3.5,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+            }
+
+            function updateCelebration(dt) {
+                celebrationTimer += dt;
+                if (celebrationTimer >= CELEBRATION_DELAY) {
+                    celebrationReady = true;
+                }
+                for (var i = celebrationParticles.length - 1; i >= 0; i--) {
+                    var p = celebrationParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 40 * dt; // gentle gravity on sparkles
+                    p.life -= dt;
+                    if (p.life <= 0) {
+                        celebrationParticles.splice(i, 1);
+                    }
+                }
+            }
+
+            function drawCelebration() {
+                for (var i = 0; i < celebrationParticles.length; i++) {
+                    var p = celebrationParticles[i];
+                    var alpha = Math.max(0, p.life / p.maxLife);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * (0.5 + 0.5 * alpha), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
             // --- Explosion Particles ---
             var explosionParticles = [];
             var explosionTimer = 0;
@@ -435,7 +494,7 @@
                         resetShip();
                         generateTerrain();
                         gameState = STATES.PLAYING;
-                    } else if (gameState === STATES.LANDED) {
+                    } else if (gameState === STATES.LANDED && celebrationReady) {
                         // Advance to next level (or game over if no more levels)
                         currentLevel++;
                         if (currentLevel >= levels.length) {
@@ -552,6 +611,8 @@
                             ship.vy = 0;
                             ship.vx = 0;
                             landingResult = 'SUCCESS';
+                            landedPadPoints = (pad0 || pad1).points;
+                            spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
                             gameState = STATES.LANDED;
                         } else {
                             // Crash — build reason
@@ -586,6 +647,11 @@
                 // Update explosion particles during crash
                 if (gameState === STATES.CRASHED) {
                     updateExplosion(dt);
+                }
+
+                // Update celebration particles during landed
+                if (gameState === STATES.LANDED) {
+                    updateCelebration(dt);
                 }
 
                 if (gameState === STATES.PLAYING) {
@@ -679,16 +745,30 @@
 
             function renderLanded() {
                 drawTerrain();
+
+                // Ship remains visible on the pad
                 drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false);
 
+                // Draw celebration particles
+                drawCelebration();
+
+                // "LANDED SUCCESSFULLY!" title
                 ctx.fillStyle = '#4CAF50';
                 ctx.font = 'bold 36px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText('LANDED SUCCESSFULLY!', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillText('LANDED SUCCESSFULLY!', canvas.width / 2, canvas.height / 2 - 40);
 
-                ctx.fillStyle = '#888';
-                ctx.font = '20px sans-serif';
-                ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + 30);
+                // Score earned displayed prominently
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 28px sans-serif';
+                ctx.fillText('+' + landedPadPoints + ' pts', canvas.width / 2, canvas.height / 2 + 5);
+
+                // "Press Space for next level" appears after delay
+                if (celebrationReady) {
+                    ctx.fillStyle = '#888';
+                    ctx.font = '20px sans-serif';
+                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + 45);
+                }
             }
 
             function renderCrashed() {
