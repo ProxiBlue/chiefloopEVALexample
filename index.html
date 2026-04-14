@@ -66,6 +66,86 @@
             var THRUST_POWER = 1.6;     // m/s^2, matches gravity at level 1 for hover equilibrium
             var PIXELS_PER_METER = 50;  // scale factor: 1 m/s = 50 px/s
 
+            // --- Terrain ---
+            var terrain = [];       // array of {x, y} points
+            var landingPadIndex = -1; // index into terrain[] where the flat landing pad starts
+
+            function generateTerrain() {
+                terrain = [];
+                var w = canvas.width;
+                var h = canvas.height;
+                var segmentCount = 40;
+                var segWidth = w / segmentCount;
+
+                // Pick a random segment for the landing pad (flat section)
+                // Keep it away from edges so it's reachable
+                landingPadIndex = 5 + Math.floor(Math.random() * (segmentCount - 12));
+                var padWidth = 2; // number of segments that are flat
+
+                // Base terrain height range (bottom 40% of screen)
+                var minY = h * 0.55;
+                var maxY = h * 0.85;
+
+                for (var i = 0; i <= segmentCount; i++) {
+                    var x = i * segWidth;
+                    var y;
+
+                    if (i >= landingPadIndex && i <= landingPadIndex + padWidth) {
+                        // Flat landing pad section — all at the same height
+                        if (i === landingPadIndex) {
+                            y = minY + Math.random() * (maxY - minY) * 0.6 + (maxY - minY) * 0.2;
+                        } else {
+                            y = terrain[landingPadIndex].y;
+                        }
+                    } else {
+                        // Jagged terrain with varied peaks and valleys
+                        y = minY + Math.random() * (maxY - minY);
+                    }
+
+                    terrain.push({ x: x, y: y });
+                }
+            }
+
+            function drawTerrain() {
+                if (terrain.length === 0) return;
+
+                // Filled polygon: terrain line segments + bottom corners
+                ctx.beginPath();
+                ctx.moveTo(terrain[0].x, terrain[0].y);
+                for (var i = 1; i < terrain.length; i++) {
+                    ctx.lineTo(terrain[i].x, terrain[i].y);
+                }
+                // Close along the bottom of the canvas
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+
+                ctx.fillStyle = '#444';
+                ctx.fill();
+
+                // Stroke the top surface
+                ctx.beginPath();
+                ctx.moveTo(terrain[0].x, terrain[0].y);
+                for (var i = 1; i < terrain.length; i++) {
+                    ctx.lineTo(terrain[i].x, terrain[i].y);
+                }
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Highlight landing pad
+                if (landingPadIndex >= 0 && landingPadIndex < terrain.length - 1) {
+                    var padStart = terrain[landingPadIndex];
+                    var padEnd = terrain[landingPadIndex + 2] || terrain[terrain.length - 1];
+                    ctx.beginPath();
+                    ctx.moveTo(padStart.x, padStart.y);
+                    ctx.lineTo(padEnd.x, padEnd.y);
+                    ctx.strokeStyle = '#0f0';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            }
+
             // --- Ship ---
             var ship = {
                 x: 0,
@@ -179,6 +259,7 @@
                         currentLevel = 0;
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
+                        generateTerrain();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.LANDED) {
                         // Advance to next level (or game over if no more levels)
@@ -190,6 +271,7 @@
                         }
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
+                        generateTerrain();
                         gameState = STATES.PLAYING;
                     } else if (gameState === STATES.GAMEOVER) {
                         currentLevel = 0;
@@ -201,6 +283,7 @@
                     if (gameState === STATES.PLAYING || gameState === STATES.CRASHED) {
                         GRAVITY = levels[currentLevel].gravity;
                         resetShip();
+                        generateTerrain();
                         gameState = STATES.PLAYING;
                     }
                 }
@@ -258,6 +341,9 @@
             }
 
             function renderPlaying() {
+                // Draw terrain
+                drawTerrain();
+
                 // Draw ship
                 drawShip(ship.x, ship.y, ship.angle, 40, ship.thrusting);
 
@@ -269,6 +355,9 @@
             }
 
             function renderLanded() {
+                drawTerrain();
+                drawShip(ship.x, ship.y, ship.angle, 40, false);
+
                 ctx.fillStyle = '#4CAF50';
                 ctx.font = 'bold 36px sans-serif';
                 ctx.textAlign = 'center';
@@ -280,6 +369,9 @@
             }
 
             function renderCrashed() {
+                drawTerrain();
+                drawShip(ship.x, ship.y, ship.angle, 40, false);
+
                 ctx.fillStyle = '#f44336';
                 ctx.font = 'bold 36px sans-serif';
                 ctx.textAlign = 'center';
