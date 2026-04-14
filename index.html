@@ -185,7 +185,9 @@
             var celebrationTimer = 0;
             var CELEBRATION_DELAY = 1.5; // seconds before "Press Space" prompt appears
             var celebrationReady = false; // true when prompt should show
-            var landedPadPoints = 0; // points earned from the landed pad
+            var landedPadPoints = 0; // pad difficulty bonus points
+            var landedFuelBonus = 0; // fuel bonus points
+            var landedTotalPoints = 0; // total points earned from landing
 
             function spawnCelebration(x, y) {
                 celebrationParticles = [];
@@ -633,7 +635,10 @@
                             ship.vx = 0;
                             landingResult = 'SUCCESS';
                             landedPadPoints = (pad0 || pad1).points;
-                            score += landedPadPoints;
+                            // Fuel bonus: remaining fuel percentage * 100, rounded
+                            landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
+                            landedTotalPoints = landedPadPoints + landedFuelBonus;
+                            score += landedTotalPoints;
                             spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
                             gameState = STATES.LANDED;
                         } else {
@@ -826,16 +831,21 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('LANDED SUCCESSFULLY!', canvas.width / 2, canvas.height / 2 - 40);
 
-                // Score earned displayed prominently
+                // Score breakdown displayed prominently
                 ctx.fillStyle = '#FFD700';
                 ctx.font = 'bold 28px sans-serif';
-                ctx.fillText('+' + landedPadPoints + ' pts', canvas.width / 2, canvas.height / 2 + 5);
+                ctx.fillText('+' + landedTotalPoints + ' pts', canvas.width / 2, canvas.height / 2 + 5);
+
+                // Breakdown: pad bonus + fuel bonus
+                ctx.fillStyle = '#ccc';
+                ctx.font = '16px sans-serif';
+                ctx.fillText('Pad bonus: ' + landedPadPoints + ' | Fuel bonus: ' + landedFuelBonus, canvas.width / 2, canvas.height / 2 + 30);
 
                 // "Press Space for next level" appears after delay
                 if (celebrationReady) {
                     ctx.fillStyle = '#888';
                     ctx.font = '20px sans-serif';
-                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + 45);
+                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + 65);
                 }
             }
 
