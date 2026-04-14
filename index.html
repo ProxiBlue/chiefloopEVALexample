@@ -403,15 +403,28 @@
                             padColor = '#f60';        // narrow pad — orange
                         }
 
-                        // Glow effect (drawn behind the line)
+                        // Wide outer glow for distance visibility
                         ctx.save();
                         ctx.shadowColor = padColor;
-                        ctx.shadowBlur = 8 + 6 * pulseAlpha;
+                        ctx.shadowBlur = 20 + 12 * pulseAlpha;
                         ctx.beginPath();
                         ctx.moveTo(padStart.x, padStart.y);
                         ctx.lineTo(padEnd.x, padEnd.y);
                         ctx.strokeStyle = padColor;
-                        ctx.globalAlpha = 0.5 + 0.5 * pulseAlpha;
+                        ctx.globalAlpha = 0.25 + 0.2 * pulseAlpha;
+                        ctx.lineWidth = 6;
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Inner glow effect (drawn behind the solid line)
+                        ctx.save();
+                        ctx.shadowColor = padColor;
+                        ctx.shadowBlur = 10 + 8 * pulseAlpha;
+                        ctx.beginPath();
+                        ctx.moveTo(padStart.x, padStart.y);
+                        ctx.lineTo(padEnd.x, padEnd.y);
+                        ctx.strokeStyle = padColor;
+                        ctx.globalAlpha = 0.6 + 0.4 * pulseAlpha;
                         ctx.lineWidth = 4;
                         ctx.stroke();
                         ctx.restore();
