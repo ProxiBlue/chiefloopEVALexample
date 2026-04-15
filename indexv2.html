@@ -212,6 +212,47 @@
 
             var gameState = STATES.MENU;
 
+            // --- Repository Selector ---
+            var availableRepos = [];        // array of {file, name} from data/repos.json
+            var selectedRepoIndex = 0;      // currently highlighted repo in selector
+            var selectedRepoName = '';      // display name of selected repo
+            var repoSelectorActive = false; // true when selector is shown on menu
+            var repoLoadError = '';         // error message if repos can't be loaded
+            var reposLoaded = false;        // true once repo list has been fetched
+
+            function loadRepoList() {
+                fetch('data/repos.json')
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('No repos.json found');
+                        return res.json();
+                    })
+                    .then(function (repos) {
+                        availableRepos = repos;
+                        reposLoaded = true;
+                        if (repos.length === 0) {
+                            repoLoadError = 'No data files found. Run fetch-github-data.js to fetch repository data.';
+                            repoSelectorActive = false;
+                        } else if (repos.length === 1) {
+                            // Auto-select the only repo
+                            selectedRepoIndex = 0;
+                            selectedRepoName = repos[0].name;
+                            repoSelectorActive = false;
+                        } else {
+                            selectedRepoIndex = 0;
+                            selectedRepoName = repos[0].name;
+                            repoSelectorActive = true;
+                        }
+                    })
+                    .catch(function () {
+                        reposLoaded = true;
+                        repoLoadError = 'No data files found. Run fetch-github-data.js to fetch repository data.';
+                        repoSelectorActive = false;
+                    });
+            }
+
+            // Load repos on startup
+            loadRepoList();
+
             // --- Score ---
             var score = 0;
 
@@ -720,7 +761,7 @@
             var keys = {};
             window.addEventListener('keydown', function (e) {
                 keys[e.key] = true;
-                if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
                     e.preventDefault();
                 }
                 if (gameState === STATES.GAMEOVER && gameOverEnteringName && e.key === 'Backspace') {
@@ -761,8 +802,29 @@
                     return;
                 }
 
+                // Repo selector navigation on menu
+                if (gameState === STATES.MENU && repoSelectorActive) {
+                    if (key === 'ArrowUp') {
+                        playClickSound();
+                        selectedRepoIndex = (selectedRepoIndex - 1 + availableRepos.length) % availableRepos.length;
+                        selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        return;
+                    } else if (key === 'ArrowDown') {
+                        playClickSound();
+                        selectedRepoIndex = (selectedRepoIndex + 1) % availableRepos.length;
+                        selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        return;
+                    } else if (key === 'Enter') {
+                        playClickSound();
+                        selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        repoSelectorActive = false;
+                        return;
+                    }
+                }
+
                 if (key === ' ') {
                     if (gameState === STATES.MENU) {
+                        if (repoLoadError || repoSelectorActive) return; // can't start without a selected repo
                         playClickSound();
                         startNewGame();
                     } else if (gameState === STATES.LANDED && celebrationReady) {
@@ -1084,6 +1146,50 @@
                 ctx.textAlign = 'center';
                 ctx.fillText('MAGE LANDER', cx, baseY + 100);
 
+                // Show selected repo name below title
+                if (selectedRepoName && !repoSelectorActive) {
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '16px monospace';
+                    ctx.fillText('Repo: ' + selectedRepoName, cx, baseY + 125);
+                }
+
+                // Error state — no data files
+                if (repoLoadError) {
+                    ctx.fillStyle = '#f44336';
+                    ctx.font = '18px monospace';
+                    ctx.fillText(repoLoadError, cx, baseY + 160);
+                    return;
+                }
+
+                // Loading state
+                if (!reposLoaded) {
+                    ctx.fillStyle = '#888';
+                    ctx.font = '18px monospace';
+                    ctx.fillText('Loading repositories...', cx, baseY + 160);
+                    return;
+                }
+
+                // Repo selector — shown when multiple repos available
+                if (repoSelectorActive) {
+                    ctx.fillStyle = '#ccc';
+                    ctx.font = '18px monospace';
+                    ctx.fillText('Select a repository:', cx, baseY + 150);
+
+                    var listY = baseY + 180;
+                    for (var i = 0; i < availableRepos.length; i++) {
+                        var isSelected = (i === selectedRepoIndex);
+                        ctx.fillStyle = isSelected ? '#f26322' : '#888';
+                        ctx.font = isSelected ? 'bold 16px monospace' : '16px monospace';
+                        var prefix = isSelected ? '> ' : '  ';
+                        ctx.fillText(prefix + availableRepos[i].name, cx, listY + i * 28);
+                    }
+
+                    ctx.fillStyle = '#888';
+                    ctx.font = '14px monospace';
+                    ctx.fillText('Up/Down to navigate, Enter to select', cx, listY + availableRepos.length * 28 + 20);
+                    return;
+                }
+
                 // Controls
                 ctx.fillStyle = '#ccc';
                 ctx.font = '16px monospace';
@@ -1170,12 +1276,21 @@
                 ctx.textAlign = 'left';
                 ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
 
-                // Score and Level
+                // Score, Level, and Repo
                 ctx.fillStyle = '#fff';
                 ctx.font = '14px monospace';
                 ctx.textAlign = 'left';
                 ctx.fillText('Score: ' + score, 10, fuelBarY + 36);
                 ctx.fillText('Level: ' + (currentLevel + 1), 10, fuelBarY + 56);
+
+                // Repo name in HUD (top-right)
+                if (selectedRepoName) {
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '12px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('Repo: ' + selectedRepoName, canvas.width - 10, 25);
+                    ctx.textAlign = 'left';
+                }
 
                 // Wind indicator (only shown when wind is active)
                 if (wind.maxStrength > 0) {

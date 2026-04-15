@@ -277,6 +277,25 @@ async function main() {
   const outputFile = path.join(dataDir, `${name}.json`);
   fs.writeFileSync(outputFile, JSON.stringify(output, null, 2));
 
+  // Update repos.json manifest
+  const manifestFile = path.join(dataDir, "repos.json");
+  let manifest = [];
+  if (fs.existsSync(manifestFile)) {
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestFile, "utf-8"));
+    } catch (e) {
+      manifest = [];
+    }
+  }
+  const entry = { file: `${name}.json`, name: repo };
+  const existingIdx = manifest.findIndex((m) => m.file === entry.file);
+  if (existingIdx >= 0) {
+    manifest[existingIdx] = entry;
+  } else {
+    manifest.push(entry);
+  }
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+
   console.log(`\nDone! Saved ${commits.length} commits and ${prs.length} PRs to ${outputFile}`);
 }
 
