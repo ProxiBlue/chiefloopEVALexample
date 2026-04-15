@@ -221,6 +221,7 @@
             var reposLoaded = false;        // true once repo list has been fetched
             var repoCommits = [];           // loaded commit data for selected repo (chronological order)
             var repoPRs = [];               // loaded PR data for selected repo (merged PRs with type)
+            var unplacedPRs = [];           // PRs that couldn't be placed on previous levels (carried forward)
             var repoDataLoaded = false;     // true once repo JSON has been fetched
 
             // PR-based landing pad configuration
@@ -242,6 +243,7 @@
                 repoDataLoaded = false;
                 repoCommits = [];
                 repoPRs = [];
+                unplacedPRs = [];
                 fetch('data/' + repoFile)
                     .then(function (res) {
                         if (!res.ok) throw new Error('Failed to load repo data');
@@ -457,14 +459,24 @@
             }
 
             // Get the PRs assigned to the current level (paginated by MAX_PADS_PER_LEVEL)
+            // Carries forward any unplaced PRs from previous levels
             function getLevelPRs(level) {
-                if (repoPRs.length === 0) return [];
+                if (repoPRs.length === 0 && unplacedPRs.length === 0) return [];
                 var startIdx = level * MAX_PADS_PER_LEVEL;
-                if (startIdx >= repoPRs.length) {
-                    // No more PRs available — don't reuse PRs from earlier levels
-                    return [];
+                // Get the scheduled PRs for this level from the main list
+                var scheduled = [];
+                if (startIdx < repoPRs.length) {
+                    scheduled = repoPRs.slice(startIdx, startIdx + MAX_PADS_PER_LEVEL);
                 }
-                return repoPRs.slice(startIdx, startIdx + MAX_PADS_PER_LEVEL);
+                // Prepend any unplaced PRs carried over from previous levels
+                var carried = unplacedPRs.splice(0);
+                var combined = carried.concat(scheduled);
+                // Cap at MAX_PADS_PER_LEVEL; put overflow back into unplacedPRs
+                if (combined.length > MAX_PADS_PER_LEVEL) {
+                    unplacedPRs = combined.slice(MAX_PADS_PER_LEVEL);
+                    combined = combined.slice(0, MAX_PADS_PER_LEVEL);
+                }
+                return combined;
             }
 
             // Map a PR's merge date to a terrain segment index based on the commit timeline
@@ -510,10 +522,9 @@
                         // Calculate target segment from PR merge date
                         var targetSeg = prMergeDateToSegment(pr, segmentCount);
 
-                        // Find nearest non-overlapping position
+                        // Find nearest non-overlapping position (with 1-segment gap)
                         var padIdx = -1;
                         for (var offset = 0; offset < segmentCount; offset++) {
-                            // Try target, then alternate left/right
                             var candidates = [targetSeg + offset, targetSeg - offset];
                             for (var ci = 0; ci < candidates.length; ci++) {
                                 var candidate = candidates[ci];
@@ -530,7 +541,30 @@
                             if (padIdx >= 0) break;
                         }
 
-                        if (padIdx >= 0) {
+                        // Retry without gap requirement if gap-based search failed
+                        if (padIdx < 0) {
+                            for (var offset = 0; offset < segmentCount; offset++) {
+                                var candidates = [targetSeg + offset, targetSeg - offset];
+                                for (var ci = 0; ci < candidates.length; ci++) {
+                                    var candidate = candidates[ci];
+                                    if (candidate < 1 || candidate + padWidth >= segmentCount) continue;
+                                    var overlap = false;
+                                    for (var s = candidate; s <= candidate + padWidth; s++) {
+                                        if (usedSegments[s]) { overlap = true; break; }
+                                    }
+                                    if (!overlap) {
+                                        padIdx = candidate;
+                                        break;
+                                    }
+                                }
+                                if (padIdx >= 0) break;
+                            }
+                        }
+
+                        // If still no position found, carry PR to the next level
+                        if (padIdx < 0) {
+                            unplacedPRs.push(pr);
+                        } else {
                             for (var s = padIdx; s <= padIdx + padWidth; s++) {
                                 usedSegments[s] = true;
                             }
@@ -966,6 +1000,7 @@
 
             function startNewGame() {
                 currentLevel = 0;
+                unplacedPRs = [];
                 score = 0;
                 GRAVITY = getLevelConfig(currentLevel).gravity;
                 THRUST_POWER = GRAVITY * 2.5;
