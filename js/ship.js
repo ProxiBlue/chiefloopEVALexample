@@ -45,40 +45,39 @@ function drawShip(x, y, angle, size, thrusting) {
     ctx.rotate(angle);
 
     var s = size;
-    var halfW = s * 0.5;
-    var halfH = s * 0.6;
+    var halfS = s * 0.5;
 
     // Draw the Mage-OS SVG logo using drawImage if loaded
     if (shipLogoLoaded) {
-        // Draw the SVG image centered at (0,0)
-        ctx.drawImage(shipLogoImg, -halfW, -halfH, s, s * 1.2);
+        // Draw the SVG image centered at (0,0) — square aspect ratio
+        ctx.drawImage(shipLogoImg, -halfS, -halfS, s, s);
     } else {
         // Fallback: draw the M shape with canvas paths (same as original)
         ctx.beginPath();
-        ctx.strokeStyle = '#f26322';
-        ctx.fillStyle = '#f26322';
+        ctx.strokeStyle = '#F37121';
+        ctx.fillStyle = '#F37121';
         ctx.lineWidth = s * 0.08;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
 
-        ctx.moveTo(-halfW, halfH);
-        ctx.lineTo(-halfW, -halfH);
-        ctx.lineTo(-halfW * 0.35, -halfH * 0.15);
-        ctx.lineTo(0, -halfH);
-        ctx.lineTo(halfW * 0.35, -halfH * 0.15);
-        ctx.lineTo(halfW, -halfH);
-        ctx.lineTo(halfW, halfH);
+        ctx.moveTo(-halfS, halfS);
+        ctx.lineTo(-halfS, -halfS);
+        ctx.lineTo(-halfS * 0.35, -halfS * 0.15);
+        ctx.lineTo(0, -halfS);
+        ctx.lineTo(halfS * 0.35, -halfS * 0.15);
+        ctx.lineTo(halfS, -halfS);
+        ctx.lineTo(halfS, halfS);
 
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.moveTo(-halfW * 0.5, halfH);
-        ctx.lineTo(-halfW * 0.5, halfH + s * 0.08);
-        ctx.moveTo(0, halfH);
-        ctx.lineTo(0, halfH + s * 0.08);
-        ctx.moveTo(halfW * 0.5, halfH);
-        ctx.lineTo(halfW * 0.5, halfH + s * 0.08);
-        ctx.strokeStyle = '#f26322';
+        ctx.moveTo(-halfS * 0.5, halfS);
+        ctx.lineTo(-halfS * 0.5, halfS + s * 0.08);
+        ctx.moveTo(0, halfS);
+        ctx.lineTo(0, halfS + s * 0.08);
+        ctx.moveTo(halfS * 0.5, halfS);
+        ctx.lineTo(halfS * 0.5, halfS + s * 0.08);
+        ctx.strokeStyle = '#F37121';
         ctx.lineWidth = s * 0.04;
         ctx.stroke();
     }
@@ -86,30 +85,30 @@ function drawShip(x, y, angle, size, thrusting) {
     // Draw thrust flame when thrusting
     if (thrusting) {
         var flameLen = s * (0.4 + Math.random() * 0.25);
-        var flameWidth = halfW * (0.35 + Math.random() * 0.08);
+        var flameWidth = halfS * (0.35 + Math.random() * 0.08);
 
         // Outer flame — orange/yellow gradient
-        var flameGrad = ctx.createLinearGradient(0, halfH, 0, halfH + flameLen);
+        var flameGrad = ctx.createLinearGradient(0, halfS, 0, halfS + flameLen);
         flameGrad.addColorStop(0, '#ff8800');
         flameGrad.addColorStop(0.5, '#ffaa00');
         flameGrad.addColorStop(1, '#ffdd00');
         ctx.beginPath();
-        ctx.moveTo(-flameWidth, halfH);
-        ctx.lineTo(0, halfH + flameLen);
-        ctx.lineTo(flameWidth, halfH);
+        ctx.moveTo(-flameWidth, halfS);
+        ctx.lineTo(0, halfS + flameLen);
+        ctx.lineTo(flameWidth, halfS);
         ctx.fillStyle = flameGrad;
         ctx.fill();
 
         // Inner flame — yellow core
         var innerLen = flameLen * (0.55 + Math.random() * 0.1);
         var innerWidth = flameWidth * 0.5;
-        var innerGrad = ctx.createLinearGradient(0, halfH, 0, halfH + innerLen);
+        var innerGrad = ctx.createLinearGradient(0, halfS, 0, halfS + innerLen);
         innerGrad.addColorStop(0, '#ffcc00');
         innerGrad.addColorStop(1, '#ffee66');
         ctx.beginPath();
-        ctx.moveTo(-innerWidth, halfH);
-        ctx.lineTo(0, halfH + innerLen);
-        ctx.lineTo(innerWidth, halfH);
+        ctx.moveTo(-innerWidth, halfS);
+        ctx.lineTo(0, halfS + innerLen);
+        ctx.lineTo(innerWidth, halfS);
         ctx.fillStyle = innerGrad;
         ctx.fill();
     }
