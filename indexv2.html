@@ -461,8 +461,8 @@
                 if (repoPRs.length === 0) return [];
                 var startIdx = level * MAX_PADS_PER_LEVEL;
                 if (startIdx >= repoPRs.length) {
-                    // Wrap around if we've exhausted all PRs
-                    startIdx = startIdx % repoPRs.length;
+                    // No more PRs available — don't reuse PRs from earlier levels
+                    return [];
                 }
                 return repoPRs.slice(startIdx, startIdx + MAX_PADS_PER_LEVEL);
             }
