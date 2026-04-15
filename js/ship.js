@@ -285,5 +285,87 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
         ctx.fill();
     }
 
+    // For right rotation: downward flame at bottom-left tip of left leg,
+    //                      upward flame at top-right tip of right leg
+    if (rotating === 'right') {
+        var jnx = drawW / 160.177;
+        var jny = drawH / 77.064;
+
+        var jetScale = 0.3;
+        var jetFlameOriginY = halfH * 0.94;
+
+        // --- Left leg bottom-left tip: flame pointing downward ---
+        // Bottom-left tip is the outer corner at SVG coords (0, 61.7)
+        var rJetX = 0 * jnx - halfW;
+        var rJetY = 61.7 * jny - halfH;
+
+        // Independent flicker for this jet
+        var rJetLen = s * jetScale * (0.4 + Math.random() * 0.25);
+        var rJetWidth = jetFlameOriginY * jetScale * (0.35 + Math.random() * 0.08);
+
+        // Outer jet flame (downward)
+        var rGrad = ctx.createLinearGradient(rJetX, rJetY, rJetX, rJetY + rJetLen);
+        rGrad.addColorStop(0, '#F37121');
+        rGrad.addColorStop(0.4, '#FF9234');
+        rGrad.addColorStop(0.75, '#FFBB44');
+        rGrad.addColorStop(1, '#FFD966');
+        ctx.beginPath();
+        ctx.moveTo(rJetX - rJetWidth, rJetY);
+        ctx.lineTo(rJetX, rJetY + rJetLen);
+        ctx.lineTo(rJetX + rJetWidth, rJetY);
+        ctx.fillStyle = rGrad;
+        ctx.fill();
+
+        // Inner jet flame (downward)
+        var rInnerLen = rJetLen * (0.55 + Math.random() * 0.1);
+        var rInnerW = rJetWidth * 0.5;
+        var rInnerGrad = ctx.createLinearGradient(rJetX, rJetY, rJetX, rJetY + rInnerLen);
+        rInnerGrad.addColorStop(0, '#FF9234');
+        rInnerGrad.addColorStop(0.5, '#FFCC55');
+        rInnerGrad.addColorStop(1, '#FFEE88');
+        ctx.beginPath();
+        ctx.moveTo(rJetX - rInnerW, rJetY);
+        ctx.lineTo(rJetX, rJetY + rInnerLen);
+        ctx.lineTo(rJetX + rInnerW, rJetY);
+        ctx.fillStyle = rInnerGrad;
+        ctx.fill();
+
+        // --- Right leg top-right tip: flame pointing upward ---
+        // Top-right tip is the outer corner at SVG coords (160.2, 30.8)
+        var lJetX = 160.2 * jnx - halfW;
+        var lJetY = 30.8 * jny - halfH;
+
+        // Independent flicker for this jet
+        var lJetLen = s * jetScale * (0.4 + Math.random() * 0.25);
+        var lJetWidth = jetFlameOriginY * jetScale * (0.35 + Math.random() * 0.08);
+
+        // Outer jet flame (upward)
+        var lGrad = ctx.createLinearGradient(lJetX, lJetY, lJetX, lJetY - lJetLen);
+        lGrad.addColorStop(0, '#F37121');
+        lGrad.addColorStop(0.4, '#FF9234');
+        lGrad.addColorStop(0.75, '#FFBB44');
+        lGrad.addColorStop(1, '#FFD966');
+        ctx.beginPath();
+        ctx.moveTo(lJetX - lJetWidth, lJetY);
+        ctx.lineTo(lJetX, lJetY - lJetLen);
+        ctx.lineTo(lJetX + lJetWidth, lJetY);
+        ctx.fillStyle = lGrad;
+        ctx.fill();
+
+        // Inner jet flame (upward)
+        var lInnerLen = lJetLen * (0.55 + Math.random() * 0.1);
+        var lInnerW = lJetWidth * 0.5;
+        var lInnerGrad = ctx.createLinearGradient(lJetX, lJetY, lJetX, lJetY - lInnerLen);
+        lInnerGrad.addColorStop(0, '#FF9234');
+        lInnerGrad.addColorStop(0.5, '#FFCC55');
+        lInnerGrad.addColorStop(1, '#FFEE88');
+        ctx.beginPath();
+        ctx.moveTo(lJetX - lInnerW, lJetY);
+        ctx.lineTo(lJetX, lJetY - lInnerLen);
+        ctx.lineTo(lJetX + lInnerW, lJetY);
+        ctx.fillStyle = lInnerGrad;
+        ctx.fill();
+    }
+
     ctx.restore();
 }
