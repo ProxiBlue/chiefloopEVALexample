@@ -159,33 +159,40 @@ function drawShip(x, y, angle, size, thrusting) {
     // Draw thrust flame when thrusting
     // Colors complement the two-tone Mage-OS orange palette (#F37121 / #FF9234)
     if (thrusting) {
+        // Flame emits from the actual bottom edge of the M logo legs, not the
+        // full draw-area boundary. SVG viewBox is 164x81 with xMidYMid meet in
+        // a 2:1 draw area — width constrains, so rendered height < drawH.
+        // M legs end at y≈77.06 in SVG coords (viewBox y spans -2 to 79).
+        // Actual leg bottom sits at ~0.47*size from center vs halfH = 0.5*size.
+        var flameOriginY = halfH * 0.94;
+
         var flameLen = s * (0.4 + Math.random() * 0.25);
-        var flameWidth = halfH * (0.35 + Math.random() * 0.08);
+        var flameWidth = flameOriginY * (0.35 + Math.random() * 0.08);
 
         // Outer flame — logo orange base transitioning to yellow tip
-        var flameGrad = ctx.createLinearGradient(0, halfH, 0, halfH + flameLen);
+        var flameGrad = ctx.createLinearGradient(0, flameOriginY, 0, flameOriginY + flameLen);
         flameGrad.addColorStop(0, '#F37121');   // primary logo orange at base
         flameGrad.addColorStop(0.4, '#FF9234'); // secondary logo orange
         flameGrad.addColorStop(0.75, '#FFBB44'); // warm amber
         flameGrad.addColorStop(1, '#FFD966');   // golden yellow tip
         ctx.beginPath();
-        ctx.moveTo(-flameWidth, halfH);
-        ctx.lineTo(0, halfH + flameLen);
-        ctx.lineTo(flameWidth, halfH);
+        ctx.moveTo(-flameWidth, flameOriginY);
+        ctx.lineTo(0, flameOriginY + flameLen);
+        ctx.lineTo(flameWidth, flameOriginY);
         ctx.fillStyle = flameGrad;
         ctx.fill();
 
         // Inner flame — bright core from logo secondary to pale yellow
         var innerLen = flameLen * (0.55 + Math.random() * 0.1);
         var innerWidth = flameWidth * 0.5;
-        var innerGrad = ctx.createLinearGradient(0, halfH, 0, halfH + innerLen);
+        var innerGrad = ctx.createLinearGradient(0, flameOriginY, 0, flameOriginY + innerLen);
         innerGrad.addColorStop(0, '#FF9234');   // secondary logo orange at base
         innerGrad.addColorStop(0.5, '#FFCC55'); // warm yellow
         innerGrad.addColorStop(1, '#FFEE88');   // pale yellow tip
         ctx.beginPath();
-        ctx.moveTo(-innerWidth, halfH);
-        ctx.lineTo(0, halfH + innerLen);
-        ctx.lineTo(innerWidth, halfH);
+        ctx.moveTo(-innerWidth, flameOriginY);
+        ctx.lineTo(0, flameOriginY + innerLen);
+        ctx.lineTo(innerWidth, flameOriginY);
         ctx.fillStyle = innerGrad;
         ctx.fill();
     }
