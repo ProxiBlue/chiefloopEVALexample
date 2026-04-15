@@ -1530,7 +1530,16 @@
                 if (repoLoadError) {
                     ctx.fillStyle = '#f44336';
                     ctx.font = '18px monospace';
-                    ctx.fillText(repoLoadError, cx, baseY + 160);
+                    ctx.fillText('No repository data found', cx, baseY + 150);
+                    ctx.fillStyle = '#ccc';
+                    ctx.font = '14px monospace';
+                    ctx.fillText('To fetch data, run:', cx, baseY + 180);
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '13px monospace';
+                    ctx.fillText('node fetch-github-data.js owner/repo', cx, baseY + 200);
+                    ctx.fillStyle = '#888';
+                    ctx.font = '12px monospace';
+                    ctx.fillText('Then reload this page', cx, baseY + 225);
                     return;
                 }
                 if (repoDataError) {
