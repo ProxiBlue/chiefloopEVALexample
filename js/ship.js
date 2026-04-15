@@ -22,10 +22,29 @@ var shipVy = 0;
 var shipSize = 40;
 
 // --- SVG Logo Preloading ---
+// Pre-render SVG to an offscreen canvas for crisp rotation at any angle.
+// Canvas drawImage with a rasterised bitmap avoids SVG re-parsing per frame
+// and guarantees consistent rendering across browsers during rotation.
 var shipLogoImg = new Image();
 var shipLogoLoaded = false;
+var shipLogoCanvas = null;   // offscreen canvas with pre-rendered logo
+
+function prerenderShipLogo(renderSize) {
+    var scale = 2; // render at 2x for retina / anti-alias quality
+    var cs = renderSize * scale;
+    shipLogoCanvas = document.createElement('canvas');
+    shipLogoCanvas.width = cs;
+    shipLogoCanvas.height = cs;
+    var offCtx = shipLogoCanvas.getContext('2d');
+    offCtx.imageSmoothingEnabled = true;
+    offCtx.imageSmoothingQuality = 'high';
+    offCtx.drawImage(shipLogoImg, 0, 0, cs, cs);
+}
+
 shipLogoImg.onload = function() {
     shipLogoLoaded = true;
+    // Pre-render at the game's ship size (SHIP_SIZE or default 40)
+    prerenderShipLogo(typeof SHIP_SIZE !== 'undefined' ? SHIP_SIZE : 40);
 };
 shipLogoImg.src = 'assets/mage-os-logo.svg';
 
@@ -44,12 +63,24 @@ function drawShip(x, y, angle, size, thrusting) {
     ctx.translate(x, y);
     ctx.rotate(angle);
 
+    // Enable high-quality image smoothing so rotated sprites stay crisp
+    ctx.imageSmoothingEnabled = true;
+    if (ctx.imageSmoothingQuality !== undefined) {
+        ctx.imageSmoothingQuality = 'high';
+    }
+
     var s = size;
     var halfS = s * 0.5;
 
-    // Draw the Mage-OS SVG logo using drawImage if loaded
-    if (shipLogoLoaded) {
-        // Draw the SVG image centered at (0,0) — square aspect ratio
+    // Draw the Mage-OS SVG logo — prefer pre-rendered canvas for clean rotation
+    if (shipLogoLoaded && shipLogoCanvas) {
+        // Re-render offscreen canvas if size changed since last pre-render
+        if (shipLogoCanvas.width !== s * 2) {
+            prerenderShipLogo(s);
+        }
+        ctx.drawImage(shipLogoCanvas, -halfS, -halfS, s, s);
+    } else if (shipLogoLoaded) {
+        // Direct SVG fallback (before offscreen canvas is ready)
         ctx.drawImage(shipLogoImg, -halfS, -halfS, s, s);
     } else {
         // Fallback: draw the M shape with canvas paths (same as original)
