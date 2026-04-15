@@ -220,11 +220,28 @@
             var repoLoadError = '';         // error message if repos can't be loaded
             var reposLoaded = false;        // true once repo list has been fetched
             var repoCommits = [];           // loaded commit data for selected repo (chronological order)
+            var repoPRs = [];               // loaded PR data for selected repo (merged PRs with type)
             var repoDataLoaded = false;     // true once repo JSON has been fetched
+
+            // PR-based landing pad configuration
+            var MAX_PADS_PER_LEVEL = 6;     // cap pads per level (5-8 range, using 6)
+            var PR_PAD_WIDTHS = {           // pad width by PR type
+                security: 1,                // narrow (hardest)
+                bugfix: 2,                  // medium
+                feature: 3,                 // wide (easiest)
+                other: 2                    // medium
+            };
+            var PR_PAD_POINTS = {           // points by PR type (inverse of difficulty)
+                security: 200,              // hardest = most points
+                bugfix: 100,
+                feature: 50,
+                other: 100
+            };
 
             function loadRepoData(repoFile) {
                 repoDataLoaded = false;
                 repoCommits = [];
+                repoPRs = [];
                 fetch('data/' + repoFile)
                     .then(function (res) {
                         if (!res.ok) throw new Error('Failed to load repo data');
@@ -236,6 +253,14 @@
                             repoCommits = data.commits.slice().sort(function (a, b) {
                                 return new Date(a.date) - new Date(b.date);
                             });
+                        }
+                        if (data.pullRequests && data.pullRequests.length > 0) {
+                            // Filter to merged PRs, sort by merge date
+                            repoPRs = data.pullRequests
+                                .filter(function (pr) { return pr.mergedDate; })
+                                .sort(function (a, b) {
+                                    return new Date(a.mergedDate) - new Date(b.mergedDate);
+                                });
                         }
                         repoDataLoaded = true;
                     })
@@ -431,6 +456,35 @@
                 return normalized;
             }
 
+            // Get the PRs assigned to the current level (paginated by MAX_PADS_PER_LEVEL)
+            function getLevelPRs(level) {
+                if (repoPRs.length === 0) return [];
+                var startIdx = level * MAX_PADS_PER_LEVEL;
+                if (startIdx >= repoPRs.length) {
+                    // Wrap around if we've exhausted all PRs
+                    startIdx = startIdx % repoPRs.length;
+                }
+                return repoPRs.slice(startIdx, startIdx + MAX_PADS_PER_LEVEL);
+            }
+
+            // Map a PR's merge date to a terrain segment index based on the commit timeline
+            function prMergeDateToSegment(pr, segmentCount) {
+                if (repoCommits.length === 0) return Math.floor(segmentCount / 2);
+
+                var prDate = new Date(pr.mergedDate).getTime();
+                var firstCommitDate = new Date(repoCommits[0].date).getTime();
+                var lastCommitDate = new Date(repoCommits[repoCommits.length - 1].date).getTime();
+                var timeRange = lastCommitDate - firstCommitDate;
+
+                if (timeRange <= 0) return Math.floor(segmentCount / 2);
+
+                // Map to segment, clamping to avoid very edges (segments 2 to segmentCount-3)
+                var ratio = (prDate - firstCommitDate) / timeRange;
+                ratio = Math.max(0, Math.min(1, ratio));
+                var seg = Math.round(2 + ratio * (segmentCount - 5));
+                return Math.max(2, Math.min(segmentCount - 3, seg));
+            }
+
             function generateTerrain() {
                 terrain = [];
                 landingPads = [];
@@ -439,52 +493,77 @@
                 var segmentCount = 40;
                 var segWidth = w / segmentCount;
 
-                // Determine pad count from level config
-                var padCount = getLevelConfig(currentLevel).padCount || 1;
-
-                // Define pad widths: wider pads are worth fewer points
-                var padSizes = [
-                    { width: 3, points: 50 },
-                    { width: 2, points: 100 },
-                    { width: 1, points: 200 }
-                ];
-
-                // Place pads: distribute them across the terrain, avoiding edges and overlap
                 var usedSegments = {};
                 var placedPads = [];
 
-                for (var p = 0; p < padCount; p++) {
-                    var sizeIdx;
-                    if (padCount >= 3) {
-                        sizeIdx = p % padSizes.length;
-                    } else if (padCount === 2) {
-                        sizeIdx = p === 0 ? 1 : 2;
-                    } else {
-                        sizeIdx = 2;
-                    }
-                    var padSize = padSizes[sizeIdx];
+                // Get PRs for this level
+                var levelPRs = getLevelPRs(currentLevel);
 
-                    var attempts = 0;
-                    var padIdx = -1;
-                    while (attempts < 50) {
-                        var candidate = 3 + Math.floor(Math.random() * (segmentCount - 6 - padSize.width));
-                        var overlap = false;
-                        for (var s = candidate - 1; s <= candidate + padSize.width + 1; s++) {
-                            if (usedSegments[s]) { overlap = true; break; }
-                        }
-                        if (!overlap) {
-                            padIdx = candidate;
-                            break;
-                        }
-                        attempts++;
-                    }
+                if (levelPRs.length > 0) {
+                    // PR-based pad placement
+                    for (var p = 0; p < levelPRs.length; p++) {
+                        var pr = levelPRs[p];
+                        var prType = pr.type || 'other';
+                        var padWidth = PR_PAD_WIDTHS[prType] || PR_PAD_WIDTHS.other;
+                        var padPoints = PR_PAD_POINTS[prType] || PR_PAD_POINTS.other;
 
-                    if (padIdx >= 0) {
-                        for (var s = padIdx; s <= padIdx + padSize.width; s++) {
-                            usedSegments[s] = true;
+                        // Calculate target segment from PR merge date
+                        var targetSeg = prMergeDateToSegment(pr, segmentCount);
+
+                        // Find nearest non-overlapping position
+                        var padIdx = -1;
+                        for (var offset = 0; offset < segmentCount; offset++) {
+                            // Try target, then alternate left/right
+                            var candidates = [targetSeg + offset, targetSeg - offset];
+                            for (var ci = 0; ci < candidates.length; ci++) {
+                                var candidate = candidates[ci];
+                                if (candidate < 2 || candidate + padWidth >= segmentCount - 1) continue;
+                                var overlap = false;
+                                for (var s = candidate - 1; s <= candidate + padWidth + 1; s++) {
+                                    if (usedSegments[s]) { overlap = true; break; }
+                                }
+                                if (!overlap) {
+                                    padIdx = candidate;
+                                    break;
+                                }
+                            }
+                            if (padIdx >= 0) break;
                         }
-                        placedPads.push({ index: padIdx, width: padSize.width, points: padSize.points });
+
+                        if (padIdx >= 0) {
+                            for (var s = padIdx; s <= padIdx + padWidth; s++) {
+                                usedSegments[s] = true;
+                            }
+                            placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number });
+                        }
                     }
+                }
+
+                // Fallback: if fewer than 1 valid pad, generate a fallback pad
+                if (placedPads.length < 1) {
+                    var fallbackWidth = 2; // medium width
+                    var fallbackIdx = Math.floor(segmentCount / 2) - 1;
+                    // Find non-overlapping spot near center
+                    for (var offset = 0; offset < segmentCount; offset++) {
+                        var candidates = [fallbackIdx + offset, fallbackIdx - offset];
+                        for (var ci = 0; ci < candidates.length; ci++) {
+                            var candidate = candidates[ci];
+                            if (candidate < 2 || candidate + fallbackWidth >= segmentCount - 1) continue;
+                            var overlap = false;
+                            for (var s = candidate - 1; s <= candidate + fallbackWidth + 1; s++) {
+                                if (usedSegments[s]) { overlap = true; break; }
+                            }
+                            if (!overlap) {
+                                fallbackIdx = candidate;
+                                break;
+                            }
+                        }
+                        if (fallbackIdx !== Math.floor(segmentCount / 2) - 1) break;
+                    }
+                    for (var s = fallbackIdx; s <= fallbackIdx + fallbackWidth; s++) {
+                        usedSegments[s] = true;
+                    }
+                    placedPads.push({ index: fallbackIdx, width: fallbackWidth, points: 100, prType: 'fallback', prNumber: null });
                 }
 
                 placedPads.sort(function(a, b) { return a.index - b.index; });
@@ -516,15 +595,12 @@
                         if (i === padRef.index) {
                             // First point of pad: use commit height if available, else random
                             if (commitHeights && i < commitHeights.length) {
-                                // Map normalized height (0=low valley, 1=high peak) to Y coords
-                                // Note: canvas Y is inverted — smaller Y = higher on screen
-                                // So largest commit (1.0) -> minY (highest peak), smallest (0.0) -> maxY (lowest valley)
                                 y = maxY - commitHeights[i] * (maxY - minY);
                             } else {
                                 y = minY + Math.random() * (maxY - minY) * 0.6 + (maxY - minY) * 0.2;
                             }
                         } else {
-                            // Subsequent points of pad: match the pad's starting height
+                            // Subsequent points of pad: match the pad's starting height (flatten terrain)
                             y = terrain[padRef.index].y;
                         }
                     } else if (commitHeights && i < commitHeights.length) {
