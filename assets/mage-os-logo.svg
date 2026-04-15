@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" width="100" height="120">
+  <!-- Mage-OS "M" lettermark in orange #f26322 -->
+  <polyline
+    points="10,110 10,10 32,95 50,10 68,95 90,10 90,110"
+    fill="none"
+    stroke="#f26322"
+    stroke-width="8"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+</svg>
