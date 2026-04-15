@@ -158,60 +158,19 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
         ctx.fill();
     }
 
-    // Draw thrust flame when thrusting
-    // Colors complement the two-tone Mage-OS orange palette (#F37121 / #FF9234)
-    if (thrusting) {
-        // Flame emits from the actual bottom edge of the M logo legs, not the
-        // full draw-area boundary. SVG viewBox is 164x81 with xMidYMid meet in
-        // a 2:1 draw area — width constrains, so rendered height < drawH.
-        // M legs end at y≈77.06 in SVG coords (viewBox y spans -2 to 79).
-        // Actual leg bottom sits at ~0.47*size from center vs halfH = 0.5*size.
-        var flameOriginY = halfH * 0.94;
+    // --- Rotation jets drawn FIRST (behind main thrust for correct z-order) ---
+    // Directional jets are cosmetic only — they do NOT consume fuel.
+    // Fuel is consumed exclusively by main thrust in update.js.
 
-        var flameLen = s * (0.4 + Math.random() * 0.25);
-        var flameWidth = flameOriginY * (0.35 + Math.random() * 0.08);
+    // SVG coordinate conversion factors shared by both rotation directions
+    var jnx = drawW / 160.177;
+    var jny = drawH / 77.064;
+    var jetScale = 0.3;
+    var jetFlameOriginY = halfH * 0.94;
 
-        // Outer flame — logo orange base transitioning to yellow tip
-        var flameGrad = ctx.createLinearGradient(0, flameOriginY, 0, flameOriginY + flameLen);
-        flameGrad.addColorStop(0, '#F37121');   // primary logo orange at base
-        flameGrad.addColorStop(0.4, '#FF9234'); // secondary logo orange
-        flameGrad.addColorStop(0.75, '#FFBB44'); // warm amber
-        flameGrad.addColorStop(1, '#FFD966');   // golden yellow tip
-        ctx.beginPath();
-        ctx.moveTo(-flameWidth, flameOriginY);
-        ctx.lineTo(0, flameOriginY + flameLen);
-        ctx.lineTo(flameWidth, flameOriginY);
-        ctx.fillStyle = flameGrad;
-        ctx.fill();
-
-        // Inner flame — bright core from logo secondary to pale yellow
-        var innerLen = flameLen * (0.55 + Math.random() * 0.1);
-        var innerWidth = flameWidth * 0.5;
-        var innerGrad = ctx.createLinearGradient(0, flameOriginY, 0, flameOriginY + innerLen);
-        innerGrad.addColorStop(0, '#FF9234');   // secondary logo orange at base
-        innerGrad.addColorStop(0.5, '#FFCC55'); // warm yellow
-        innerGrad.addColorStop(1, '#FFEE88');   // pale yellow tip
-        ctx.beginPath();
-        ctx.moveTo(-innerWidth, flameOriginY);
-        ctx.lineTo(0, flameOriginY + innerLen);
-        ctx.lineTo(innerWidth, flameOriginY);
-        ctx.fillStyle = innerGrad;
-        ctx.fill();
-    }
-
-    // Draw torque-pair rotation jets
     // For left rotation: downward flame at bottom-right tip of right leg,
     //                     upward flame at top-left tip of left leg
     if (rotating === 'left') {
-        // SVG coordinate conversion factors (same as fallback logo rendering)
-        var jnx = drawW / 160.177;
-        var jny = drawH / 77.064;
-
-        // Jet flames are ~30% the size of main thrust
-        var jetScale = 0.3;
-        // Jet flame origin Y offset (mirrors main thrust's flameOriginY calculation)
-        var jetFlameOriginY = halfH * 0.94;
-
         // --- Right leg bottom-right tip: flame pointing downward ---
         // Bottom-right tip is the outer corner at SVG coords (160.2, 61.7)
         var rJetX = 160.2 * jnx - halfW;
@@ -288,12 +247,6 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
     // For right rotation: downward flame at bottom-left tip of left leg,
     //                      upward flame at top-right tip of right leg
     if (rotating === 'right') {
-        var jnx = drawW / 160.177;
-        var jny = drawH / 77.064;
-
-        var jetScale = 0.3;
-        var jetFlameOriginY = halfH * 0.94;
-
         // --- Left leg bottom-left tip: flame pointing downward ---
         // Bottom-left tip is the outer corner at SVG coords (0, 61.7)
         var rJetX = 0 * jnx - halfW;
@@ -364,6 +317,42 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
         ctx.lineTo(lJetX, lJetY - lInnerLen);
         ctx.lineTo(lJetX + lInnerW, lJetY);
         ctx.fillStyle = lInnerGrad;
+        ctx.fill();
+    }
+
+    // --- Main thrust flame drawn LAST (on top of rotation jets for correct z-order) ---
+    // Main thrust consumes fuel (handled in update.js); rotation jets do not.
+    if (thrusting) {
+        var flameOriginY = halfH * 0.94;
+
+        var flameLen = s * (0.4 + Math.random() * 0.25);
+        var flameWidth = flameOriginY * (0.35 + Math.random() * 0.08);
+
+        // Outer flame — logo orange base transitioning to yellow tip
+        var flameGrad = ctx.createLinearGradient(0, flameOriginY, 0, flameOriginY + flameLen);
+        flameGrad.addColorStop(0, '#F37121');
+        flameGrad.addColorStop(0.4, '#FF9234');
+        flameGrad.addColorStop(0.75, '#FFBB44');
+        flameGrad.addColorStop(1, '#FFD966');
+        ctx.beginPath();
+        ctx.moveTo(-flameWidth, flameOriginY);
+        ctx.lineTo(0, flameOriginY + flameLen);
+        ctx.lineTo(flameWidth, flameOriginY);
+        ctx.fillStyle = flameGrad;
+        ctx.fill();
+
+        // Inner flame — bright core from logo secondary to pale yellow
+        var innerLen = flameLen * (0.55 + Math.random() * 0.1);
+        var innerWidth = flameWidth * 0.5;
+        var innerGrad = ctx.createLinearGradient(0, flameOriginY, 0, flameOriginY + innerLen);
+        innerGrad.addColorStop(0, '#FF9234');
+        innerGrad.addColorStop(0.5, '#FFCC55');
+        innerGrad.addColorStop(1, '#FFEE88');
+        ctx.beginPath();
+        ctx.moveTo(-innerWidth, flameOriginY);
+        ctx.lineTo(0, flameOriginY + innerLen);
+        ctx.lineTo(innerWidth, flameOriginY);
+        ctx.fillStyle = innerGrad;
         ctx.fill();
     }
 

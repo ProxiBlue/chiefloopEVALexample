@@ -138,7 +138,10 @@ function getLevelPRs(level) {
         var dates = [];
         for (var i = 0; i < combined.length; i++) {
             if (combined[i].mergedDate) {
-                dates.push(new Date(combined[i].mergedDate).getTime());
+                var parsedTime = new Date(combined[i].mergedDate).getTime();
+                if (!isNaN(parsedTime)) {
+                    dates.push(parsedTime);
+                }
             }
         }
         if (dates.length > 0) {
@@ -155,7 +158,7 @@ function getLevelPRs(level) {
                 levelCommits = [];
                 for (var c = 0; c < repoCommits.length; c++) {
                     var commitDate = new Date(repoCommits[c].date).getTime();
-                    if (commitDate >= minDate && commitDate <= maxDate) {
+                    if (!isNaN(commitDate) && commitDate >= minDate && commitDate <= maxDate) {
                         levelCommits.push(repoCommits[c]);
                     }
                 }
@@ -178,6 +181,9 @@ function prMergeDateToSegment(pr, segmentCount) {
     var prDate = new Date(pr.mergedDate).getTime();
     var firstCommitDate = new Date(commits[0].date).getTime();
     var lastCommitDate = new Date(commits[commits.length - 1].date).getTime();
+
+    if (isNaN(prDate) || isNaN(firstCommitDate) || isNaN(lastCommitDate)) return Math.floor(segmentCount / 2);
+
     var timeRange = lastCommitDate - firstCommitDate;
 
     if (timeRange <= 0) return Math.floor(segmentCount / 2);
@@ -208,8 +214,8 @@ function generateTerrain() {
         for (var p = 0; p < levelPRs.length; p++) {
             var pr = levelPRs[p];
             var prType = pr.type || 'other';
-            var padWidth = PR_PAD_WIDTHS[prType] || PR_PAD_WIDTHS.other;
-            var padPoints = PR_PAD_POINTS[prType] || PR_PAD_POINTS.other;
+            var padWidth = (typeof PR_PAD_WIDTHS[prType] === 'number') ? PR_PAD_WIDTHS[prType] : (PR_PAD_WIDTHS.other || 2);
+            var padPoints = (typeof PR_PAD_POINTS[prType] === 'number') ? PR_PAD_POINTS[prType] : (PR_PAD_POINTS.other || 100);
 
             // Calculate target segment from PR merge date
             var targetSeg = prMergeDateToSegment(pr, segmentCount);
@@ -260,7 +266,7 @@ function generateTerrain() {
                 for (var s = padIdx; s <= padIdx + padWidth; s++) {
                     usedSegments[s] = true;
                 }
-                placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: pr.mergeCommitHash ? pr.mergeCommitHash.substring(0, 7) : '', prAuthor: pr.author || '', prMergedDate: pr.mergedDate || '' });
+                placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: (pr.mergeCommitHash && typeof pr.mergeCommitHash === 'string') ? pr.mergeCommitHash.substring(0, 7) : '', prAuthor: pr.author || '', prMergedDate: pr.mergedDate || '' });
             }
         }
     }

@@ -51,10 +51,11 @@ function update(dt) {
         ship.vy += GRAVITY * PIXELS_PER_METER * dt;
 
         // Thrust — applied in the direction the ship is facing (nose = -Y when angle=0)
-        // Thrust requires fuel; pressing thrust with no fuel does nothing
+        // Only main thrust consumes fuel; rotation jets are cosmetic and free.
         var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
         ship.thrusting = wantsThrust && ship.fuel > 0;
         if (ship.thrusting) {
+            // Fuel consumed ONLY by main thrust — rotation jets (ship.rotating) never touch fuel
             ship.fuel -= FUEL_BURN_RATE * dt;
             if (ship.fuel < 0) ship.fuel = 0;
             ship.vx += Math.sin(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
