@@ -29,16 +29,21 @@ var shipLogoImg = new Image();
 var shipLogoLoaded = false;
 var shipLogoCanvas = null;   // offscreen canvas with pre-rendered logo
 
+// Logo content aspect ratio: 160.177 x 77.064 ≈ 2.08:1
+// Ship is drawn at 2:1 aspect (width = size*2, height = size) so the M fills the size
+var LOGO_DRAW_RATIO = 2; // width multiplier relative to height (= size param)
+
 function prerenderShipLogo(renderSize) {
     var scale = 2; // render at 2x for retina / anti-alias quality
-    var cs = renderSize * scale;
+    var cw = renderSize * LOGO_DRAW_RATIO * scale;
+    var ch = renderSize * scale;
     shipLogoCanvas = document.createElement('canvas');
-    shipLogoCanvas.width = cs;
-    shipLogoCanvas.height = cs;
+    shipLogoCanvas.width = cw;
+    shipLogoCanvas.height = ch;
     var offCtx = shipLogoCanvas.getContext('2d');
     offCtx.imageSmoothingEnabled = true;
     offCtx.imageSmoothingQuality = 'high';
-    offCtx.drawImage(shipLogoImg, 0, 0, cs, cs);
+    offCtx.drawImage(shipLogoImg, 0, 0, cw, ch);
 }
 
 shipLogoImg.onload = function() {
@@ -70,77 +75,83 @@ function drawShip(x, y, angle, size, thrusting) {
     }
 
     var s = size;
-    var halfS = s * 0.5;
+    // Draw at natural 2:1 aspect ratio so the M logo fills the size parameter
+    var drawW = s * LOGO_DRAW_RATIO;
+    var drawH = s;
+    var halfW = drawW * 0.5;
+    var halfH = drawH * 0.5;
 
     // Draw the Mage-OS SVG logo — prefer pre-rendered canvas for clean rotation
     if (shipLogoLoaded && shipLogoCanvas) {
         // Re-render offscreen canvas if size changed since last pre-render
-        if (shipLogoCanvas.width !== s * 2) {
+        if (shipLogoCanvas.height !== s * 2) {
             prerenderShipLogo(s);
         }
-        ctx.drawImage(shipLogoCanvas, -halfS, -halfS, s, s);
+        ctx.drawImage(shipLogoCanvas, -halfW, -halfH, drawW, drawH);
     } else if (shipLogoLoaded) {
         // Direct SVG fallback (before offscreen canvas is ready)
-        ctx.drawImage(shipLogoImg, -halfS, -halfS, s, s);
+        ctx.drawImage(shipLogoImg, -halfW, -halfH, drawW, drawH);
     } else {
         // Fallback: approximate isometric Mage-OS "M" logomark with canvas paths
-        // Coordinates derived from SVG paths, normalized from 170x170 viewBox
-        var n = s / 170;  // scale factor: SVG viewBox units to canvas pixels
-        var cx = 80 * n;  // center offset X (viewBox center)
-        var cy = 38.5 * n; // center offset Y (viewBox center)
+        // Coordinates derived from SVG paths, scaled to fill drawW x drawH
+        // Content bounds: 160.177 wide x 77.064 tall
+        var nx = drawW / 160.177;  // scale factor X: SVG content units to canvas pixels
+        var ny = drawH / 77.064;   // scale factor Y: SVG content units to canvas pixels
+        var cx = halfW;             // center offset X
+        var cy = halfH;             // center offset Y
 
         // Left leg right face (#FF9234 — lighter shading for 3D depth)
         ctx.beginPath();
         ctx.fillStyle = '#FF9234';
-        ctx.moveTo(53.4 * n - cx, 61.7 * n - cy);
-        ctx.lineTo(53.4 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(26.7 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(26.7 * n - cx, 77.1 * n - cy);
+        ctx.moveTo(53.4 * nx - cx, 61.7 * ny - cy);
+        ctx.lineTo(53.4 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(26.7 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(26.7 * nx - cx, 77.1 * ny - cy);
         ctx.closePath();
         ctx.fill();
 
         // Middle leg right face (#FF9234)
         ctx.beginPath();
-        ctx.moveTo(106.8 * n - cx, 61.7 * n - cy);
-        ctx.lineTo(106.8 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(80.1 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(80.1 * n - cx, 77.1 * n - cy);
+        ctx.moveTo(106.8 * nx - cx, 61.7 * ny - cy);
+        ctx.lineTo(106.8 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(80.1 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(80.1 * nx - cx, 77.1 * ny - cy);
         ctx.closePath();
         ctx.fill();
 
         // Main M shape (#F37121 — primary orange, evenodd fill for cutouts)
         ctx.beginPath();
         ctx.fillStyle = '#F37121';
-        ctx.moveTo(0 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(53.4 * n - cx, 0 * n - cy);
-        ctx.lineTo(80.1 * n - cx, 15.4 * n - cy);
-        ctx.lineTo(106.8 * n - cx, 0 * n - cy);
-        ctx.lineTo(160.2 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(133.5 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(106.8 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(133.5 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(133.5 * n - cx, 77.1 * n - cy);
-        ctx.lineTo(106.8 * n - cx, 61.7 * n - cy);
-        ctx.lineTo(106.8 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(80.1 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(53.4 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(80.1 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(80.1 * n - cx, 77.1 * n - cy);
-        ctx.lineTo(53.4 * n - cx, 61.7 * n - cy);
-        ctx.lineTo(53.4 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(26.7 * n - cx, 46.2 * n - cy);
-        ctx.lineTo(26.7 * n - cx, 77.1 * n - cy);
-        ctx.lineTo(0 * n - cx, 61.7 * n - cy);
+        ctx.moveTo(0 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(53.4 * nx - cx, 0 * ny - cy);
+        ctx.lineTo(80.1 * nx - cx, 15.4 * ny - cy);
+        ctx.lineTo(106.8 * nx - cx, 0 * ny - cy);
+        ctx.lineTo(160.2 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(133.5 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(106.8 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(133.5 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(133.5 * nx - cx, 77.1 * ny - cy);
+        ctx.lineTo(106.8 * nx - cx, 61.7 * ny - cy);
+        ctx.lineTo(106.8 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(80.1 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(53.4 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(80.1 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(80.1 * nx - cx, 77.1 * ny - cy);
+        ctx.lineTo(53.4 * nx - cx, 61.7 * ny - cy);
+        ctx.lineTo(53.4 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(26.7 * nx - cx, 46.2 * ny - cy);
+        ctx.lineTo(26.7 * nx - cx, 77.1 * ny - cy);
+        ctx.lineTo(0 * nx - cx, 61.7 * ny - cy);
         ctx.closePath();
         ctx.fill('evenodd');
 
         // Right leg right face (#FF9234 — drawn last, on top)
         ctx.beginPath();
         ctx.fillStyle = '#FF9234';
-        ctx.moveTo(160.2 * n - cx, 30.8 * n - cy);
-        ctx.lineTo(160.2 * n - cx, 61.7 * n - cy);
-        ctx.lineTo(133.5 * n - cx, 77.1 * n - cy);
-        ctx.lineTo(133.5 * n - cx, 46.2 * n - cy);
+        ctx.moveTo(160.2 * nx - cx, 30.8 * ny - cy);
+        ctx.lineTo(160.2 * nx - cx, 61.7 * ny - cy);
+        ctx.lineTo(133.5 * nx - cx, 77.1 * ny - cy);
+        ctx.lineTo(133.5 * nx - cx, 46.2 * ny - cy);
         ctx.closePath();
         ctx.fill();
     }
@@ -148,30 +159,30 @@ function drawShip(x, y, angle, size, thrusting) {
     // Draw thrust flame when thrusting
     if (thrusting) {
         var flameLen = s * (0.4 + Math.random() * 0.25);
-        var flameWidth = halfS * (0.35 + Math.random() * 0.08);
+        var flameWidth = halfH * (0.35 + Math.random() * 0.08);
 
         // Outer flame — orange/yellow gradient
-        var flameGrad = ctx.createLinearGradient(0, halfS, 0, halfS + flameLen);
+        var flameGrad = ctx.createLinearGradient(0, halfH, 0, halfH + flameLen);
         flameGrad.addColorStop(0, '#ff8800');
         flameGrad.addColorStop(0.5, '#ffaa00');
         flameGrad.addColorStop(1, '#ffdd00');
         ctx.beginPath();
-        ctx.moveTo(-flameWidth, halfS);
-        ctx.lineTo(0, halfS + flameLen);
-        ctx.lineTo(flameWidth, halfS);
+        ctx.moveTo(-flameWidth, halfH);
+        ctx.lineTo(0, halfH + flameLen);
+        ctx.lineTo(flameWidth, halfH);
         ctx.fillStyle = flameGrad;
         ctx.fill();
 
         // Inner flame — yellow core
         var innerLen = flameLen * (0.55 + Math.random() * 0.1);
         var innerWidth = flameWidth * 0.5;
-        var innerGrad = ctx.createLinearGradient(0, halfS, 0, halfS + innerLen);
+        var innerGrad = ctx.createLinearGradient(0, halfH, 0, halfH + innerLen);
         innerGrad.addColorStop(0, '#ffcc00');
         innerGrad.addColorStop(1, '#ffee66');
         ctx.beginPath();
-        ctx.moveTo(-innerWidth, halfS);
-        ctx.lineTo(0, halfS + innerLen);
-        ctx.lineTo(innerWidth, halfS);
+        ctx.moveTo(-innerWidth, halfH);
+        ctx.lineTo(0, halfH + innerLen);
+        ctx.lineTo(innerWidth, halfH);
         ctx.fillStyle = innerGrad;
         ctx.fill();
     }
