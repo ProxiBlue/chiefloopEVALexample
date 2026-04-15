@@ -219,6 +219,30 @@
             var repoSelectorActive = false; // true when selector is shown on menu
             var repoLoadError = '';         // error message if repos can't be loaded
             var reposLoaded = false;        // true once repo list has been fetched
+            var repoCommits = [];           // loaded commit data for selected repo (chronological order)
+            var repoDataLoaded = false;     // true once repo JSON has been fetched
+
+            function loadRepoData(repoFile) {
+                repoDataLoaded = false;
+                repoCommits = [];
+                fetch('data/' + repoFile)
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('Failed to load repo data');
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        if (data.commits && data.commits.length > 0) {
+                            // Sort chronologically: oldest first (left side of terrain)
+                            repoCommits = data.commits.slice().sort(function (a, b) {
+                                return new Date(a.date) - new Date(b.date);
+                            });
+                        }
+                        repoDataLoaded = true;
+                    })
+                    .catch(function () {
+                        repoDataLoaded = true;
+                    });
+            }
 
             function loadRepoList() {
                 fetch('data/repos.json')
@@ -236,6 +260,7 @@
                             // Auto-select the only repo
                             selectedRepoIndex = 0;
                             selectedRepoName = repos[0].name;
+                            loadRepoData(repos[0].file);
                             repoSelectorActive = false;
                         } else {
                             selectedRepoIndex = 0;
@@ -321,6 +346,91 @@
             var landingPadIndex = -1; // index into terrain[] where the first flat landing pad starts (kept for backward compat)
             var landingPads = [];    // array of {index, width, points} for all landing pads
 
+            // Build per-segment height values from commit data.
+            // Returns an array of normalized heights (0 = smallest commit, 1 = largest commit)
+            // for exactly segmentCount segments.
+            function buildCommitHeights(segmentCount) {
+                if (repoCommits.length === 0) return null;
+
+                // Compute total lines changed per commit
+                var commitSizes = [];
+                for (var i = 0; i < repoCommits.length; i++) {
+                    var c = repoCommits[i];
+                    commitSizes.push((c.linesAdded || 0) + (c.linesDeleted || 0));
+                }
+
+                var rawHeights = [];
+
+                if (commitSizes.length >= segmentCount) {
+                    // More commits than segments: group/average per segment
+                    var commitsPerSeg = commitSizes.length / segmentCount;
+                    for (var s = 0; s < segmentCount; s++) {
+                        var startIdx = Math.floor(s * commitsPerSeg);
+                        var endIdx = Math.floor((s + 1) * commitsPerSeg);
+                        if (endIdx <= startIdx) endIdx = startIdx + 1;
+                        var sum = 0;
+                        var count = 0;
+                        for (var j = startIdx; j < endIdx && j < commitSizes.length; j++) {
+                            sum += commitSizes[j];
+                            count++;
+                        }
+                        rawHeights.push(count > 0 ? sum / count : 0);
+                    }
+                } else {
+                    // Fewer commits than segments: interpolate intermediate points
+                    // Place commits evenly across segments, linearly interpolate between them
+                    if (commitSizes.length === 1) {
+                        for (var s = 0; s < segmentCount; s++) {
+                            rawHeights.push(commitSizes[0]);
+                        }
+                    } else {
+                        var step = (commitSizes.length - 1) / (segmentCount - 1);
+                        for (var s = 0; s < segmentCount; s++) {
+                            var pos = s * step;
+                            var lo = Math.floor(pos);
+                            var hi = Math.ceil(pos);
+                            if (hi >= commitSizes.length) hi = commitSizes.length - 1;
+                            var frac = pos - lo;
+                            rawHeights.push(commitSizes[lo] * (1 - frac) + commitSizes[hi] * frac);
+                        }
+                    }
+                }
+
+                // Normalize to 0..1 range
+                var minVal = rawHeights[0];
+                var maxVal = rawHeights[0];
+                for (var i = 1; i < rawHeights.length; i++) {
+                    if (rawHeights[i] < minVal) minVal = rawHeights[i];
+                    if (rawHeights[i] > maxVal) maxVal = rawHeights[i];
+                }
+                var range = maxVal - minVal;
+                var normalized = [];
+                for (var i = 0; i < rawHeights.length; i++) {
+                    normalized.push(range > 0 ? (rawHeights[i] - minVal) / range : 0.5);
+                }
+
+                // Smoothing pass: limit max slope between adjacent segments
+                // Max allowed change per segment (0.25 = 25% of full height range per step)
+                var maxSlope = 0.25;
+                for (var pass = 0; pass < 3; pass++) {
+                    for (var i = 1; i < normalized.length; i++) {
+                        var diff = normalized[i] - normalized[i - 1];
+                        if (Math.abs(diff) > maxSlope) {
+                            normalized[i] = normalized[i - 1] + (diff > 0 ? maxSlope : -maxSlope);
+                        }
+                    }
+                    // Reverse pass for symmetry
+                    for (var i = normalized.length - 2; i >= 0; i--) {
+                        var diff = normalized[i] - normalized[i + 1];
+                        if (Math.abs(diff) > maxSlope) {
+                            normalized[i] = normalized[i + 1] + (diff > 0 ? maxSlope : -maxSlope);
+                        }
+                    }
+                }
+
+                return normalized;
+            }
+
             function generateTerrain() {
                 terrain = [];
                 landingPads = [];
@@ -333,7 +443,6 @@
                 var padCount = getLevelConfig(currentLevel).padCount || 1;
 
                 // Define pad widths: wider pads are worth fewer points
-                // Available pad sizes: 3 segments (wide, 50pts), 2 segments (medium, 100pts), 1 segment (narrow, 200pts)
                 var padSizes = [
                     { width: 3, points: 50 },
                     { width: 2, points: 100 },
@@ -341,25 +450,20 @@
                 ];
 
                 // Place pads: distribute them across the terrain, avoiding edges and overlap
-                var usedSegments = {};  // track which segments are occupied by pads
+                var usedSegments = {};
                 var placedPads = [];
 
                 for (var p = 0; p < padCount; p++) {
-                    // Pick a random pad size — bias toward wider on easy levels, narrower on hard
                     var sizeIdx;
                     if (padCount >= 3) {
-                        // Easy level: mix of sizes
                         sizeIdx = p % padSizes.length;
                     } else if (padCount === 2) {
-                        // Medium level: medium and narrow
                         sizeIdx = p === 0 ? 1 : 2;
                     } else {
-                        // Hard level: narrow only
                         sizeIdx = 2;
                     }
                     var padSize = padSizes[sizeIdx];
 
-                    // Find a valid random position that doesn't overlap existing pads
                     var attempts = 0;
                     var padIdx = -1;
                     while (attempts < 50) {
@@ -376,7 +480,6 @@
                     }
 
                     if (padIdx >= 0) {
-                        // Mark segments as used
                         for (var s = padIdx; s <= padIdx + padSize.width; s++) {
                             usedSegments[s] = true;
                         }
@@ -384,7 +487,6 @@
                     }
                 }
 
-                // Sort pads by index for terrain generation
                 placedPads.sort(function(a, b) { return a.index - b.index; });
                 landingPads = placedPads;
                 landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
@@ -402,6 +504,9 @@
                     }
                 }
 
+                // Get commit-driven heights (null if no commit data available)
+                var commitHeights = buildCommitHeights(segmentCount);
+
                 for (var i = 0; i <= segmentCount; i++) {
                     var x = i * segWidth;
                     var y;
@@ -409,14 +514,24 @@
                     if (segmentPadMap[i] !== undefined) {
                         var padRef = landingPads[segmentPadMap[i]];
                         if (i === padRef.index) {
-                            // First point of pad: pick a random height
-                            y = minY + Math.random() * (maxY - minY) * 0.6 + (maxY - minY) * 0.2;
+                            // First point of pad: use commit height if available, else random
+                            if (commitHeights && i < commitHeights.length) {
+                                // Map normalized height (0=low valley, 1=high peak) to Y coords
+                                // Note: canvas Y is inverted — smaller Y = higher on screen
+                                // So largest commit (1.0) -> minY (highest peak), smallest (0.0) -> maxY (lowest valley)
+                                y = maxY - commitHeights[i] * (maxY - minY);
+                            } else {
+                                y = minY + Math.random() * (maxY - minY) * 0.6 + (maxY - minY) * 0.2;
+                            }
                         } else {
-                            // Subsequent points: match the pad's starting height
+                            // Subsequent points of pad: match the pad's starting height
                             y = terrain[padRef.index].y;
                         }
+                    } else if (commitHeights && i < commitHeights.length) {
+                        // Commit-driven terrain: map normalized height to Y range
+                        y = maxY - commitHeights[i] * (maxY - minY);
                     } else {
-                        // Jagged terrain with varied peaks and valleys
+                        // Fallback: random terrain (v1 style)
                         y = minY + Math.random() * (maxY - minY);
                     }
 
@@ -817,6 +932,7 @@
                     } else if (key === 'Enter') {
                         playClickSound();
                         selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        loadRepoData(availableRepos[selectedRepoIndex].file);
                         repoSelectorActive = false;
                         return;
                     }
