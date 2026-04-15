@@ -580,7 +580,7 @@
                             for (var s = padIdx; s <= padIdx + padWidth; s++) {
                                 usedSegments[s] = true;
                             }
-                            placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number });
+                            placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: pr.mergeCommitHash ? pr.mergeCommitHash.substring(0, 7) : '' });
                         }
                     }
                 }
@@ -609,7 +609,7 @@
                     for (var s = fallbackIdx; s <= fallbackIdx + fallbackWidth; s++) {
                         usedSegments[s] = true;
                     }
-                    placedPads.push({ index: fallbackIdx, width: fallbackWidth, points: 100, prType: 'fallback', prNumber: null });
+                    placedPads.push({ index: fallbackIdx, width: fallbackWidth, points: 100, prType: 'fallback', prNumber: null, prTitle: '', prHash: '' });
                 }
 
                 placedPads.sort(function(a, b) { return a.index - b.index; });
@@ -674,6 +674,7 @@
             var landedTotalPoints = 0; // total points earned from landing
             var landedTypeMultiplier = 1; // type multiplier applied
             var landedPadBasePoints = 0; // base pad points (before multiplier)
+            var landedPRTitle = '';       // full PR title for celebration screen
 
             function spawnCelebration(x, y) {
                 celebrationParticles = [];
@@ -879,6 +880,22 @@
                             labelText += ' x' + padMultiplier;
                         }
                         ctx.fillText(labelText, midX, padStart.y - 8);
+
+                        // PR/commit hash label below the pad
+                        var padLabel = '';
+                        if (pad.prNumber) {
+                            padLabel = 'PR #' + pad.prNumber;
+                        } else if (pad.prHash) {
+                            padLabel = pad.prHash;
+                        }
+                        if (padLabel) {
+                            ctx.save();
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.font = Math.round(9 * glowScale) + 'px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(padLabel, midX, padStart.y + 14 * glowScale);
+                            ctx.restore();
+                        }
                     }
                 }
             }
@@ -1204,6 +1221,7 @@
                             landedTypeMultiplier = PR_TYPE_MULTIPLIERS[landedPad.prType] || 1;
                             landedPadBasePoints = landedPad.points;
                             landedPadPoints = landedPad.points * landedTypeMultiplier;
+                            landedPRTitle = landedPad.prTitle || '';
                             // Fuel bonus: remaining fuel percentage * 100, rounded
                             landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
                             landedTotalPoints = landedPadPoints + landedFuelBonus;
@@ -1629,11 +1647,20 @@
                 var padBreakdown = 'Pad: ' + landedPadBasePoints + (landedTypeMultiplier > 1 ? ' x' + landedTypeMultiplier + ' = ' + landedPadPoints : '');
                 ctx.fillText(padBreakdown + ' | Fuel bonus: ' + landedFuelBonus, canvas.width / 2, canvas.height / 2 + 30);
 
+                // Show full PR title on successful landing
+                if (landedPRTitle) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.font = '14px sans-serif';
+                    // Truncate very long titles to fit on screen
+                    var displayTitle = landedPRTitle.length > 60 ? landedPRTitle.substring(0, 57) + '...' : landedPRTitle;
+                    ctx.fillText(displayTitle, canvas.width / 2, canvas.height / 2 + 52);
+                }
+
                 // "Press Space for next level" appears after delay
                 if (celebrationReady) {
                     ctx.fillStyle = '#888';
                     ctx.font = '20px sans-serif';
-                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + 65);
+                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + (landedPRTitle ? 80 : 65));
                 }
             }
 
