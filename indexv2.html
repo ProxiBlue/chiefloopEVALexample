@@ -223,9 +223,11 @@
             var repoPRs = [];               // loaded PR data for selected repo (merged PRs with type)
             var unplacedPRs = [];           // PRs that couldn't be placed on previous levels (carried forward)
             var repoDataLoaded = false;     // true once repo JSON has been fetched
+            var levelDateRange = '';        // date range string for current level's PR batch (e.g., "Mar 2024 - Apr 2024")
+            var levelCommits = [];          // commits filtered to current level's PR batch date range
 
             // PR-based landing pad configuration
-            var MAX_PADS_PER_LEVEL = 6;     // cap pads per level (5-8 range, using 6)
+            var MAX_PADS_PER_LEVEL = 5;     // PRs per level batch (5 per batch)
             var PR_PAD_WIDTHS = {           // pad width by PR type
                 security: 1,                // narrow (hardest)
                 bugfix: 2,                  // medium
@@ -256,6 +258,8 @@
                 repoCommits = [];
                 repoPRs = [];
                 unplacedPRs = [];
+                levelDateRange = '';
+                levelCommits = [];
                 fetch('data/' + repoFile)
                     .then(function (res) {
                         if (!res.ok) throw new Error('Failed to load repo data');
@@ -269,11 +273,12 @@
                             });
                         }
                         if (data.pullRequests && data.pullRequests.length > 0) {
-                            // Filter to merged PRs, sort by merge date
+                            // Filter to merged PRs, sort by merge date descending (most recent first)
+                            // Level 1 plays the most recent batch, level 2 the next, etc. (backward through history)
                             repoPRs = data.pullRequests
                                 .filter(function (pr) { return pr.mergedDate; })
                                 .sort(function (a, b) {
-                                    return new Date(a.mergedDate) - new Date(b.mergedDate);
+                                    return new Date(b.mergedDate) - new Date(a.mergedDate);
                                 });
                         }
                         repoDataLoaded = true;
@@ -388,13 +393,14 @@
             // Build per-segment height values from commit data.
             // Returns an array of normalized heights (0 = smallest commit, 1 = largest commit)
             // for exactly segmentCount segments.
-            function buildCommitHeights(segmentCount) {
-                if (repoCommits.length === 0) return null;
+            function buildCommitHeights(segmentCount, commits) {
+                var source = commits || repoCommits;
+                if (source.length === 0) return null;
 
                 // Compute total lines changed per commit
                 var commitSizes = [];
-                for (var i = 0; i < repoCommits.length; i++) {
-                    var c = repoCommits[i];
+                for (var i = 0; i < source.length; i++) {
+                    var c = source[i];
                     commitSizes.push((c.linesAdded || 0) + (c.linesDeleted || 0));
                 }
 
@@ -470,11 +476,33 @@
                 return normalized;
             }
 
-            // Get the PRs assigned to the current level (paginated by MAX_PADS_PER_LEVEL)
-            // Carries forward any unplaced PRs from previous levels
+            // Get total number of PR batches available
+            function getTotalBatches() {
+                if (repoPRs.length === 0) return 0;
+                return Math.ceil(repoPRs.length / MAX_PADS_PER_LEVEL);
+            }
+
+            // Get the PRs assigned to the current level (batched by MAX_PADS_PER_LEVEL)
+            // PRs are sorted most-recent-first, so level 0 = most recent batch, level 1 = next, etc.
+            // If past all batches, loops back to the beginning
+            // Also sets levelDateRange and levelCommits for the current batch
             function getLevelPRs(level) {
+                levelDateRange = '';
+                levelCommits = [];
+
                 if (repoPRs.length === 0 && unplacedPRs.length === 0) return [];
-                var startIdx = level * MAX_PADS_PER_LEVEL;
+
+                var totalBatches = getTotalBatches();
+                var effectiveLevel = level;
+                var looped = false;
+
+                // If past all available batches, loop back
+                if (totalBatches > 0 && effectiveLevel >= totalBatches) {
+                    effectiveLevel = effectiveLevel % totalBatches;
+                    looped = true;
+                }
+
+                var startIdx = effectiveLevel * MAX_PADS_PER_LEVEL;
                 // Get the scheduled PRs for this level from the main list
                 var scheduled = [];
                 if (startIdx < repoPRs.length) {
@@ -488,16 +516,52 @@
                     unplacedPRs = combined.slice(MAX_PADS_PER_LEVEL);
                     combined = combined.slice(0, MAX_PADS_PER_LEVEL);
                 }
+
+                // Compute date range for this batch and filter commits
+                if (combined.length > 0) {
+                    var dates = [];
+                    for (var i = 0; i < combined.length; i++) {
+                        if (combined[i].mergedDate) {
+                            dates.push(new Date(combined[i].mergedDate).getTime());
+                        }
+                    }
+                    if (dates.length > 0) {
+                        var minDate = Math.min.apply(null, dates);
+                        var maxDate = Math.max.apply(null, dates);
+                        // Format date range for HUD display
+                        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        var d1 = new Date(minDate);
+                        var d2 = new Date(maxDate);
+                        levelDateRange = months[d1.getMonth()] + ' ' + d1.getFullYear() + ' - ' + months[d2.getMonth()] + ' ' + d2.getFullYear();
+
+                        // Filter commits to this batch's date range
+                        if (repoCommits.length > 0) {
+                            levelCommits = [];
+                            for (var c = 0; c < repoCommits.length; c++) {
+                                var commitDate = new Date(repoCommits[c].date).getTime();
+                                if (commitDate >= minDate && commitDate <= maxDate) {
+                                    levelCommits.push(repoCommits[c]);
+                                }
+                            }
+                            // If no commits in range, use all commits as fallback
+                            if (levelCommits.length === 0) {
+                                levelCommits = repoCommits;
+                            }
+                        }
+                    }
+                }
+
                 return combined;
             }
 
             // Map a PR's merge date to a terrain segment index based on the commit timeline
             function prMergeDateToSegment(pr, segmentCount) {
-                if (repoCommits.length === 0) return Math.floor(segmentCount / 2);
+                var commits = levelCommits.length > 0 ? levelCommits : repoCommits;
+                if (commits.length === 0) return Math.floor(segmentCount / 2);
 
                 var prDate = new Date(pr.mergedDate).getTime();
-                var firstCommitDate = new Date(repoCommits[0].date).getTime();
-                var lastCommitDate = new Date(repoCommits[repoCommits.length - 1].date).getTime();
+                var firstCommitDate = new Date(commits[0].date).getTime();
+                var lastCommitDate = new Date(commits[commits.length - 1].date).getTime();
                 var timeRange = lastCommitDate - firstCommitDate;
 
                 if (timeRange <= 0) return Math.floor(segmentCount / 2);
@@ -629,8 +693,9 @@
                     }
                 }
 
-                // Get commit-driven heights (null if no commit data available)
-                var commitHeights = buildCommitHeights(segmentCount);
+                // Get commit-driven heights using level-filtered commits (or all commits as fallback)
+                var commitsForTerrain = levelCommits.length > 0 ? levelCommits : repoCommits;
+                var commitHeights = buildCommitHeights(segmentCount, commitsForTerrain);
 
                 for (var i = 0; i <= segmentCount; i++) {
                     var x = i * segWidth;
@@ -1030,6 +1095,8 @@
             function startNewGame() {
                 currentLevel = 0;
                 unplacedPRs = [];
+                levelDateRange = '';
+                levelCommits = [];
                 score = 0;
                 GRAVITY = getLevelConfig(currentLevel).gravity;
                 THRUST_POWER = GRAVITY * 2.5;
@@ -1569,6 +1636,14 @@
                     ctx.fillRect(legendX - 8, legendY + li * 16 - 8, 8, 8);
                     ctx.fillStyle = '#ccc';
                     ctx.fillText(lt.label, legendX - 14, legendY + li * 16);
+                }
+
+                // Date range of current level's data
+                if (levelDateRange) {
+                    ctx.fillStyle = '#aaa';
+                    ctx.font = '11px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(levelDateRange, legendX, legendY + legendTypes.length * 16 + 6);
                 }
                 ctx.textAlign = 'left';
 
