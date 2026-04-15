@@ -672,7 +672,7 @@
                             for (var s = padIdx; s <= padIdx + padWidth; s++) {
                                 usedSegments[s] = true;
                             }
-                            placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: pr.mergeCommitHash ? pr.mergeCommitHash.substring(0, 7) : '' });
+                            placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: pr.mergeCommitHash ? pr.mergeCommitHash.substring(0, 7) : '', prAuthor: pr.author || '', prMergedDate: pr.mergedDate || '' });
                         }
                     }
                 }
@@ -768,6 +768,10 @@
             var landedTypeMultiplier = 1; // type multiplier applied
             var landedPadBasePoints = 0; // base pad points (before multiplier)
             var landedPRTitle = '';       // full PR title for celebration screen
+            var landedPRNumber = null;   // PR number for info panel
+            var landedPRAuthor = '';      // PR author for info panel
+            var landedPRType = '';        // PR type for info panel badge
+            var landedPRMergedDate = '';  // PR merge date for info panel
 
             function spawnCelebration(x, y) {
                 celebrationParticles = [];
@@ -1327,6 +1331,10 @@
                             landedPadBasePoints = landedPad.points;
                             landedPadPoints = landedPad.points * landedTypeMultiplier;
                             landedPRTitle = landedPad.prTitle || '';
+                            landedPRNumber = landedPad.prNumber || null;
+                            landedPRAuthor = landedPad.prAuthor || '';
+                            landedPRType = landedPad.prType || '';
+                            landedPRMergedDate = landedPad.prMergedDate || '';
                             // Fuel bonus: remaining fuel percentage * 100, rounded
                             landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
                             landedTotalPoints = landedPadPoints + landedFuelBonus;
@@ -1787,20 +1795,97 @@
                 var padBreakdown = 'Pad: ' + landedPadBasePoints + (landedTypeMultiplier > 1 ? ' x' + landedTypeMultiplier + ' = ' + landedPadPoints : '');
                 ctx.fillText(padBreakdown + ' | Fuel bonus: ' + landedFuelBonus, canvas.width / 2, canvas.height / 2 + 30);
 
-                // Show full PR title on successful landing
-                if (landedPRTitle) {
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-                    ctx.font = '14px sans-serif';
-                    // Truncate very long titles to fit on screen
-                    var displayTitle = landedPRTitle.length > 60 ? landedPRTitle.substring(0, 57) + '...' : landedPRTitle;
-                    ctx.fillText(displayTitle, canvas.width / 2, canvas.height / 2 + 52);
+                // PR Info Panel on successful landing
+                if (landedPRNumber) {
+                    var panelCx = canvas.width / 2;
+                    var panelTop = canvas.height / 2 + 48;
+                    var panelW = 400;
+                    var panelH = 100;
+                    var panelLeft = panelCx - panelW / 2;
+
+                    // Panel background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.roundRect(panelLeft, panelTop, panelW, panelH, 8);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    var lineY = panelTop + 22;
+
+                    // Row 1: PR number + type badge
+                    ctx.font = 'bold 15px sans-serif';
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'left';
+                    var prLabel = 'PR #' + landedPRNumber;
+                    ctx.fillText(prLabel, panelLeft + 14, lineY);
+
+                    // Type badge
+                    if (landedPRType && landedPRType !== 'fallback') {
+                        var badgeColor = PR_TYPE_COLORS[landedPRType] || PR_TYPE_COLORS.other;
+                        var badgeText = landedPRType.charAt(0).toUpperCase() + landedPRType.slice(1);
+                        var prLabelWidth = ctx.measureText(prLabel).width;
+                        var badgeX = panelLeft + 14 + prLabelWidth + 10;
+                        ctx.font = 'bold 11px sans-serif';
+                        var badgeTextWidth = ctx.measureText(badgeText).width;
+                        // Badge background
+                        ctx.fillStyle = badgeColor;
+                        ctx.beginPath();
+                        ctx.roundRect(badgeX, lineY - 11, badgeTextWidth + 12, 16, 4);
+                        ctx.fill();
+                        // Badge text
+                        ctx.fillStyle = '#000';
+                        ctx.fillText(badgeText, badgeX + 6, lineY - 0.5);
+                    }
+
+                    // Merge date (right-aligned)
+                    if (landedPRMergedDate) {
+                        var mergeDate = new Date(landedPRMergedDate);
+                        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        var dateStr = months[mergeDate.getMonth()] + ' ' + mergeDate.getDate() + ', ' + mergeDate.getFullYear();
+                        ctx.font = '12px sans-serif';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'right';
+                        ctx.fillText(dateStr, panelLeft + panelW - 14, lineY);
+                    }
+
+                    lineY += 22;
+
+                    // Row 2: PR title (truncated)
+                    ctx.font = '13px sans-serif';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.textAlign = 'left';
+                    var maxTitleW = panelW - 28;
+                    var displayTitle = landedPRTitle;
+                    while (displayTitle.length > 0 && ctx.measureText(displayTitle).width > maxTitleW) {
+                        displayTitle = displayTitle.substring(0, displayTitle.length - 1);
+                    }
+                    if (displayTitle.length < landedPRTitle.length) {
+                        displayTitle = displayTitle.substring(0, displayTitle.length - 3) + '...';
+                    }
+                    ctx.fillText(displayTitle, panelLeft + 14, lineY);
+
+                    lineY += 20;
+
+                    // Row 3: Author
+                    if (landedPRAuthor) {
+                        ctx.font = '12px sans-serif';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'left';
+                        ctx.fillText('by ' + landedPRAuthor, panelLeft + 14, lineY);
+                    }
+
+                    // Reset text align for subsequent draws
+                    ctx.textAlign = 'center';
                 }
 
                 // "Press Space for next level" appears after delay
                 if (celebrationReady) {
                     ctx.fillStyle = '#888';
                     ctx.font = '20px sans-serif';
-                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + (landedPRTitle ? 80 : 65));
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + (landedPRNumber ? 170 : 65));
                 }
             }
 

@@ -237,6 +237,7 @@ async function fetchPRs(owner, name, token, count) {
   return mergedPRs.slice(0, count).map((pr) => ({
     number: pr.number,
     title: pr.title,
+    author: (pr.user && pr.user.login) || "",
     description: pr.body || "",
     labels: pr.labels.map((l) => l.name),
     mergeCommitHash: pr.merge_commit_sha,
