@@ -83,34 +83,66 @@ function drawShip(x, y, angle, size, thrusting) {
         // Direct SVG fallback (before offscreen canvas is ready)
         ctx.drawImage(shipLogoImg, -halfS, -halfS, s, s);
     } else {
-        // Fallback: draw the M shape with canvas paths (same as original)
+        // Fallback: approximate isometric Mage-OS "M" logomark with canvas paths
+        // Coordinates derived from SVG paths, normalized from 170x170 viewBox
+        var n = s / 170;  // scale factor: SVG viewBox units to canvas pixels
+        var cx = 80 * n;  // center offset X (viewBox center)
+        var cy = 38.5 * n; // center offset Y (viewBox center)
+
+        // Left leg right face (#FF9234 — lighter shading for 3D depth)
         ctx.beginPath();
-        ctx.strokeStyle = '#F37121';
+        ctx.fillStyle = '#FF9234';
+        ctx.moveTo(53.4 * n - cx, 61.7 * n - cy);
+        ctx.lineTo(53.4 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(26.7 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(26.7 * n - cx, 77.1 * n - cy);
+        ctx.closePath();
+        ctx.fill();
+
+        // Middle leg right face (#FF9234)
+        ctx.beginPath();
+        ctx.moveTo(106.8 * n - cx, 61.7 * n - cy);
+        ctx.lineTo(106.8 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(80.1 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(80.1 * n - cx, 77.1 * n - cy);
+        ctx.closePath();
+        ctx.fill();
+
+        // Main M shape (#F37121 — primary orange, evenodd fill for cutouts)
+        ctx.beginPath();
         ctx.fillStyle = '#F37121';
-        ctx.lineWidth = s * 0.08;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
+        ctx.moveTo(0 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(53.4 * n - cx, 0 * n - cy);
+        ctx.lineTo(80.1 * n - cx, 15.4 * n - cy);
+        ctx.lineTo(106.8 * n - cx, 0 * n - cy);
+        ctx.lineTo(160.2 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(133.5 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(106.8 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(133.5 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(133.5 * n - cx, 77.1 * n - cy);
+        ctx.lineTo(106.8 * n - cx, 61.7 * n - cy);
+        ctx.lineTo(106.8 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(80.1 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(53.4 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(80.1 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(80.1 * n - cx, 77.1 * n - cy);
+        ctx.lineTo(53.4 * n - cx, 61.7 * n - cy);
+        ctx.lineTo(53.4 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(26.7 * n - cx, 46.2 * n - cy);
+        ctx.lineTo(26.7 * n - cx, 77.1 * n - cy);
+        ctx.lineTo(0 * n - cx, 61.7 * n - cy);
+        ctx.closePath();
+        ctx.fill('evenodd');
 
-        ctx.moveTo(-halfS, halfS);
-        ctx.lineTo(-halfS, -halfS);
-        ctx.lineTo(-halfS * 0.35, -halfS * 0.15);
-        ctx.lineTo(0, -halfS);
-        ctx.lineTo(halfS * 0.35, -halfS * 0.15);
-        ctx.lineTo(halfS, -halfS);
-        ctx.lineTo(halfS, halfS);
-
-        ctx.stroke();
-
+        // Right leg right face (#FF9234 — drawn last, on top)
         ctx.beginPath();
-        ctx.moveTo(-halfS * 0.5, halfS);
-        ctx.lineTo(-halfS * 0.5, halfS + s * 0.08);
-        ctx.moveTo(0, halfS);
-        ctx.lineTo(0, halfS + s * 0.08);
-        ctx.moveTo(halfS * 0.5, halfS);
-        ctx.lineTo(halfS * 0.5, halfS + s * 0.08);
-        ctx.strokeStyle = '#F37121';
-        ctx.lineWidth = s * 0.04;
-        ctx.stroke();
+        ctx.fillStyle = '#FF9234';
+        ctx.moveTo(160.2 * n - cx, 30.8 * n - cy);
+        ctx.lineTo(160.2 * n - cx, 61.7 * n - cy);
+        ctx.lineTo(133.5 * n - cx, 77.1 * n - cy);
+        ctx.lineTo(133.5 * n - cx, 46.2 * n - cy);
+        ctx.closePath();
+        ctx.fill();
     }
 
     // Draw thrust flame when thrusting
