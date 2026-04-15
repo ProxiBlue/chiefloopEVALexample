@@ -157,15 +157,17 @@ function drawShip(x, y, angle, size, thrusting) {
     }
 
     // Draw thrust flame when thrusting
+    // Colors complement the two-tone Mage-OS orange palette (#F37121 / #FF9234)
     if (thrusting) {
         var flameLen = s * (0.4 + Math.random() * 0.25);
         var flameWidth = halfH * (0.35 + Math.random() * 0.08);
 
-        // Outer flame — orange/yellow gradient
+        // Outer flame — logo orange base transitioning to yellow tip
         var flameGrad = ctx.createLinearGradient(0, halfH, 0, halfH + flameLen);
-        flameGrad.addColorStop(0, '#ff8800');
-        flameGrad.addColorStop(0.5, '#ffaa00');
-        flameGrad.addColorStop(1, '#ffdd00');
+        flameGrad.addColorStop(0, '#F37121');   // primary logo orange at base
+        flameGrad.addColorStop(0.4, '#FF9234'); // secondary logo orange
+        flameGrad.addColorStop(0.75, '#FFBB44'); // warm amber
+        flameGrad.addColorStop(1, '#FFD966');   // golden yellow tip
         ctx.beginPath();
         ctx.moveTo(-flameWidth, halfH);
         ctx.lineTo(0, halfH + flameLen);
@@ -173,12 +175,13 @@ function drawShip(x, y, angle, size, thrusting) {
         ctx.fillStyle = flameGrad;
         ctx.fill();
 
-        // Inner flame — yellow core
+        // Inner flame — bright core from logo secondary to pale yellow
         var innerLen = flameLen * (0.55 + Math.random() * 0.1);
         var innerWidth = flameWidth * 0.5;
         var innerGrad = ctx.createLinearGradient(0, halfH, 0, halfH + innerLen);
-        innerGrad.addColorStop(0, '#ffcc00');
-        innerGrad.addColorStop(1, '#ffee66');
+        innerGrad.addColorStop(0, '#FF9234');   // secondary logo orange at base
+        innerGrad.addColorStop(0.5, '#FFCC55'); // warm yellow
+        innerGrad.addColorStop(1, '#FFEE88');   // pale yellow tip
         ctx.beginPath();
         ctx.moveTo(-innerWidth, halfH);
         ctx.lineTo(0, halfH + innerLen);

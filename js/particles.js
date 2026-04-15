@@ -104,7 +104,7 @@ function spawnExplosion(x, y) {
     explosionParticles = [];
     explosionTimer = 0;
     explosionFinished = false;
-    var colors = ['#ff4500', '#ff6600', '#ff8800', '#ffaa00', '#ffcc00', '#ff2200', '#ff0000'];
+    var colors = ['#F37121', '#FF9234', '#E85D0F', '#D4520A', '#FFBB44', '#FFD966', '#FF6600'];
     for (var i = 0; i < 60; i++) {
         var angle = Math.random() * Math.PI * 2;
         var speed = 50 + Math.random() * 200;
