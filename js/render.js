@@ -5,6 +5,12 @@ function renderMenu() {
     var cx = canvas.width / 2;
     var baseY = canvas.height / 2 - 120;
 
+    // Fan-creation disclaimer (bottom of screen, visually secondary)
+    ctx.fillStyle = '#666';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('This is a fan-made game. It is not official or associated with Mage-OS.', cx, canvas.height - 16);
+
     // Draw ship logo on menu (Mage-OS "M" logo)
     drawShip(cx, baseY, 0, 60);
 
