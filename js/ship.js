@@ -207,20 +207,21 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
         var jnx = drawW / 160.177;
         var jny = drawH / 77.064;
 
-        // Jet flames are ~30% the size of main thrust (each jet gets independent flicker)
+        // Jet flames are ~30% the size of main thrust
         var jetScale = 0.3;
+        // Jet flame origin Y offset (mirrors main thrust's flameOriginY calculation)
+        var jetFlameOriginY = halfH * 0.94;
 
         // --- Right leg bottom-right tip: flame pointing downward ---
-        // Right leg bottom edge runs from (133.5, 77.1) to (160.2, 61.7)
         // Bottom-right tip is the outer corner at SVG coords (160.2, 61.7)
         var rJetX = 160.2 * jnx - halfW;
         var rJetY = 61.7 * jny - halfH;
 
-        // Independent flicker for right jet
+        // Independent flicker for right jet (same formula as main thrust, scaled by jetScale)
         var rJetLen = s * jetScale * (0.4 + Math.random() * 0.25);
-        var rJetWidth = s * jetScale * (0.15 + Math.random() * 0.04);
+        var rJetWidth = jetFlameOriginY * jetScale * (0.35 + Math.random() * 0.08);
 
-        // Outer jet flame (downward)
+        // Outer jet flame (downward — same direction as main thrust)
         var rGrad = ctx.createLinearGradient(rJetX, rJetY, rJetX, rJetY + rJetLen);
         rGrad.addColorStop(0, '#F37121');
         rGrad.addColorStop(0.4, '#FF9234');
@@ -248,16 +249,15 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
         ctx.fill();
 
         // --- Left leg top-left tip: flame pointing upward ---
-        // Left leg top edge runs from (0, 30.8) to (26.7, 46.2)
         // Top-left tip is the outer corner at SVG coords (0, 30.8)
         var lJetX = 0 * jnx - halfW;
         var lJetY = 30.8 * jny - halfH;
 
-        // Independent flicker for left jet
+        // Independent flicker for left jet (same formula as main thrust, scaled by jetScale)
         var lJetLen = s * jetScale * (0.4 + Math.random() * 0.25);
-        var lJetWidth = s * jetScale * (0.15 + Math.random() * 0.04);
+        var lJetWidth = jetFlameOriginY * jetScale * (0.35 + Math.random() * 0.08);
 
-        // Outer jet flame (upward)
+        // Outer jet flame (upward — opposite to main thrust)
         var lGrad = ctx.createLinearGradient(lJetX, lJetY, lJetX, lJetY - lJetLen);
         lGrad.addColorStop(0, '#F37121');
         lGrad.addColorStop(0.4, '#FF9234');
