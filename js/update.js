@@ -22,12 +22,16 @@ function update(dt) {
 
     if (gameState === STATES.PLAYING) {
         // Ship rotation
-        if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+        var rotatingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
+        var rotatingRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        if (rotatingLeft) {
             ship.angle -= ship.rotationSpeed * dt;
         }
-        if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+        if (rotatingRight) {
             ship.angle += ship.rotationSpeed * dt;
         }
+        // Track rotation direction for rendering (left takes priority if both pressed)
+        ship.rotating = rotatingLeft ? 'left' : rotatingRight ? 'right' : null;
 
         // Wind — update gusts and apply horizontal force
         if (wind.maxStrength > 0) {

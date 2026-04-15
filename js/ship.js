@@ -10,6 +10,7 @@ var ship = {
     angle: 0,           // radians, 0 = upright
     rotationSpeed: ROTATION_SPEED,   // radians per second
     thrusting: false,   // whether thrust is currently active
+    rotating: null,     // current rotation direction: 'left', 'right', or null
     fuel: FUEL_MAX      // remaining fuel
 };
 
@@ -60,6 +61,7 @@ function resetShip() {
     ship.vy = 0;
     ship.angle = 0;
     ship.thrusting = false;
+    ship.rotating = null;
     ship.fuel = FUEL_MAX;
 }
 
