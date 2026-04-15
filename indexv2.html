@@ -238,6 +238,18 @@
                 feature: 50,
                 other: 100
             };
+            var PR_TYPE_MULTIPLIERS = {     // score multiplier by PR type
+                security: 3,
+                bugfix: 2,
+                feature: 1,
+                other: 1
+            };
+            var PR_TYPE_COLORS = {          // pad color by PR type
+                security: '#DC143C',        // crimson/red
+                bugfix: '#FFB300',          // amber/yellow
+                feature: '#00BCD4',         // cyan/blue
+                other: '#9E9E9E'            // gray
+            };
 
             function loadRepoData(repoFile) {
                 repoDataLoaded = false;
@@ -657,9 +669,11 @@
             var celebrationTimer = 0;
             var CELEBRATION_DELAY = 1.5; // seconds before "Press Space" prompt appears
             var celebrationReady = false; // true when prompt should show
-            var landedPadPoints = 0; // pad difficulty bonus points
+            var landedPadPoints = 0; // pad difficulty bonus points (after multiplier)
             var landedFuelBonus = 0; // fuel bonus points
             var landedTotalPoints = 0; // total points earned from landing
+            var landedTypeMultiplier = 1; // type multiplier applied
+            var landedPadBasePoints = 0; // base pad points (before multiplier)
 
             function spawnCelebration(x, y) {
                 celebrationParticles = [];
@@ -817,15 +831,8 @@
                         var padStart = terrain[pad.index];
                         var padEnd = terrain[pad.index + pad.width] || terrain[terrain.length - 1];
 
-                        // Color based on point value: green for easy, yellow for medium, red/orange for hard
-                        var padColor;
-                        if (pad.points <= 50) {
-                            padColor = '#0f0';        // wide pad — green
-                        } else if (pad.points <= 100) {
-                            padColor = '#ff0';        // medium pad — yellow
-                        } else {
-                            padColor = '#f60';        // narrow pad — orange
-                        }
+                        // Color based on PR type
+                        var padColor = PR_TYPE_COLORS[pad.prType] || PR_TYPE_COLORS.other;
 
                         // Wide outer glow for distance visibility (scales with viewport)
                         ctx.save();
@@ -861,12 +868,17 @@
                         ctx.lineWidth = 3 * glowScale;
                         ctx.stroke();
 
-                        // Point value label (scales with viewport)
+                        // Point value label with multiplier (scales with viewport)
                         var midX = (padStart.x + padEnd.x) / 2;
                         ctx.fillStyle = padColor;
                         ctx.font = 'bold ' + Math.round(12 * glowScale) + 'px sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.fillText(pad.points + 'pts', midX, padStart.y - 8);
+                        var padMultiplier = PR_TYPE_MULTIPLIERS[pad.prType] || 1;
+                        var labelText = pad.points + 'pts';
+                        if (padMultiplier > 1) {
+                            labelText += ' x' + padMultiplier;
+                        }
+                        ctx.fillText(labelText, midX, padStart.y - 8);
                     }
                 }
             }
@@ -1188,7 +1200,10 @@
                             ship.vy = 0;
                             ship.vx = 0;
                             landingResult = 'SUCCESS';
-                            landedPadPoints = (pad0 || pad1).points;
+                            var landedPad = pad0 || pad1;
+                            landedTypeMultiplier = PR_TYPE_MULTIPLIERS[landedPad.prType] || 1;
+                            landedPadBasePoints = landedPad.points;
+                            landedPadPoints = landedPad.points * landedTypeMultiplier;
                             // Fuel bonus: remaining fuel percentage * 100, rounded
                             landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
                             landedTotalPoints = landedPadPoints + landedFuelBonus;
@@ -1519,6 +1534,26 @@
                     ctx.textAlign = 'left';
                 }
 
+                // PR Type Legend (top-right, below repo name)
+                var legendX = canvas.width - 10;
+                var legendY = 45;
+                ctx.font = '11px monospace';
+                ctx.textAlign = 'right';
+                var legendTypes = [
+                    { label: 'Security (3x)', color: PR_TYPE_COLORS.security },
+                    { label: 'Bug Fix (2x)', color: PR_TYPE_COLORS.bugfix },
+                    { label: 'Feature (1x)', color: PR_TYPE_COLORS.feature },
+                    { label: 'Other (1x)', color: PR_TYPE_COLORS.other }
+                ];
+                for (var li = 0; li < legendTypes.length; li++) {
+                    var lt = legendTypes[li];
+                    ctx.fillStyle = lt.color;
+                    ctx.fillRect(legendX - 8, legendY + li * 16 - 8, 8, 8);
+                    ctx.fillStyle = '#ccc';
+                    ctx.fillText(lt.label, legendX - 14, legendY + li * 16);
+                }
+                ctx.textAlign = 'left';
+
                 // Wind indicator (only shown when wind is active)
                 if (wind.maxStrength > 0) {
                     var windY = fuelBarY + 76;
@@ -1588,10 +1623,11 @@
                 ctx.font = 'bold 28px sans-serif';
                 ctx.fillText('+' + landedTotalPoints + ' pts', canvas.width / 2, canvas.height / 2 + 5);
 
-                // Breakdown: pad bonus + fuel bonus
+                // Breakdown: pad bonus (with multiplier) + fuel bonus
                 ctx.fillStyle = '#ccc';
                 ctx.font = '16px sans-serif';
-                ctx.fillText('Pad bonus: ' + landedPadPoints + ' | Fuel bonus: ' + landedFuelBonus, canvas.width / 2, canvas.height / 2 + 30);
+                var padBreakdown = 'Pad: ' + landedPadBasePoints + (landedTypeMultiplier > 1 ? ' x' + landedTypeMultiplier + ' = ' + landedPadPoints : '');
+                ctx.fillText(padBreakdown + ' | Fuel bonus: ' + landedFuelBonus, canvas.width / 2, canvas.height / 2 + 30);
 
                 // "Press Space for next level" appears after delay
                 if (celebrationReady) {
