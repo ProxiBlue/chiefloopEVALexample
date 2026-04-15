@@ -126,7 +126,7 @@ function renderPlaying() {
     drawTerrain();
 
     // Draw ship
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating);
 
     // --- HUD ---
     var vyMs = ship.vy / PIXELS_PER_METER;
