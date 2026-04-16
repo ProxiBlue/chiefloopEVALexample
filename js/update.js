@@ -114,8 +114,7 @@ function update(dt) {
                 }
                 snapNewPads = []; // No landing pads on invader terrain
             } else {
-                // Normal pad: advance to next level and generate new terrain
-                currentLevel++;
+                // Normal pad: level already incremented at spacebar press — apply config and generate terrain
                 GRAVITY = getLevelConfig(currentLevel).gravity;
                 THRUST_POWER = GRAVITY * 2.5;
                 resetWind();
@@ -189,7 +188,7 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
-                ship.fuel = FUEL_MAX;
+                // Fuel carries over from previous level — do NOT reset
                 gameState = STATES.SCENE_DESCENT;
             }
         } else {

@@ -103,6 +103,11 @@ function handleKeyPress(key) {
             playClickSound();
             // Both security and non-security pads use the same liftoff + scroll transition
             securityPadScroll = (landedPRType === 'security');
+            // Increment level at the start of the transition (non-security only;
+            // security pads advance in INVADER_RETURN after the invader phase)
+            if (!securityPadScroll) {
+                currentLevel++;
+            }
             ship.thrusting = false;
             ship.rotating = null;
             ship.vx = 0;
