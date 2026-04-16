@@ -37,6 +37,10 @@ function handleKeyPress(key) {
         if (key === 'Enter') {
             var name = gameOverName.trim() || 'AAA';
             addToLeaderboard(name, score);
+            // Submit to online leaderboard asynchronously (fire-and-forget)
+            if (score > 0 && typeof submitOnlineScore === 'function') {
+                submitOnlineScore(name, score);
+            }
             gameOverEnteringName = false;
             return;
         } else if (key === 'Backspace') {
