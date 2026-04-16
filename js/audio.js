@@ -139,6 +139,61 @@ function playLandingSound() {
     });
 }
 
+function playShootSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+
+    // Short retro laser zap — square wave with fast downward pitch sweep
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.exponentialRampToValueAtTime(200, t + 0.08);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.12, t);
+    gain.gain.linearRampToValueAtTime(0.10, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.1);
+}
+
+function playAlienDestroySound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+
+    // Retro 8-bit pop/crunch — noise burst + descending square tone
+    // Noise burst layer (short crunch)
+    var noiseBuffer = createNoiseBuffer(ctx, 0.15);
+    var noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    var noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.15, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(3000, t);
+    bp.Q.setValueAtTime(1.5, t);
+    noise.connect(bp);
+    bp.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + 0.15);
+
+    // Square wave pop (descending pitch)
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.exponentialRampToValueAtTime(80, t + 0.15);
+    var oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(0.10, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.18);
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

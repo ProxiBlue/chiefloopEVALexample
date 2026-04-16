@@ -165,6 +165,7 @@ function update(dt) {
             // Fire bullet from the nose of the ship (ship faces right at angle PI/2)
             bullets.push({ x: ship.x + SHIP_SIZE * 0.6, y: ship.y });
             bulletCooldownTimer = BULLET_COOLDOWN;
+            playShootSound();
         }
 
         // --- Update bullets ---
@@ -199,6 +200,7 @@ function update(dt) {
                     by >= ay - halfSize && by <= ay + halfSize) {
                     // Spawn explosion at alien position
                     spawnAlienExplosion(ax, ay);
+                    playAlienDestroySound();
                     // Destroy alien
                     aliens.splice(a, 1);
                     aliensDestroyed++;
