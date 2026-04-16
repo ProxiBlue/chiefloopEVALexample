@@ -3,118 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://www.dreamlo.com; img-src 'none'; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src https://www.dreamlo.com; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
     <title>Mage Lander - Leaderboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: #111;
-            color: #e0e0e0;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        h1 {
-            text-align: center;
-            color: #4fc3f7;
-            font-size: 28px;
-            margin-bottom: 8px;
-            letter-spacing: 2px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-        .refresh-row {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .refresh-btn {
-            background: #222;
-            color: #4fc3f7;
-            border: 1px solid #4fc3f7;
-            padding: 8px 24px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            cursor: pointer;
-            letter-spacing: 1px;
-        }
-        .refresh-btn:hover {
-            background: #4fc3f7;
-            color: #111;
-        }
-        .refresh-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        #status {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 16px;
-            min-height: 24px;
-        }
-        .loading {
-            color: #888;
-        }
-        .error {
-            color: #ef5350;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        thead th {
-            text-align: left;
-            color: #4fc3f7;
-            border-bottom: 1px solid #333;
-            padding: 8px 4px;
-            font-size: 14px;
-        }
-        thead th:first-child {
-            width: 60px;
-            text-align: center;
-        }
-        thead th:last-child {
-            text-align: right;
-        }
-        tbody td {
-            padding: 6px 4px;
-            border-bottom: 1px solid #1a1a1a;
-            font-size: 14px;
-        }
-        tbody td:first-child {
-            text-align: center;
-            color: #888;
-        }
-        tbody td:last-child {
-            text-align: right;
-            color: #ffcc80;
-        }
-        tbody tr:hover {
-            background: #1a1a1a;
-        }
-    </style>
+    <link rel="stylesheet" href="css/leaderboard.css">
 </head>
 <body>
     <div class="container">
         <h1>MAGE LANDER</h1>
         <div class="subtitle">Global Leaderboard</div>
         <div class="refresh-row">
-            <button class="refresh-btn" id="refreshBtn" onclick="loadScores()">Refresh</button>
+            <button class="refresh-btn" id="refreshBtn">Refresh</button>
         </div>
         <div id="status"></div>
-        <table id="leaderboardTable" style="display:none;">
+        <table id="leaderboardTable">
             <thead>
                 <tr>
                     <th>#</th>
@@ -128,76 +29,6 @@
 
     <script src="js/onlineConfig.js"></script>
     <script src="js/onlineLeaderboard.js"></script>
-    <script>
-        var REFRESH_COOLDOWN_MS = 10000;
-        var _lastFetchTime = 0;
-
-        function loadScores() {
-            var now = Date.now();
-            var statusEl = document.getElementById('status');
-            var tableEl = document.getElementById('leaderboardTable');
-            var bodyEl = document.getElementById('leaderboardBody');
-            var btnEl = document.getElementById('refreshBtn');
-
-            if (now - _lastFetchTime < REFRESH_COOLDOWN_MS) {
-                return;
-            }
-
-            statusEl.className = 'loading';
-            statusEl.textContent = 'Loading scores...';
-            tableEl.style.display = 'none';
-            btnEl.disabled = true;
-            _lastFetchTime = now;
-
-            fetchOnlineScores(50).then(function (scores) {
-                _enableRefreshAfterCooldown(btnEl);
-                if (!scores || scores.length === 0) {
-                    statusEl.className = '';
-                    statusEl.textContent = 'No scores yet. Be the first to play!';
-                    return;
-                }
-
-                statusEl.textContent = '';
-                statusEl.className = '';
-                while (bodyEl.firstChild) {
-                    bodyEl.removeChild(bodyEl.firstChild);
-                }
-
-                for (var i = 0; i < scores.length; i++) {
-                    var tr = document.createElement('tr');
-
-                    var rankTd = document.createElement('td');
-                    rankTd.textContent = i + 1;
-                    tr.appendChild(rankTd);
-
-                    var nameTd = document.createElement('td');
-                    nameTd.textContent = scores[i].name;
-                    tr.appendChild(nameTd);
-
-                    var scoreTd = document.createElement('td');
-                    scoreTd.textContent = scores[i].score.toLocaleString();
-                    tr.appendChild(scoreTd);
-
-                    bodyEl.appendChild(tr);
-                }
-
-                tableEl.style.display = '';
-            }).catch(function () {
-                _enableRefreshAfterCooldown(btnEl);
-                statusEl.className = 'error';
-                statusEl.textContent = 'Could not load scores. Try again later.';
-            });
-        }
-
-        function _enableRefreshAfterCooldown(btnEl) {
-            var elapsed = Date.now() - _lastFetchTime;
-            var remaining = Math.max(0, REFRESH_COOLDOWN_MS - elapsed);
-            setTimeout(function () {
-                btnEl.disabled = false;
-            }, remaining);
-        }
-
-        loadScores();
-    </script>
+    <script src="js/leaderboardPage.js"></script>
 </body>
 </html>
