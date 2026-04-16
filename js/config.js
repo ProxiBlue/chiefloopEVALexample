@@ -94,6 +94,9 @@ var TERRAIN_FLAT_Y_RATIO = 0.87;       // flat ground at 87% of canvas height
 var terrainTransitionTimer = 0;         // elapsed time in transition
 var terrainOriginalPoints = [];         // snapshot of terrain Y values before flattening
 
+// --- Invader Player Movement ---
+var INVADER_MOVE_SPEED = 200;           // pixels per second (direct movement, all 4 directions)
+
 // --- Alien Wave Configuration ---
 var ALIEN_SPEED = 120;                  // pixels per second (leftward)
 var ALIEN_SIZE = 28;                    // pixel size of each alien sprite

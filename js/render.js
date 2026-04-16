@@ -563,7 +563,7 @@ function renderInvaderPlaying() {
     ctx.fillStyle = '#555';
     ctx.font = '14px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('SPACE to shoot | UP/DOWN to move', canvas.width / 2, canvas.height - 30);
+    ctx.fillText('SPACE to shoot | Arrow keys / WASD to move', canvas.width / 2, canvas.height - 30);
 }
 
 function renderInvaderComplete() {

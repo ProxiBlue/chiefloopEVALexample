@@ -133,18 +133,29 @@ function update(dt) {
 
     // Invader playing: move aliens, handle bullets, detect collisions
     if (gameState === STATES.INVADER_PLAYING) {
-        // --- Ship vertical movement (Up/Down to dodge) ---
+        // --- Ship 4-directional movement (direct, no physics) ---
         var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
         var movingUp = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
         var movingDown = !!(keys['ArrowDown'] || keys['s'] || keys['S']);
+        var movingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
+        var movingRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
         if (movingUp) {
-            ship.y -= 200 * dt;
-            if (ship.y < 80) ship.y = 80;
+            ship.y -= INVADER_MOVE_SPEED * dt;
         }
         if (movingDown) {
-            ship.y += 200 * dt;
-            if (ship.y > flatY - 40) ship.y = flatY - 40;
+            ship.y += INVADER_MOVE_SPEED * dt;
         }
+        if (movingLeft) {
+            ship.x -= INVADER_MOVE_SPEED * dt;
+        }
+        if (movingRight) {
+            ship.x += INVADER_MOVE_SPEED * dt;
+        }
+        // Clamp to canvas bounds
+        if (ship.y < 80) ship.y = 80;
+        if (ship.y > flatY - 40) ship.y = flatY - 40;
+        if (ship.x < SHIP_SIZE) ship.x = SHIP_SIZE;
+        if (ship.x > canvas.width - SHIP_SIZE) ship.x = canvas.width - SHIP_SIZE;
 
         // --- Bullet firing (Space key) ---
         bulletCooldownTimer -= dt;
