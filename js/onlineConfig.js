@@ -18,8 +18,10 @@ var ONLINE_LEADERBOARD_CONFIG = {
     // Deploy server/leaderboard-proxy.js as a Cloudflare Worker and set
     // this to your worker URL (e.g. https://leaderboard-proxy.yourname.workers.dev)
     submitProxyUrl: 'https://leaderboard-proxy.example.workers.dev',
-    // Maximum allowed score value (enforced server-side; client uses as UX hint)
-    maxScore: 1000000,
+    // Maximum plausible score — based on game mechanics: points per landing
+    // pad × maximum conceivable levels. Adjust this as game balance changes.
+    // Enforced both client-side (prevents submission) and server-side (rejects).
+    maxPlausibleScore: 100000,
     // Minimum seconds between score submissions (client-side UX throttle;
     // provides per-submission cooldown in addition to the sliding-window
     // rate limit in onlineLeaderboard.js). Must be >= 1; values < 1 are

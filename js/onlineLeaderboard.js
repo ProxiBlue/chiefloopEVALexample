@@ -157,9 +157,9 @@ var RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // sliding window duration in ms (5 mi
             console.warn('submitOnlineScore: score must be a positive integer');
             return Promise.resolve(false);
         }
-        var maxScore = ONLINE_LEADERBOARD_CONFIG.maxScore || 1000000;
-        if (scoreInt > maxScore) {
-            console.warn('submitOnlineScore: score exceeds maximum allowed value (' + maxScore + ')');
+        var maxPlausibleScore = ONLINE_LEADERBOARD_CONFIG.maxPlausibleScore || 100000;
+        if (scoreInt > maxPlausibleScore) {
+            console.warn('submitOnlineScore: score exceeds plausible maximum (' + maxPlausibleScore + ')');
             return Promise.resolve(false);
         }
 

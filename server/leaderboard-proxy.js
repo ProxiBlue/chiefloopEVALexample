@@ -43,7 +43,7 @@
 
 // --- Configuration ---
 var MAX_NAME_LENGTH = 20;
-var MAX_SCORE = 1000000;
+var MAX_SCORE = 100000; // plausible max — must match onlineConfig.js maxPlausibleScore
 var RATE_LIMIT_WINDOW_MS = 10000; // 10 seconds per IP per endpoint
 var SESSION_TTL_SECONDS = 30 * 60; // 30 minutes (KV expiration in seconds)
 var MAX_ACTIVE_SESSIONS_PER_IP = 3; // max concurrent sessions per IP
