@@ -399,6 +399,19 @@ function renderLanded() {
     }
 }
 
+function renderSceneLiftoff() {
+    drawTerrain();
+
+    // Show thrust flame during rise (visual only, no fuel cost)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('LAUNCHING TO NEXT MISSION', canvas.width / 2, 60);
+}
+
 function renderInvaderLiftoff() {
     drawTerrain();
 
@@ -757,6 +770,9 @@ function render() {
             break;
         case STATES.LANDED:
             renderLanded();
+            break;
+        case STATES.SCENE_LIFTOFF:
+            renderSceneLiftoff();
             break;
         case STATES.INVADER_LIFTOFF:
             renderInvaderLiftoff();

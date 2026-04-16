@@ -110,14 +110,12 @@ function handleKeyPress(key) {
                 ship.vy = 0;
                 gameState = STATES.INVADER_LIFTOFF;
             } else {
-                // Normal pad: advance to next level (endless progression)
-                currentLevel++;
-                GRAVITY = getLevelConfig(currentLevel).gravity;
-                THRUST_POWER = GRAVITY * 2.5;
-                resetShip();
-                resetWind();
-                generateTerrain();
-                gameState = STATES.PLAYING;
+                // Normal pad: liftoff animation before advancing to next level
+                ship.thrusting = false;
+                ship.rotating = null;
+                ship.vx = 0;
+                ship.vy = 0;
+                gameState = STATES.SCENE_LIFTOFF;
             }
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;

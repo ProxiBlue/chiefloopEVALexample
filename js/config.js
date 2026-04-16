@@ -5,6 +5,7 @@ var STATES = {
     LANDED: 'landed',
     CRASHED: 'crashed',
     GAMEOVER: 'gameover',
+    SCENE_LIFTOFF: 'scene_liftoff',
     INVADER_LIFTOFF: 'invader_liftoff',
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
@@ -81,6 +82,9 @@ var PR_TYPE_COLORS = {          // pad color by PR type
 // --- Ship / Fuel Constants ---
 var FUEL_MAX = 100;         // fuel units per level
 var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
+
+// --- Scene Liftoff Animation (after normal landing) ---
+var SCENE_LIFTOFF_RISE_SPEED = 120; // pixels per second during vertical rise
 
 // --- Invader Liftoff Animation ---
 var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise

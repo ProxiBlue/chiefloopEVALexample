@@ -85,6 +85,23 @@ function update(dt) {
         updateCelebration(dt);
     }
 
+    // Scene liftoff animation: rise to vertical center then advance level
+    if (gameState === STATES.SCENE_LIFTOFF) {
+        var targetY = canvas.height / 2;
+        ship.y -= SCENE_LIFTOFF_RISE_SPEED * dt;
+        if (ship.y <= targetY) {
+            ship.y = targetY;
+            // Advance to next level
+            currentLevel++;
+            GRAVITY = getLevelConfig(currentLevel).gravity;
+            THRUST_POWER = GRAVITY * 2.5;
+            resetShip();
+            resetWind();
+            generateTerrain();
+            gameState = STATES.PLAYING;
+        }
+    }
+
     // Invader liftoff animation: rise then rotate
     if (gameState === STATES.INVADER_LIFTOFF) {
         var targetY = canvas.height / 2;
