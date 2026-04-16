@@ -412,6 +412,24 @@ function renderSceneLiftoff() {
     ctx.fillText('LAUNCHING TO NEXT MISSION', canvas.width / 2, 60);
 }
 
+function renderSceneDescent() {
+    drawTerrain();
+
+    // Ship descends without thrust (gliding down)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('DESCENDING TO POSITION', canvas.width / 2, 60);
+
+    // Level indicator
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px monospace';
+    ctx.fillText('Level ' + (currentLevel + 1), canvas.width / 2, 90);
+}
+
 function drawTerrainAtOffset(terrainPoints, pads, offsetX) {
     if (terrainPoints.length === 0) return;
 
@@ -913,6 +931,9 @@ function render() {
             break;
         case STATES.SCENE_SCROLL:
             renderSceneScroll();
+            break;
+        case STATES.SCENE_DESCENT:
+            renderSceneDescent();
             break;
         case STATES.INVADER_LIFTOFF:
             renderInvaderLiftoff();

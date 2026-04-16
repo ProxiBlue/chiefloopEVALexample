@@ -7,6 +7,7 @@ var STATES = {
     GAMEOVER: 'gameover',
     SCENE_LIFTOFF: 'scene_liftoff',
     SCENE_SCROLL: 'scene_scroll',
+    SCENE_DESCENT: 'scene_descent',
     INVADER_LIFTOFF: 'invader_liftoff',
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
@@ -86,6 +87,12 @@ var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
 
 // --- Scene Liftoff Animation (after normal landing) ---
 var SCENE_LIFTOFF_RISE_SPEED = 120; // pixels per second during vertical rise
+
+// --- Scene Descent (ship descends to starting altitude after scroll) ---
+var SCENE_DESCENT_DURATION = 1.0;   // seconds for descent from center to starting altitude
+var sceneDescentTimer = 0;          // elapsed time in descent
+var sceneDescentStartY = 0;         // y position at start of descent (canvas.height / 2)
+var sceneDescentTargetY = 0;        // y position at end of descent (canvas.height / 3)
 
 // --- Scene Scroll (horizontal terrain transition between levels) ---
 var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll

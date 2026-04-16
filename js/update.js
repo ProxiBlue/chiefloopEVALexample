@@ -151,9 +151,19 @@ function update(dt) {
             landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
             // Atomically clear scroll state
             sceneScrollState = null;
-            // Reset ship for playing
-            resetShip();
-            gameState = STATES.PLAYING;
+            // Begin descent from center to starting altitude
+            sceneDescentStartY = canvas.height / 2;
+            sceneDescentTargetY = canvas.height / 3;
+            sceneDescentTimer = 0;
+            ship.x = canvas.width / 2;
+            ship.y = sceneDescentStartY;
+            ship.angle = 0;
+            ship.vx = 0;
+            ship.vy = 0;
+            ship.thrusting = false;
+            ship.rotating = null;
+            ship.fuel = FUEL_MAX;
+            gameState = STATES.SCENE_DESCENT;
         } else {
             // Update timer by replacing the frozen object atomically
             sceneScrollState = Object.freeze({
@@ -163,6 +173,21 @@ function update(dt) {
                 newTerrain: sceneScrollState.newTerrain,
                 newPads: sceneScrollState.newPads
             });
+        }
+    }
+
+    // Scene descent: ship descends from center to starting altitude
+    if (gameState === STATES.SCENE_DESCENT) {
+        sceneDescentTimer += dt;
+        var t = Math.min(sceneDescentTimer / SCENE_DESCENT_DURATION, 1);
+        // Ease in-out for smooth descent
+        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        ship.y = sceneDescentStartY + (sceneDescentTargetY - sceneDescentStartY) * eased;
+        ship.x = canvas.width / 2;
+
+        if (t >= 1) {
+            ship.y = sceneDescentTargetY;
+            gameState = STATES.PLAYING;
         }
     }
 
