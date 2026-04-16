@@ -419,8 +419,8 @@ function renderSceneLiftoff() {
 function renderSceneDescent() {
     drawTerrain();
 
-    // Ship descends without thrust (gliding down)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    // Ship descends with thrust flame visible
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
@@ -657,8 +657,8 @@ function renderSceneScroll() {
 
     ctx.restore();
 
-    // Draw ship hovering at center (no thrust during scroll)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    // Draw ship hovering at center (thrust flame visible during scroll)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
