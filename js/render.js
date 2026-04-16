@@ -402,7 +402,8 @@ function renderLanded() {
 function renderSceneLiftoff() {
     drawTerrain();
 
-    // Show thrust flame during rise (visual only, no fuel cost)
+    // Show thrust flame during rise for both normal and security pad (invader) paths
+    // 5th param = true enables main thrust flame visual (no fuel cost)
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null);
 
     // Status text
@@ -657,7 +658,9 @@ function renderSceneScroll() {
 
     ctx.restore();
 
-    // Draw ship with thrust flame + side thrusters in the direction of travel
+    // Draw ship with thrust flame + side thrusters for both normal and security pad (invader) paths
+    // 5th param = true: main thrust flame visible during scroll
+    // 6th param = thrusterDir: side thrusters fire in direction of horizontal travel
     var thrusterDir = (sceneScrollState.shipStartX < canvas.width / 2) ? 'right' : 'left';
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, thrusterDir);
 

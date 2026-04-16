@@ -87,7 +87,12 @@ function update(dt) {
 
     // Scene liftoff animation: rise to vertical center then begin horizontal scroll
     // Uses eased deceleration and horizontal blend for seamless transition to scroll
+    // Thrust sound plays for both normal and invader (security pad) paths
     if (gameState === STATES.SCENE_LIFTOFF) {
+        // Ensure thrust sound is active during liftoff (both normal and security pad paths)
+        startThrustSound();
+        // Set thrusting flag so ship state reflects visual thrust flame
+        ship.thrusting = true;
         var targetY = canvas.height / 2;
         var totalDist = sceneLiftoffStartY - targetY;
         if (totalDist <= 0) totalDist = 1;
@@ -153,7 +158,15 @@ function update(dt) {
     }
 
     // Scene scroll: horizontal terrain transition
+    // Thrust sound + visuals active for both normal and invader (security pad) paths
     if (gameState === STATES.SCENE_SCROLL && sceneScrollState) {
+        // Ensure thrust sound continues during scroll (both normal and security pad paths)
+        startThrustSound();
+        // Set thrusting flag and side thruster direction for visual rendering
+        ship.thrusting = true;
+        var shipStartX = sceneScrollState.shipStartX;
+        // Side thrusters show during horizontal scroll (direction matches travel)
+        ship.rotating = (shipStartX < canvas.width / 2) ? 'right' : 'left';
         // Timer is tracked via a new object since sceneScrollState is frozen
         var scrollTimer = sceneScrollState.timer + dt;
         var t = Math.min(scrollTimer / SCENE_SCROLL_DURATION, 1);
@@ -162,7 +175,6 @@ function update(dt) {
         var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
         // Ship flies across: from starting X to center (synchronized with terrain scroll)
-        var shipStartX = sceneScrollState.shipStartX;
         ship.x = shipStartX + (canvas.width / 2 - shipStartX) * eased;
 
         // Y: smooth arc from center toward target altitude
