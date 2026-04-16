@@ -100,23 +100,13 @@ function handleKeyPress(key) {
             startNewGame();
         } else if (gameState === STATES.LANDED && celebrationReady) {
             playClickSound();
-            if (landedPRType === 'security') {
-                // Security pad: route to Space Invaders interlude
-                invaderLiftoffPhase = 'rising';
-                invaderLiftoffRotationTimer = 0;
-                ship.thrusting = false;
-                ship.rotating = null;
-                ship.vx = 0;
-                ship.vy = 0;
-                gameState = STATES.INVADER_LIFTOFF;
-            } else {
-                // Normal pad: liftoff animation before advancing to next level
-                ship.thrusting = false;
-                ship.rotating = null;
-                ship.vx = 0;
-                ship.vy = 0;
-                gameState = STATES.SCENE_LIFTOFF;
-            }
+            // Both security and non-security pads use the same liftoff + scroll transition
+            securityPadScroll = (landedPRType === 'security');
+            ship.thrusting = false;
+            ship.rotating = null;
+            ship.vx = 0;
+            ship.vy = 0;
+            gameState = STATES.SCENE_LIFTOFF;
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;
             if (score > 0) {

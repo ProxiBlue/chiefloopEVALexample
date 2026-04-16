@@ -9,6 +9,7 @@ var STATES = {
     SCENE_SCROLL: 'scene_scroll',
     SCENE_DESCENT: 'scene_descent',
     SCENE_COUNTDOWN: 'scene_countdown',
+    INVADER_SCROLL_ROTATE: 'invader_scroll_rotate',
     INVADER_LIFTOFF: 'invader_liftoff',
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
@@ -105,15 +106,21 @@ var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll
 // null when no scroll is active; a frozen object during SCENE_SCROLL.
 var sceneScrollState = null;        // { timer, oldTerrain, oldPads, newTerrain, newPads }
 
-function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads) {
+function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll) {
     return Object.freeze({
         timer: 0,
         oldTerrain: oldTerrain,
         oldPads: oldPads,
         newTerrain: newTerrain,
-        newPads: newPads
+        newPads: newPads,
+        isInvaderScroll: !!isInvaderScroll
     });
 }
+
+// --- Security Pad Scroll-to-Invader Transition ---
+var securityPadScroll = false;                      // true when scroll is for security pad (invader interlude)
+var INVADER_SCROLL_ROTATE_DURATION = 1;             // seconds for 90-degree rotation after scroll
+var invaderScrollRotateTimer = 0;                   // elapsed time in rotation after scroll
 
 // --- Invader Liftoff Animation ---
 var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise

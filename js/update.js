@@ -60,7 +60,8 @@ function update(dt) {
     animTime += dt;
 
     // Track whether we're in invader mode for visual polish
-    invaderMode = (gameState === STATES.INVADER_LIFTOFF ||
+    invaderMode = (gameState === STATES.INVADER_SCROLL_ROTATE ||
+                   gameState === STATES.INVADER_LIFTOFF ||
                    gameState === STATES.INVADER_TRANSITION ||
                    gameState === STATES.INVADER_PLAYING ||
                    gameState === STATES.INVADER_COMPLETE ||
@@ -101,24 +102,37 @@ function update(dt) {
                 var p = landingPads[i];
                 snapOldPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
             }
-            // Advance to next level and generate new terrain
-            currentLevel++;
-            GRAVITY = getLevelConfig(currentLevel).gravity;
-            THRUST_POWER = GRAVITY * 2.5;
-            resetWind();
-            generateTerrain();
-            // Store the new terrain as the scroll target
-            var snapNewTerrain = [];
-            for (var i = 0; i < terrain.length; i++) {
-                snapNewTerrain.push({ x: terrain[i].x, y: terrain[i].y });
-            }
-            var snapNewPads = [];
-            for (var i = 0; i < landingPads.length; i++) {
-                var p = landingPads[i];
-                snapNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+
+            var snapNewTerrain;
+            var snapNewPads;
+
+            if (securityPadScroll) {
+                // Security pad: generate flat invader-style terrain (no level advance)
+                var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
+                snapNewTerrain = [];
+                for (var i = 0; i < terrain.length; i++) {
+                    snapNewTerrain.push({ x: terrain[i].x, y: flatY });
+                }
+                snapNewPads = []; // No landing pads on invader terrain
+            } else {
+                // Normal pad: advance to next level and generate new terrain
+                currentLevel++;
+                GRAVITY = getLevelConfig(currentLevel).gravity;
+                THRUST_POWER = GRAVITY * 2.5;
+                resetWind();
+                generateTerrain();
+                snapNewTerrain = [];
+                for (var i = 0; i < terrain.length; i++) {
+                    snapNewTerrain.push({ x: terrain[i].x, y: terrain[i].y });
+                }
+                snapNewPads = [];
+                for (var i = 0; i < landingPads.length; i++) {
+                    var p = landingPads[i];
+                    snapNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+                }
             }
             // Atomically set scroll state as a frozen object
-            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads);
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll);
             // Center ship horizontally for the scroll
             ship.x = canvas.width / 2;
             gameState = STATES.SCENE_SCROLL;
@@ -139,6 +153,7 @@ function update(dt) {
             // Scroll complete — finalize new terrain from the frozen snapshot
             var newT = sceneScrollState.newTerrain;
             var newP = sceneScrollState.newPads;
+            var wasInvaderScroll = sceneScrollState.isInvaderScroll;
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
                 terrain.push({ x: newT[i].x, y: newT[i].y });
@@ -151,19 +166,33 @@ function update(dt) {
             landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
             // Atomically clear scroll state
             sceneScrollState = null;
-            // Begin descent from center to starting altitude
-            sceneDescentStartY = canvas.height / 2;
-            sceneDescentTargetY = canvas.height / 3;
-            sceneDescentTimer = 0;
-            ship.x = canvas.width / 2;
-            ship.y = sceneDescentStartY;
-            ship.angle = 0;
-            ship.vx = 0;
-            ship.vy = 0;
-            ship.thrusting = false;
-            ship.rotating = null;
-            ship.fuel = FUEL_MAX;
-            gameState = STATES.SCENE_DESCENT;
+
+            if (wasInvaderScroll) {
+                // Security pad: rotate ship 90° then enter invader gameplay
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 2;
+                ship.angle = 0;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                invaderScrollRotateTimer = 0;
+                gameState = STATES.INVADER_SCROLL_ROTATE;
+            } else {
+                // Normal pad: begin descent from center to starting altitude
+                sceneDescentStartY = canvas.height / 2;
+                sceneDescentTargetY = canvas.height / 3;
+                sceneDescentTimer = 0;
+                ship.x = canvas.width / 2;
+                ship.y = sceneDescentStartY;
+                ship.angle = 0;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                ship.fuel = FUEL_MAX;
+                gameState = STATES.SCENE_DESCENT;
+            }
         } else {
             // Update timer by replacing the frozen object atomically
             sceneScrollState = Object.freeze({
@@ -171,7 +200,8 @@ function update(dt) {
                 oldTerrain: sceneScrollState.oldTerrain,
                 oldPads: sceneScrollState.oldPads,
                 newTerrain: sceneScrollState.newTerrain,
-                newPads: sceneScrollState.newPads
+                newPads: sceneScrollState.newPads,
+                isInvaderScroll: sceneScrollState.isInvaderScroll
             });
         }
     }
@@ -207,6 +237,26 @@ function update(dt) {
             ship.vx = 0;
             ship.vy = 0;
             gameState = STATES.PLAYING;
+        }
+    }
+
+    // Invader scroll rotate: 90-degree clockwise rotation after security pad scroll
+    if (gameState === STATES.INVADER_SCROLL_ROTATE) {
+        invaderScrollRotateTimer += dt;
+        var t = Math.min(invaderScrollRotateTimer / INVADER_SCROLL_ROTATE_DURATION, 1);
+        // Ease in-out for smooth rotation
+        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        ship.angle = eased * (Math.PI / 2);
+
+        if (t >= 1) {
+            ship.angle = Math.PI / 2;
+            // Terrain is already flat from scroll — snapshot for INVADER_TRANSITION compatibility
+            terrainOriginalPoints = [];
+            for (var i = 0; i < terrain.length; i++) {
+                terrainOriginalPoints.push(terrain[i].y);
+            }
+            terrainTransitionTimer = 0;
+            gameState = STATES.INVADER_TRANSITION;
         }
     }
 

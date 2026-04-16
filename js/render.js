@@ -409,7 +409,11 @@ function renderSceneLiftoff() {
     ctx.fillStyle = '#4FC3F7';
     ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('LAUNCHING TO NEXT MISSION', canvas.width / 2, 60);
+    if (securityPadScroll) {
+        ctx.fillText('SECURITY THREAT DETECTED', canvas.width / 2, 60);
+    } else {
+        ctx.fillText('LAUNCHING TO NEXT MISSION', canvas.width / 2, 60);
+    }
 }
 
 function renderSceneDescent() {
@@ -577,6 +581,56 @@ function drawTerrainAtOffset(terrainPoints, pads, offsetX) {
     }
 }
 
+function drawInvaderTerrainAtOffset(terrainPoints, offsetX) {
+    if (terrainPoints.length === 0) return;
+
+    // Draw filled terrain with dark green tint
+    ctx.beginPath();
+    ctx.moveTo(terrainPoints[0].x + offsetX, terrainPoints[0].y);
+    for (var i = 1; i < terrainPoints.length; i++) {
+        ctx.lineTo(terrainPoints[i].x + offsetX, terrainPoints[i].y);
+    }
+    ctx.lineTo(terrainPoints[terrainPoints.length - 1].x + offsetX, canvas.height);
+    ctx.lineTo(terrainPoints[0].x + offsetX, canvas.height);
+    ctx.closePath();
+    ctx.fillStyle = '#1a3a1a';
+    ctx.fill();
+
+    // Stroke the top surface in green
+    ctx.beginPath();
+    ctx.moveTo(terrainPoints[0].x + offsetX, terrainPoints[0].y);
+    for (var i = 1; i < terrainPoints.length; i++) {
+        ctx.lineTo(terrainPoints[i].x + offsetX, terrainPoints[i].y);
+    }
+    ctx.strokeStyle = '#4CAF50';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw grid lines on the terrain surface
+    var flatY = terrainPoints[0].y;
+    var startX = terrainPoints[0].x + offsetX;
+    var endX = terrainPoints[terrainPoints.length - 1].x + offsetX;
+    ctx.strokeStyle = 'rgba(76, 175, 80, 0.3)';
+    ctx.lineWidth = 1;
+
+    // Vertical grid lines
+    var gridSpacing = 60;
+    for (var gx = Math.ceil(startX / gridSpacing) * gridSpacing; gx <= endX; gx += gridSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(gx, flatY);
+        ctx.lineTo(gx, canvas.height);
+        ctx.stroke();
+    }
+
+    // Horizontal grid lines
+    for (var gy = flatY + gridSpacing; gy < canvas.height; gy += gridSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(startX, gy);
+        ctx.lineTo(endX, gy);
+        ctx.stroke();
+    }
+}
+
 function renderSceneScroll() {
     if (!sceneScrollState) return;
 
@@ -595,7 +649,11 @@ function renderSceneScroll() {
     drawTerrainAtOffset(sceneScrollState.oldTerrain, sceneScrollState.oldPads, -scrollOffset);
 
     // Draw new terrain entering from right
-    drawTerrainAtOffset(sceneScrollState.newTerrain, sceneScrollState.newPads, canvas.width - scrollOffset);
+    if (sceneScrollState.isInvaderScroll) {
+        drawInvaderTerrainAtOffset(sceneScrollState.newTerrain, canvas.width - scrollOffset);
+    } else {
+        drawTerrainAtOffset(sceneScrollState.newTerrain, sceneScrollState.newPads, canvas.width - scrollOffset);
+    }
 
     ctx.restore();
 
@@ -606,12 +664,28 @@ function renderSceneScroll() {
     ctx.fillStyle = '#4FC3F7';
     ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('APPROACHING NEXT MISSION', canvas.width / 2, 60);
+    if (sceneScrollState.isInvaderScroll) {
+        ctx.fillText('SECURITY THREAT DETECTED', canvas.width / 2, 60);
+    } else {
+        ctx.fillText('APPROACHING NEXT MISSION', canvas.width / 2, 60);
+        // Level indicator
+        ctx.fillStyle = '#fff';
+        ctx.font = '16px monospace';
+        ctx.fillText('Level ' + (currentLevel + 1), canvas.width / 2, 90);
+    }
+}
 
-    // Level indicator
-    ctx.fillStyle = '#fff';
-    ctx.font = '16px monospace';
-    ctx.fillText('Level ' + (currentLevel + 1), canvas.width / 2, 90);
+function renderInvaderScrollRotate() {
+    drawTerrain();
+
+    // Draw ship rotating (no thrust during rotation)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ENGAGING DEFENSE MODE', canvas.width / 2, 60);
 }
 
 function renderInvaderLiftoff() {
@@ -984,6 +1058,9 @@ function render() {
             break;
         case STATES.SCENE_COUNTDOWN:
             renderSceneCountdown();
+            break;
+        case STATES.INVADER_SCROLL_ROTATE:
+            renderInvaderScrollRotate();
             break;
         case STATES.INVADER_LIFTOFF:
             renderInvaderLiftoff();
