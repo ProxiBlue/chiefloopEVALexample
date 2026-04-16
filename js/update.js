@@ -165,11 +165,16 @@ function update(dt) {
         var shipStartX = sceneScrollState.shipStartX;
         ship.x = shipStartX + (canvas.width / 2 - shipStartX) * eased;
 
-        // Y: smooth arc from center toward descent altitude (covers 85% during scroll)
-        // Blends liftoff momentum into descent — ship is never locked at a fixed Y
+        // Y: smooth arc from center toward target altitude
+        // Normal path: descend toward canvas.height/3 (covers 85% during scroll)
+        // Invader path: stay at canvas.height/2 (INVADER_SCROLL_ROTATE expects center)
         var scrollCenterY = canvas.height / 2;
-        var scrollTargetY = canvas.height / 3;
-        ship.y = scrollCenterY + (scrollTargetY - scrollCenterY) * 0.85 * eased;
+        if (!sceneScrollState.isInvaderScroll) {
+            var scrollTargetY = canvas.height / 3;
+            ship.y = scrollCenterY + (scrollTargetY - scrollCenterY) * 0.85 * eased;
+        } else {
+            ship.y = scrollCenterY;
+        }
 
         // Bank angle: smooth bell curve peaking at mid-scroll, direction depends on travel
         var bankDirection = (shipStartX < canvas.width / 2) ? 1 : -1;
