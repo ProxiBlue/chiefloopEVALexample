@@ -141,7 +141,7 @@ var invaderTotalAliens = 0;             // total aliens spawned this wave
 var alienExplosions = [];               // array of particle groups from destroyed aliens
 
 // --- Invader Phase Completion ---
-var INVADER_COMPLETE_DELAY = 2.5;       // seconds to show results before returning
+var INVADER_COMPLETE_DELAY = 2.0;       // seconds to show results before returning
 var invaderCompleteTimer = 0;           // elapsed time in INVADER_COMPLETE state
 
 // --- Invader Return Transition ---

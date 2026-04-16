@@ -205,7 +205,6 @@ function update(dt) {
                     aliens.splice(a, 1);
                     aliensDestroyed++;
                     invaderScore += ALIEN_POINTS;
-                    score += ALIEN_POINTS;
                     hit = true;
                     break;
                 }
@@ -231,6 +230,8 @@ function update(dt) {
         updateAlienExplosions(dt);
         invaderCompleteTimer += dt;
         if (invaderCompleteTimer >= INVADER_COMPLETE_DELAY) {
+            // Add invader bonus points to player's total score
+            score += invaderScore;
             // Return to normal gameplay — start return rotation
             invaderReturnRotationTimer = 0;
             gameState = STATES.INVADER_RETURN;
