@@ -89,11 +89,19 @@ var SCENE_LIFTOFF_RISE_SPEED = 120; // pixels per second during vertical rise
 
 // --- Scene Scroll (horizontal terrain transition between levels) ---
 var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll
-var sceneScrollTimer = 0;           // elapsed time in scroll
-var sceneScrollOldTerrain = [];     // snapshot of old level terrain points
-var sceneScrollOldPads = [];        // snapshot of old level landing pads
-var sceneScrollNewTerrain = [];     // next level terrain points
-var sceneScrollNewPads = [];        // next level landing pads
+// Scroll state is encapsulated in a single object to prevent partial mutation.
+// null when no scroll is active; a frozen object during SCENE_SCROLL.
+var sceneScrollState = null;        // { timer, oldTerrain, oldPads, newTerrain, newPads }
+
+function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads) {
+    return Object.freeze({
+        timer: 0,
+        oldTerrain: oldTerrain,
+        oldPads: oldPads,
+        newTerrain: newTerrain,
+        newPads: newPads
+    });
+}
 
 // --- Invader Liftoff Animation ---
 var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise

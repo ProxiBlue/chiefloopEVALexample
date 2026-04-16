@@ -92,14 +92,14 @@ function update(dt) {
         if (ship.y <= targetY) {
             ship.y = targetY;
             // Snapshot current terrain before generating new level
-            sceneScrollOldTerrain = [];
+            var snapOldTerrain = [];
             for (var i = 0; i < terrain.length; i++) {
-                sceneScrollOldTerrain.push({ x: terrain[i].x, y: terrain[i].y });
+                snapOldTerrain.push({ x: terrain[i].x, y: terrain[i].y });
             }
-            sceneScrollOldPads = [];
+            var snapOldPads = [];
             for (var i = 0; i < landingPads.length; i++) {
                 var p = landingPads[i];
-                sceneScrollOldPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+                snapOldPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
             }
             // Advance to next level and generate new terrain
             currentLevel++;
@@ -108,59 +108,61 @@ function update(dt) {
             resetWind();
             generateTerrain();
             // Store the new terrain as the scroll target
-            sceneScrollNewTerrain = [];
+            var snapNewTerrain = [];
             for (var i = 0; i < terrain.length; i++) {
-                sceneScrollNewTerrain.push({ x: terrain[i].x, y: terrain[i].y });
+                snapNewTerrain.push({ x: terrain[i].x, y: terrain[i].y });
             }
-            sceneScrollNewPads = [];
+            var snapNewPads = [];
             for (var i = 0; i < landingPads.length; i++) {
                 var p = landingPads[i];
-                sceneScrollNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+                snapNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
             }
+            // Atomically set scroll state as a frozen object
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads);
             // Center ship horizontally for the scroll
             ship.x = canvas.width / 2;
-            sceneScrollTimer = 0;
             gameState = STATES.SCENE_SCROLL;
         }
     }
 
     // Scene scroll: horizontal terrain transition
-    if (gameState === STATES.SCENE_SCROLL) {
-        sceneScrollTimer += dt;
-        var t = Math.min(sceneScrollTimer / SCENE_SCROLL_DURATION, 1);
-        // Ease in-out for smooth scroll
-        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-        var scrollOffset = eased * canvas.width;
+    if (gameState === STATES.SCENE_SCROLL && sceneScrollState) {
+        // Timer is tracked via a new object since sceneScrollState is frozen
+        var scrollTimer = sceneScrollState.timer + dt;
+        var t = Math.min(scrollTimer / SCENE_SCROLL_DURATION, 1);
 
         // Keep ship centered
         ship.x = canvas.width / 2;
         ship.y = canvas.height / 2;
 
-        // Update terrain points to reflect scroll position
-        // Old terrain slides left, new terrain enters from right
-        // We rebuild the terrain array each frame for rendering
-        // (drawTerrain and drawTerrainWithOffset handle the visual)
-
         if (t >= 1) {
-            // Scroll complete — finalize new terrain
+            // Scroll complete — finalize new terrain from the frozen snapshot
+            var newT = sceneScrollState.newTerrain;
+            var newP = sceneScrollState.newPads;
             terrain = [];
-            for (var i = 0; i < sceneScrollNewTerrain.length; i++) {
-                terrain.push({ x: sceneScrollNewTerrain[i].x, y: sceneScrollNewTerrain[i].y });
+            for (var i = 0; i < newT.length; i++) {
+                terrain.push({ x: newT[i].x, y: newT[i].y });
             }
             landingPads = [];
-            for (var i = 0; i < sceneScrollNewPads.length; i++) {
-                var p = sceneScrollNewPads[i];
+            for (var i = 0; i < newP.length; i++) {
+                var p = newP[i];
                 landingPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
             }
             landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
-            // Clean up scroll state
-            sceneScrollOldTerrain = [];
-            sceneScrollOldPads = [];
-            sceneScrollNewTerrain = [];
-            sceneScrollNewPads = [];
+            // Atomically clear scroll state
+            sceneScrollState = null;
             // Reset ship for playing
             resetShip();
             gameState = STATES.PLAYING;
+        } else {
+            // Update timer by replacing the frozen object atomically
+            sceneScrollState = Object.freeze({
+                timer: scrollTimer,
+                oldTerrain: sceneScrollState.oldTerrain,
+                oldPads: sceneScrollState.oldPads,
+                newTerrain: sceneScrollState.newTerrain,
+                newPads: sceneScrollState.newPads
+            });
         }
     }
 

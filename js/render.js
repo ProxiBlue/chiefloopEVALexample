@@ -513,8 +513,10 @@ function drawTerrainAtOffset(terrainPoints, pads, offsetX) {
 }
 
 function renderSceneScroll() {
-    // Calculate scroll progress
-    var t = Math.min(sceneScrollTimer / SCENE_SCROLL_DURATION, 1);
+    if (!sceneScrollState) return;
+
+    // Calculate scroll progress from encapsulated state
+    var t = Math.min(sceneScrollState.timer / SCENE_SCROLL_DURATION, 1);
     var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     var scrollOffset = eased * canvas.width;
 
@@ -525,10 +527,10 @@ function renderSceneScroll() {
     ctx.clip();
 
     // Draw old terrain scrolling left
-    drawTerrainAtOffset(sceneScrollOldTerrain, sceneScrollOldPads, -scrollOffset);
+    drawTerrainAtOffset(sceneScrollState.oldTerrain, sceneScrollState.oldPads, -scrollOffset);
 
     // Draw new terrain entering from right
-    drawTerrainAtOffset(sceneScrollNewTerrain, sceneScrollNewPads, canvas.width - scrollOffset);
+    drawTerrainAtOffset(sceneScrollState.newTerrain, sceneScrollState.newPads, canvas.width - scrollOffset);
 
     ctx.restore();
 
