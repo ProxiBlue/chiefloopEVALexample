@@ -29,6 +29,12 @@ function startNewGame() {
     resetWind();
     generateTerrain();
     gameState = STATES.PLAYING;
+    // Request a one-time-use session token for online score submission.
+    // Fire-and-forget: if this fails, the game works fine — scores just
+    // won't be submitted online. The token is consumed by submitOnlineScore().
+    if (typeof requestGameSession === 'function') {
+        requestGameSession();
+    }
 }
 
 function handleKeyPress(key) {

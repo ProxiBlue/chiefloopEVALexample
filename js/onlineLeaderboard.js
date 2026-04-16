@@ -1,8 +1,9 @@
 // --- Online Leaderboard Utility ---
 // Requires: js/onlineConfig.js (loaded before this file)
 
-// --- Private state for rate limiting ---
+// --- Private state ---
 var _lastSubmitTime = 0;
+var _gameSessionToken = null; // one-time-use token from server
 
 /**
  * Sanitize a string for safe DOM insertion — HTML-entity-encodes special
@@ -50,9 +51,59 @@ function _fetchWithTimeout(url, options, timeoutMs) {
 }
 
 /**
+ * Request a one-time-use game session token from the server-side proxy.
+ * Must be called when a new game starts. The token is stored internally
+ * and consumed by submitOnlineScore(). Each token can only be used for
+ * one score submission, preventing console-based score injection without
+ * having started a game through the normal UI flow.
+ *
+ * This is fire-and-forget — if the request fails, the game continues
+ * normally; the score simply won't be submitted to the online leaderboard.
+ *
+ * @returns {Promise<boolean>} true if a token was obtained, false otherwise
+ */
+function requestGameSession() {
+    _gameSessionToken = null; // clear any prior token
+
+    var proxyUrl = ONLINE_LEADERBOARD_CONFIG.submitProxyUrl;
+    if (!proxyUrl) {
+        return Promise.resolve(false);
+    }
+
+    var timeoutMs = ONLINE_LEADERBOARD_CONFIG.fetchTimeoutMs || 10000;
+
+    return _fetchWithTimeout(proxyUrl + '/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    }, timeoutMs)
+        .then(function (response) {
+            if (!response.ok) {
+                console.warn('requestGameSession: HTTP ' + response.status);
+                return false;
+            }
+            return response.json();
+        })
+        .then(function (data) {
+            if (data && data.token) {
+                _gameSessionToken = data.token;
+                return true;
+            }
+            return false;
+        })
+        .catch(function (err) {
+            console.warn('requestGameSession: network error', err);
+            return false;
+        });
+}
+
+/**
  * Submit a score to the online leaderboard via the server-side proxy.
+ * Requires a valid game session token obtained via requestGameSession().
+ *
  * The proxy holds the dreamlo private key and performs server-side
- * validation (rate limiting, score bounds, name sanitization).
+ * validation: session token verification (one-time-use, IP-bound),
+ * per-IP rate limiting, score bounds, and name sanitization.
  * Client-side checks here are UX guardrails only.
  *
  * @param {string} playerName - Player name (max 20 characters)
@@ -60,7 +111,15 @@ function _fetchWithTimeout(url, options, timeoutMs) {
  * @returns {Promise<boolean>} true if submission succeeded, false otherwise
  */
 function submitOnlineScore(playerName, playerScore) {
-    // --- Client-side UX throttle (server also enforces rate limits) ---
+    // --- Require a valid session token (proves a game was started normally) ---
+    if (!_gameSessionToken) {
+        console.warn('submitOnlineScore: no game session token — score not submitted');
+        return Promise.resolve(false);
+    }
+    var token = _gameSessionToken;
+    _gameSessionToken = null; // consume the token (one-time-use)
+
+    // --- Client-side UX throttle (server also enforces per-IP rate limits) ---
     var now = Date.now();
     var cooldownMs = (ONLINE_LEADERBOARD_CONFIG.submitCooldownSeconds || 10) * 1000;
     if (now - _lastSubmitTime < cooldownMs) {
@@ -102,7 +161,7 @@ function submitOnlineScore(playerName, playerScore) {
     return _fetchWithTimeout(proxyUrl + '/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, score: scoreInt })
+        body: JSON.stringify({ name: name, score: scoreInt, token: token })
     }, timeoutMs)
         .then(function (response) {
             if (!response.ok) {
