@@ -117,3 +117,23 @@ var ALIEN_RANDOM_HEIGHT = 300;          // height of the rectangular spawn area
 var aliens = [];                        // array of { x, y, type } objects
 var alienFormation = 'grid';            // 'grid' or 'random' — chosen at spawn time
 var aliensSpawned = false;              // whether wave has been spawned this round
+
+// --- Bullet Configuration ---
+var BULLET_SPEED = 500;                 // pixels per second (rightward)
+var BULLET_SIZE = 6;                    // pixel size of bullet
+var BULLET_COOLDOWN = 0.18;             // seconds between shots
+var BULLET_COLOR = '#FFD700';           // gold/yellow
+
+// --- Bullet State ---
+var bullets = [];                       // array of { x, y } objects
+var bulletCooldownTimer = 0;            // time remaining before next shot
+
+// --- Invader Scoring ---
+var ALIEN_POINTS = 50;                  // points per alien destroyed
+var invaderScore = 0;                   // bonus points earned during invader phase
+var aliensDestroyed = 0;                // count of aliens destroyed this wave
+var invaderTotalAliens = 0;             // total aliens spawned this wave
+
+// --- Invader Phase Completion ---
+var INVADER_COMPLETE_DELAY = 2.5;       // seconds to show results before returning
+var invaderCompleteTimer = 0;           // elapsed time in INVADER_COMPLETE state

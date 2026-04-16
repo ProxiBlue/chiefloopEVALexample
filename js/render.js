@@ -533,12 +533,20 @@ function renderInvaderPlaying() {
     // Draw ship at its current position (rotated sideways)
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
 
+    // Draw all bullets
+    ctx.fillStyle = BULLET_COLOR;
+    for (var i = 0; i < bullets.length; i++) {
+        ctx.beginPath();
+        ctx.arc(bullets[i].x, bullets[i].y, BULLET_SIZE / 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
     // Draw all aliens
     for (var i = 0; i < aliens.length; i++) {
         drawAlien(aliens[i].x, aliens[i].y, ALIEN_SIZE, aliens[i].type);
     }
 
-    // HUD: formation type and alien count
+    // HUD
     ctx.fillStyle = '#4FC3F7';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
@@ -548,7 +556,43 @@ function renderInvaderPlaying() {
     ctx.font = '14px monospace';
     ctx.textAlign = 'left';
     ctx.fillText('Aliens: ' + aliens.length, 10, 25);
-    ctx.fillText('Formation: ' + alienFormation.toUpperCase(), 10, 45);
+    ctx.fillText('Destroyed: ' + aliensDestroyed, 10, 45);
+    ctx.fillText('Score: ' + score, 10, 65);
+
+    // Controls hint
+    ctx.fillStyle = '#555';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SPACE to shoot | UP/DOWN to move', canvas.width / 2, canvas.height - 30);
+}
+
+function renderInvaderComplete() {
+    // Draw terrain
+    drawTerrain();
+
+    // Draw ship
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Results overlay
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('WAVE COMPLETE!', cx, cy - 60);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText('Aliens Destroyed: ' + aliensDestroyed + ' / ' + invaderTotalAliens, cx, cy - 15);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('Bonus: +' + invaderScore + ' pts', cx, cy + 25);
+
+    ctx.fillStyle = '#888';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('Returning to mission...', cx, cy + 65);
 }
 
 function renderCrashed() {
@@ -674,6 +718,9 @@ function render() {
             break;
         case STATES.INVADER_PLAYING:
             renderInvaderPlaying();
+            break;
+        case STATES.INVADER_COMPLETE:
+            renderInvaderComplete();
             break;
         case STATES.CRASHED:
             renderCrashed();

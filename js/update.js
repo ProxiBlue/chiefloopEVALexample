@@ -3,7 +3,11 @@
 // Spawn a wave of aliens off-screen to the right
 function spawnAlienWave() {
     aliens = [];
+    bullets = [];
     aliensSpawned = true;
+    invaderScore = 0;
+    aliensDestroyed = 0;
+    bulletCooldownTimer = 0;
 
     // Randomly pick formation type
     alienFormation = Math.random() < 0.5 ? 'grid' : 'random';
@@ -47,6 +51,8 @@ function spawnAlienWave() {
             });
         }
     }
+
+    invaderTotalAliens = aliens.length;
 }
 
 function update(dt) {
@@ -125,8 +131,41 @@ function update(dt) {
         }
     }
 
-    // Invader playing: move aliens leftward, remove those off-screen
+    // Invader playing: move aliens, handle bullets, detect collisions
     if (gameState === STATES.INVADER_PLAYING) {
+        // --- Ship vertical movement (Up/Down to dodge) ---
+        var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
+        var movingUp = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+        var movingDown = !!(keys['ArrowDown'] || keys['s'] || keys['S']);
+        if (movingUp) {
+            ship.y -= 200 * dt;
+            if (ship.y < 80) ship.y = 80;
+        }
+        if (movingDown) {
+            ship.y += 200 * dt;
+            if (ship.y > flatY - 40) ship.y = flatY - 40;
+        }
+
+        // --- Bullet firing (Space key) ---
+        bulletCooldownTimer -= dt;
+        if (bulletCooldownTimer < 0) bulletCooldownTimer = 0;
+        var wantsFire = !!(keys[' '] || keys['Space']);
+        if (wantsFire && bulletCooldownTimer <= 0) {
+            // Fire bullet from the nose of the ship (ship faces right at angle PI/2)
+            bullets.push({ x: ship.x + SHIP_SIZE * 0.6, y: ship.y });
+            bulletCooldownTimer = BULLET_COOLDOWN;
+        }
+
+        // --- Update bullets ---
+        for (var i = bullets.length - 1; i >= 0; i--) {
+            bullets[i].x += BULLET_SPEED * dt;
+            // Remove bullets that go off-screen right
+            if (bullets[i].x > canvas.width + 20) {
+                bullets.splice(i, 1);
+            }
+        }
+
+        // --- Move aliens leftward ---
         for (var i = aliens.length - 1; i >= 0; i--) {
             aliens[i].x -= ALIEN_SPEED * dt;
             // Remove alien when fully off the left edge
@@ -134,6 +173,66 @@ function update(dt) {
                 aliens.splice(i, 1);
             }
         }
+
+        // --- Bullet-Alien collision detection ---
+        for (var b = bullets.length - 1; b >= 0; b--) {
+            var bx = bullets[b].x;
+            var by = bullets[b].y;
+            var hit = false;
+            for (var a = aliens.length - 1; a >= 0; a--) {
+                var ax = aliens[a].x;
+                var ay = aliens[a].y;
+                var halfSize = ALIEN_SIZE / 2;
+                // Simple AABB collision
+                if (bx >= ax - halfSize && bx <= ax + halfSize &&
+                    by >= ay - halfSize && by <= ay + halfSize) {
+                    // Destroy alien
+                    aliens.splice(a, 1);
+                    aliensDestroyed++;
+                    invaderScore += ALIEN_POINTS;
+                    score += ALIEN_POINTS;
+                    hit = true;
+                    break;
+                }
+            }
+            if (hit) {
+                bullets.splice(b, 1);
+            }
+        }
+
+        // --- End condition: all aliens gone (destroyed or scrolled off) ---
+        if (aliensSpawned && aliens.length === 0 && bullets.length >= 0) {
+            // Wave complete — transition to results screen
+            invaderCompleteTimer = 0;
+            gameState = STATES.INVADER_COMPLETE;
+        }
+    }
+
+    // Invader complete: show results, then return to normal gameplay
+    if (gameState === STATES.INVADER_COMPLETE) {
+        invaderCompleteTimer += dt;
+        if (invaderCompleteTimer >= INVADER_COMPLETE_DELAY) {
+            // Return to normal gameplay — advance to next level
+            gameState = STATES.INVADER_RETURN;
+        }
+    }
+
+    // Invader return: reset and go back to normal landing gameplay
+    if (gameState === STATES.INVADER_RETURN) {
+        // Clean up invader state
+        aliens = [];
+        bullets = [];
+        aliensSpawned = false;
+        bulletCooldownTimer = 0;
+
+        // Advance to next level
+        currentLevel++;
+        GRAVITY = getLevelConfig(currentLevel).gravity;
+        THRUST_POWER = GRAVITY * 2.5;
+        resetShip();
+        resetWind();
+        generateTerrain();
+        gameState = STATES.PLAYING;
     }
 
     if (gameState === STATES.PLAYING) {
