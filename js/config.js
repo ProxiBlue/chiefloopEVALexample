@@ -123,9 +123,9 @@ var aliensSpawned = false;              // whether wave has been spawned this ro
 
 // --- Bullet Configuration ---
 var BULLET_SPEED = 500;                 // pixels per second (rightward)
-var BULLET_SIZE = 6;                    // pixel size of bullet
-var BULLET_COOLDOWN = 0.18;             // seconds between shots
-var BULLET_COLOR = '#FFD700';           // gold/yellow
+var BULLET_SIZE = 10;                   // length of laser-line segment
+var BULLET_COOLDOWN = 0.22;             // seconds between shots (~4.5 per second)
+var BULLET_COLOR = '#F37121';           // orange — matches ship color theme
 
 // --- Bullet State ---
 var bullets = [];                       // array of { x, y } objects

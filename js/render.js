@@ -533,13 +533,28 @@ function renderInvaderPlaying() {
     // Draw ship at its current position (rotated sideways)
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
 
-    // Draw all bullets
-    ctx.fillStyle = BULLET_COLOR;
+    // Draw all bullets as short laser-line segments
+    ctx.strokeStyle = BULLET_COLOR;
+    ctx.lineWidth = 3;
+    ctx.shadowColor = BULLET_COLOR;
+    ctx.shadowBlur = 6;
     for (var i = 0; i < bullets.length; i++) {
         ctx.beginPath();
-        ctx.arc(bullets[i].x, bullets[i].y, BULLET_SIZE / 2, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(bullets[i].x - BULLET_SIZE, bullets[i].y);
+        ctx.lineTo(bullets[i].x, bullets[i].y);
+        ctx.stroke();
+        // Bright core
+        ctx.strokeStyle = '#FFF';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bullets[i].x - BULLET_SIZE + 2, bullets[i].y);
+        ctx.lineTo(bullets[i].x - 1, bullets[i].y);
+        ctx.stroke();
+        // Reset for next bullet
+        ctx.strokeStyle = BULLET_COLOR;
+        ctx.lineWidth = 3;
     }
+    ctx.shadowBlur = 0;
 
     // Draw all aliens
     for (var i = 0; i < aliens.length; i++) {
