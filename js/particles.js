@@ -152,6 +152,63 @@ function drawExplosion() {
     ctx.globalAlpha = 1;
 }
 
+// --- Alien Explosion Particles ---
+var ALIEN_EXPLOSION_COLORS = ['#FF4444', '#FF6644', '#FFAA00', '#FFDD44', '#FFFFFF'];
+
+function spawnAlienExplosion(x, y) {
+    var particles = [];
+    for (var i = 0; i < 12; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 40 + Math.random() * 100;
+        var life = 0.3 + Math.random() * 0.4;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 3,
+            color: ALIEN_EXPLOSION_COLORS[Math.floor(Math.random() * ALIEN_EXPLOSION_COLORS.length)]
+        });
+    }
+    alienExplosions.push(particles);
+}
+
+function updateAlienExplosions(dt) {
+    for (var g = alienExplosions.length - 1; g >= 0; g--) {
+        var group = alienExplosions[g];
+        for (var i = group.length - 1; i >= 0; i--) {
+            var p = group[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt;
+            if (p.life <= 0) {
+                group.splice(i, 1);
+            }
+        }
+        if (group.length === 0) {
+            alienExplosions.splice(g, 1);
+        }
+    }
+}
+
+function drawAlienExplosions() {
+    for (var g = 0; g < alienExplosions.length; g++) {
+        var group = alienExplosions[g];
+        for (var i = 0; i < group.length; i++) {
+            var p = group[i];
+            var alpha = Math.max(0, p.life / p.maxLife);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+
 // --- Screen Shake ---
 var screenShake = 0;
 var SCREEN_SHAKE_DURATION = 0.3;

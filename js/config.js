@@ -132,10 +132,13 @@ var bullets = [];                       // array of { x, y } objects
 var bulletCooldownTimer = 0;            // time remaining before next shot
 
 // --- Invader Scoring ---
-var ALIEN_POINTS = 50;                  // points per alien destroyed
+var ALIEN_POINTS = 100;                 // points per alien destroyed
 var invaderScore = 0;                   // bonus points earned during invader phase
 var aliensDestroyed = 0;                // count of aliens destroyed this wave
 var invaderTotalAliens = 0;             // total aliens spawned this wave
+
+// --- Alien Explosion Particles ---
+var alienExplosions = [];               // array of particle groups from destroyed aliens
 
 // --- Invader Phase Completion ---
 var INVADER_COMPLETE_DELAY = 2.5;       // seconds to show results before returning

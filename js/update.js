@@ -197,6 +197,8 @@ function update(dt) {
                 // Simple AABB collision
                 if (bx >= ax - halfSize && bx <= ax + halfSize &&
                     by >= ay - halfSize && by <= ay + halfSize) {
+                    // Spawn explosion at alien position
+                    spawnAlienExplosion(ax, ay);
                     // Destroy alien
                     aliens.splice(a, 1);
                     aliensDestroyed++;
@@ -211,6 +213,9 @@ function update(dt) {
             }
         }
 
+        // --- Update alien explosion particles ---
+        updateAlienExplosions(dt);
+
         // --- End condition: all aliens gone (destroyed or scrolled off) ---
         if (aliensSpawned && aliens.length === 0) {
             // Wave complete — transition to results screen
@@ -221,6 +226,7 @@ function update(dt) {
 
     // Invader complete: show results, then return to normal gameplay
     if (gameState === STATES.INVADER_COMPLETE) {
+        updateAlienExplosions(dt);
         invaderCompleteTimer += dt;
         if (invaderCompleteTimer >= INVADER_COMPLETE_DELAY) {
             // Return to normal gameplay — advance to next level
@@ -233,6 +239,7 @@ function update(dt) {
         // Clean up invader state
         aliens = [];
         bullets = [];
+        alienExplosions = [];
         aliensSpawned = false;
         bulletCooldownTimer = 0;
 

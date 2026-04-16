@@ -561,6 +561,9 @@ function renderInvaderPlaying() {
         drawAlien(aliens[i].x, aliens[i].y, ALIEN_SIZE, aliens[i].type);
     }
 
+    // Draw alien explosion particles
+    drawAlienExplosions();
+
     // HUD
     ctx.fillStyle = '#4FC3F7';
     ctx.font = 'bold 20px sans-serif';
@@ -573,6 +576,11 @@ function renderInvaderPlaying() {
     ctx.fillText('Aliens: ' + aliens.length, 10, 25);
     ctx.fillText('Destroyed: ' + aliensDestroyed, 10, 45);
     ctx.fillText('Score: ' + score, 10, 65);
+
+    // Invader bonus points (running total)
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('Bonus: +' + invaderScore + ' pts', 10, 85);
 
     // Controls hint
     ctx.fillStyle = '#555';
@@ -587,6 +595,9 @@ function renderInvaderComplete() {
 
     // Draw ship
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Draw any remaining alien explosion particles
+    drawAlienExplosions();
 
     // Results overlay
     var cx = canvas.width / 2;
