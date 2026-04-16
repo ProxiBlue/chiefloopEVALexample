@@ -42,8 +42,12 @@ function handleKeyPress(key) {
     if (gameState === STATES.GAMEOVER && gameOverEnteringName) {
         if (key === 'Enter') {
             var name = gameOverName.trim() || 'AAA';
-            addToLeaderboard(name, score);
-            // Submit to online leaderboard asynchronously (fire-and-forget)
+            // Save to local leaderboard only if it qualifies as a local high score
+            if (isHighScore(score)) {
+                addToLeaderboard(name, score);
+            }
+            // Submit to online leaderboard asynchronously (fire-and-forget).
+            // All positive scores are eligible regardless of local ranking.
             if (score > 0 && typeof submitOnlineScore === 'function') {
                 submitOnlineScore(name, score);
             }
@@ -117,7 +121,10 @@ function handleKeyPress(key) {
             }
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;
-            if (isHighScore(score)) {
+            if (score > 0) {
+                // Always allow name entry for positive scores so the player
+                // can submit to the online leaderboard even if the score
+                // doesn't crack the local top 10.
                 gameOverEnteringName = true;
                 gameOverName = '';
             } else {
