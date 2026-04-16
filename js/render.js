@@ -412,6 +412,141 @@ function renderSceneLiftoff() {
     ctx.fillText('LAUNCHING TO NEXT MISSION', canvas.width / 2, 60);
 }
 
+function drawTerrainAtOffset(terrainPoints, pads, offsetX) {
+    if (terrainPoints.length === 0) return;
+
+    // Draw filled terrain polygon
+    ctx.beginPath();
+    ctx.moveTo(terrainPoints[0].x + offsetX, terrainPoints[0].y);
+    for (var i = 1; i < terrainPoints.length; i++) {
+        ctx.lineTo(terrainPoints[i].x + offsetX, terrainPoints[i].y);
+    }
+    ctx.lineTo(terrainPoints[terrainPoints.length - 1].x + offsetX, canvas.height);
+    ctx.lineTo(terrainPoints[0].x + offsetX, canvas.height);
+    ctx.closePath();
+    ctx.fillStyle = '#444';
+    ctx.fill();
+
+    // Stroke the top surface
+    ctx.beginPath();
+    ctx.moveTo(terrainPoints[0].x + offsetX, terrainPoints[0].y);
+    for (var i = 1; i < terrainPoints.length; i++) {
+        ctx.lineTo(terrainPoints[i].x + offsetX, terrainPoints[i].y);
+    }
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw landing pads with glow
+    var pulseAlpha = 0.5 + 0.5 * Math.sin(animTime * 3);
+    var glowScale = Math.max(1, Math.min(canvas.width, canvas.height) / 800);
+    for (var p = 0; p < pads.length; p++) {
+        var pad = pads[p];
+        if (pad.index >= 0 && pad.index < terrainPoints.length) {
+            var padStart = terrainPoints[pad.index];
+            var padEnd = terrainPoints[pad.index + pad.width] || terrainPoints[terrainPoints.length - 1];
+            var padColor = PR_TYPE_COLORS[pad.prType] || PR_TYPE_COLORS.other;
+
+            // Outer glow
+            ctx.save();
+            ctx.shadowColor = padColor;
+            ctx.shadowBlur = (20 + 12 * pulseAlpha) * glowScale;
+            ctx.beginPath();
+            ctx.moveTo(padStart.x + offsetX, padStart.y);
+            ctx.lineTo(padEnd.x + offsetX, padEnd.y);
+            ctx.strokeStyle = padColor;
+            ctx.globalAlpha = 0.25 + 0.2 * pulseAlpha;
+            ctx.lineWidth = 6 * glowScale;
+            ctx.stroke();
+            ctx.restore();
+
+            // Inner glow
+            ctx.save();
+            ctx.shadowColor = padColor;
+            ctx.shadowBlur = (10 + 8 * pulseAlpha) * glowScale;
+            ctx.beginPath();
+            ctx.moveTo(padStart.x + offsetX, padStart.y);
+            ctx.lineTo(padEnd.x + offsetX, padEnd.y);
+            ctx.strokeStyle = padColor;
+            ctx.globalAlpha = 0.6 + 0.4 * pulseAlpha;
+            ctx.lineWidth = 4 * glowScale;
+            ctx.stroke();
+            ctx.restore();
+
+            // Solid pad line
+            ctx.beginPath();
+            ctx.moveTo(padStart.x + offsetX, padStart.y);
+            ctx.lineTo(padEnd.x + offsetX, padEnd.y);
+            ctx.strokeStyle = padColor;
+            ctx.lineWidth = 3 * glowScale;
+            ctx.stroke();
+
+            // Point value label
+            var midX = (padStart.x + padEnd.x) / 2 + offsetX;
+            ctx.fillStyle = padColor;
+            ctx.font = 'bold ' + Math.round(12 * glowScale) + 'px sans-serif';
+            ctx.textAlign = 'center';
+            var padMultiplier = PR_TYPE_MULTIPLIERS[pad.prType] || 1;
+            var labelText = pad.points + 'pts';
+            if (padMultiplier > 1) {
+                labelText += ' x' + padMultiplier;
+            }
+            ctx.fillText(labelText, midX, padStart.y - 8);
+
+            // PR label below pad
+            var padLabel = '';
+            if (pad.prNumber) {
+                padLabel = 'PR #' + pad.prNumber;
+            } else if (pad.prHash) {
+                padLabel = pad.prHash;
+            }
+            if (padLabel) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = Math.round(9 * glowScale) + 'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(padLabel, midX, padStart.y + 14 * glowScale);
+                ctx.restore();
+            }
+        }
+    }
+}
+
+function renderSceneScroll() {
+    // Calculate scroll progress
+    var t = Math.min(sceneScrollTimer / SCENE_SCROLL_DURATION, 1);
+    var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    var scrollOffset = eased * canvas.width;
+
+    // Clip to prevent terrain drawing outside canvas
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, canvas.width, canvas.height);
+    ctx.clip();
+
+    // Draw old terrain scrolling left
+    drawTerrainAtOffset(sceneScrollOldTerrain, sceneScrollOldPads, -scrollOffset);
+
+    // Draw new terrain entering from right
+    drawTerrainAtOffset(sceneScrollNewTerrain, sceneScrollNewPads, canvas.width - scrollOffset);
+
+    ctx.restore();
+
+    // Draw ship hovering at center (no thrust during scroll)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('APPROACHING NEXT MISSION', canvas.width / 2, 60);
+
+    // Level indicator
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px monospace';
+    ctx.fillText('Level ' + (currentLevel + 1), canvas.width / 2, 90);
+}
+
 function renderInvaderLiftoff() {
     drawTerrain();
 
@@ -773,6 +908,9 @@ function render() {
             break;
         case STATES.SCENE_LIFTOFF:
             renderSceneLiftoff();
+            break;
+        case STATES.SCENE_SCROLL:
+            renderSceneScroll();
             break;
         case STATES.INVADER_LIFTOFF:
             renderInvaderLiftoff();

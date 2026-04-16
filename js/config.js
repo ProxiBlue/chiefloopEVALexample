@@ -6,6 +6,7 @@ var STATES = {
     CRASHED: 'crashed',
     GAMEOVER: 'gameover',
     SCENE_LIFTOFF: 'scene_liftoff',
+    SCENE_SCROLL: 'scene_scroll',
     INVADER_LIFTOFF: 'invader_liftoff',
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
@@ -85,6 +86,14 @@ var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
 
 // --- Scene Liftoff Animation (after normal landing) ---
 var SCENE_LIFTOFF_RISE_SPEED = 120; // pixels per second during vertical rise
+
+// --- Scene Scroll (horizontal terrain transition between levels) ---
+var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll
+var sceneScrollTimer = 0;           // elapsed time in scroll
+var sceneScrollOldTerrain = [];     // snapshot of old level terrain points
+var sceneScrollOldPads = [];        // snapshot of old level landing pads
+var sceneScrollNewTerrain = [];     // next level terrain points
+var sceneScrollNewPads = [];        // next level landing pads
 
 // --- Invader Liftoff Animation ---
 var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise
