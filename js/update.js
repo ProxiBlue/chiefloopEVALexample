@@ -201,7 +201,7 @@ function update(dt) {
         }
 
         // --- End condition: all aliens gone (destroyed or scrolled off) ---
-        if (aliensSpawned && aliens.length === 0 && bullets.length >= 0) {
+        if (aliensSpawned && aliens.length === 0) {
             // Wave complete — transition to results screen
             invaderCompleteTimer = 0;
             gameState = STATES.INVADER_COMPLETE;
