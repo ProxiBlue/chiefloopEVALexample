@@ -22,8 +22,21 @@ var ONLINE_LEADERBOARD_CONFIG = {
     maxScore: 1000000,
     // Minimum seconds between score submissions (client-side UX throttle;
     // provides per-submission cooldown in addition to the sliding-window
-    // rate limit in onlineLeaderboard.js)
+    // rate limit in onlineLeaderboard.js). Must be >= 1; values < 1 are
+    // treated as 10 by onlineLeaderboard.js.
     submitCooldownSeconds: 10,
     // Fetch timeout in milliseconds
     fetchTimeoutMs: 10000
 };
+
+// --- Config bounds enforcement ---
+// Ensure submitCooldownSeconds cannot be zero, negative, or non-numeric.
+// This runs at load time so that even if the value above is edited to an
+// invalid number, the runtime config is always safe.
+(function () {
+    var c = ONLINE_LEADERBOARD_CONFIG;
+    var raw = Number(c.submitCooldownSeconds);
+    if (isNaN(raw) || raw < 1) {
+        c.submitCooldownSeconds = 10;
+    }
+})();
