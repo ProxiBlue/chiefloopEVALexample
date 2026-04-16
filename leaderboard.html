@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://www.dreamlo.com; img-src 'none'; object-src 'none';">
     <title>Mage Lander - Leaderboard</title>
     <style>
         * {
@@ -128,19 +129,28 @@
     <script src="js/onlineConfig.js"></script>
     <script src="js/onlineLeaderboard.js"></script>
     <script>
+        var REFRESH_COOLDOWN_MS = 10000;
+        var _lastFetchTime = 0;
+
         function loadScores() {
+            var now = Date.now();
             var statusEl = document.getElementById('status');
             var tableEl = document.getElementById('leaderboardTable');
             var bodyEl = document.getElementById('leaderboardBody');
             var btnEl = document.getElementById('refreshBtn');
 
+            if (now - _lastFetchTime < REFRESH_COOLDOWN_MS) {
+                return;
+            }
+
             statusEl.className = 'loading';
             statusEl.textContent = 'Loading scores...';
             tableEl.style.display = 'none';
             btnEl.disabled = true;
+            _lastFetchTime = now;
 
             fetchOnlineScores(50).then(function (scores) {
-                btnEl.disabled = false;
+                _enableRefreshAfterCooldown(btnEl);
                 if (!scores || scores.length === 0) {
                     statusEl.className = '';
                     statusEl.textContent = 'No scores yet. Be the first to play!';
@@ -149,7 +159,9 @@
 
                 statusEl.textContent = '';
                 statusEl.className = '';
-                bodyEl.innerHTML = '';
+                while (bodyEl.firstChild) {
+                    bodyEl.removeChild(bodyEl.firstChild);
+                }
 
                 for (var i = 0; i < scores.length; i++) {
                     var tr = document.createElement('tr');
@@ -171,10 +183,18 @@
 
                 tableEl.style.display = '';
             }).catch(function () {
-                btnEl.disabled = false;
+                _enableRefreshAfterCooldown(btnEl);
                 statusEl.className = 'error';
                 statusEl.textContent = 'Could not load scores. Try again later.';
             });
+        }
+
+        function _enableRefreshAfterCooldown(btnEl) {
+            var elapsed = Date.now() - _lastFetchTime;
+            var remaining = Math.max(0, REFRESH_COOLDOWN_MS - elapsed);
+            setTimeout(function () {
+                btnEl.disabled = false;
+            }, remaining);
         }
 
         loadScores();
