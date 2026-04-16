@@ -59,6 +59,16 @@ function update(dt) {
     // Update animation timer for pad glow pulse
     animTime += dt;
 
+    // Track whether we're in invader mode for visual polish
+    invaderMode = (gameState === STATES.INVADER_LIFTOFF ||
+                   gameState === STATES.INVADER_TRANSITION ||
+                   gameState === STATES.INVADER_PLAYING ||
+                   gameState === STATES.INVADER_COMPLETE ||
+                   gameState === STATES.INVADER_RETURN);
+
+    // Scroll stars during invader mode
+    updateStars(dt);
+
     // Update screen shake timer
     if (screenShake > 0) {
         screenShake -= dt;

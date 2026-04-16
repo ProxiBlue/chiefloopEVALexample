@@ -351,29 +351,107 @@ function generateTerrain() {
 function drawTerrain() {
     if (terrain.length === 0) return;
 
-    // Filled polygon: terrain line segments + bottom corners
-    ctx.beginPath();
-    ctx.moveTo(terrain[0].x, terrain[0].y);
-    for (var i = 1; i < terrain.length; i++) {
-        ctx.lineTo(terrain[i].x, terrain[i].y);
-    }
-    // Close along the bottom of the canvas
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.closePath();
+    if (invaderMode) {
+        // --- Invader mode: arcade-style terrain with green grid glow ---
 
-    ctx.fillStyle = '#444';
-    ctx.fill();
+        // Dark fill with faint green tint
+        ctx.beginPath();
+        ctx.moveTo(terrain[0].x, terrain[0].y);
+        for (var i = 1; i < terrain.length; i++) {
+            ctx.lineTo(terrain[i].x, terrain[i].y);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        ctx.fillStyle = '#0a1a0a';
+        ctx.fill();
 
-    // Stroke the top surface
-    ctx.beginPath();
-    ctx.moveTo(terrain[0].x, terrain[0].y);
-    for (var i = 1; i < terrain.length; i++) {
-        ctx.lineTo(terrain[i].x, terrain[i].y);
+        // Horizontal grid lines (classic arcade floor)
+        var gridSpacing = 20;
+        var terrainTopY = terrain[0].y;
+        for (var gi = 0; gi < terrain.length; gi++) {
+            if (terrain[gi].y < terrainTopY) terrainTopY = terrain[gi].y;
+        }
+        ctx.save();
+        // Clip to terrain area
+        ctx.beginPath();
+        ctx.moveTo(terrain[0].x, terrain[0].y);
+        for (var i = 1; i < terrain.length; i++) {
+            ctx.lineTo(terrain[i].x, terrain[i].y);
+        }
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.strokeStyle = 'rgba(0, 255, 65, 0.12)';
+        ctx.lineWidth = 1;
+        for (var gy = terrainTopY; gy <= canvas.height; gy += gridSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(0, gy);
+            ctx.lineTo(canvas.width, gy);
+            ctx.stroke();
+        }
+
+        // Vertical grid lines
+        for (var gx = 0; gx <= canvas.width; gx += gridSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(gx, terrainTopY);
+            ctx.lineTo(gx, canvas.height);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Glowing green top surface line
+        ctx.save();
+        ctx.shadowColor = '#00FF41';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(terrain[0].x, terrain[0].y);
+        for (var i = 1; i < terrain.length; i++) {
+            ctx.lineTo(terrain[i].x, terrain[i].y);
+        }
+        ctx.strokeStyle = '#00FF41';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+
+        // Second pass: brighter inner line
+        ctx.beginPath();
+        ctx.moveTo(terrain[0].x, terrain[0].y);
+        for (var i = 1; i < terrain.length; i++) {
+            ctx.lineTo(terrain[i].x, terrain[i].y);
+        }
+        ctx.strokeStyle = 'rgba(0, 255, 65, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    } else {
+        // --- Normal lander mode terrain ---
+
+        // Filled polygon: terrain line segments + bottom corners
+        ctx.beginPath();
+        ctx.moveTo(terrain[0].x, terrain[0].y);
+        for (var i = 1; i < terrain.length; i++) {
+            ctx.lineTo(terrain[i].x, terrain[i].y);
+        }
+        // Close along the bottom of the canvas
+        ctx.lineTo(canvas.width, canvas.height);
+        ctx.lineTo(0, canvas.height);
+        ctx.closePath();
+
+        ctx.fillStyle = '#444';
+        ctx.fill();
+
+        // Stroke the top surface
+        ctx.beginPath();
+        ctx.moveTo(terrain[0].x, terrain[0].y);
+        for (var i = 1; i < terrain.length; i++) {
+            ctx.lineTo(terrain[i].x, terrain[i].y);
+        }
+        ctx.strokeStyle = '#888';
+        ctx.lineWidth = 2;
+        ctx.stroke();
     }
-    ctx.strokeStyle = '#888';
-    ctx.lineWidth = 2;
-    ctx.stroke();
 
     // Highlight all landing pads with glow/pulse animation
     var pulseAlpha = 0.5 + 0.5 * Math.sin(animTime * 3);  // oscillates between 0 and 1

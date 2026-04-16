@@ -147,3 +147,7 @@ var invaderCompleteTimer = 0;           // elapsed time in INVADER_COMPLETE stat
 // --- Invader Return Transition ---
 var INVADER_RETURN_ROTATION_DURATION = 1; // seconds for 90-degree counter-clockwise rotation
 var invaderReturnRotationTimer = 0;       // elapsed time in return rotation
+
+// --- Invader Visual Polish ---
+var STAR_SCROLL_SPEED = 30;               // pixels per second leftward during invader states
+var invaderMode = false;                  // true when in any INVADER_* state (controls visual style)

@@ -14,6 +14,18 @@ function generateStars() {
     }
 }
 
+function updateStars(dt) {
+    if (!invaderMode) return;
+    // Scroll stars leftward during invader states for horizontal movement feel
+    for (var i = 0; i < stars.length; i++) {
+        stars[i].x -= STAR_SCROLL_SPEED * stars[i].size * dt; // parallax: bigger stars scroll faster
+        if (stars[i].x < -2) {
+            stars[i].x = canvas.width + 2;
+            stars[i].y = Math.random() * canvas.height;
+        }
+    }
+}
+
 function drawStars() {
     for (var i = 0; i < stars.length; i++) {
         var s = stars[i];
