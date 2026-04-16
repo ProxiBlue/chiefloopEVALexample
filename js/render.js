@@ -431,6 +431,126 @@ function renderInvaderTransition() {
     ctx.fillText('PREPARING BATTLEFIELD', canvas.width / 2, 60);
 }
 
+// --- Alien Sprite Drawing ---
+// Three classic Space Invaders-style pixel-art aliens rendered on canvas
+// Each is drawn centered at (x, y) within a size x size bounding box
+
+function drawAlien(x, y, size, type) {
+    var s = size / 11; // each alien is on an 11x8-ish pixel grid
+    ctx.save();
+    ctx.translate(x - size / 2, y - size / 2);
+
+    if (type === 0) {
+        // Type 0: Classic "crab" alien — green
+        ctx.fillStyle = '#4CAF50';
+        // Row 0
+        ctx.fillRect(3*s, 0, s, s);
+        ctx.fillRect(7*s, 0, s, s);
+        // Row 1
+        ctx.fillRect(4*s, s, s, s);
+        ctx.fillRect(6*s, s, s, s);
+        // Row 2
+        ctx.fillRect(3*s, 2*s, 5*s, s);
+        // Row 3
+        ctx.fillRect(2*s, 3*s, 2*s, s);
+        ctx.fillRect(5*s, 3*s, s, s);
+        ctx.fillRect(7*s, 3*s, 2*s, s);
+        // Row 4
+        ctx.fillRect(1*s, 4*s, 9*s, s);
+        // Row 5
+        ctx.fillRect(1*s, 5*s, s, s);
+        ctx.fillRect(3*s, 5*s, 5*s, s);
+        ctx.fillRect(9*s, 5*s, s, s);
+        // Row 6
+        ctx.fillRect(1*s, 6*s, s, s);
+        ctx.fillRect(3*s, 6*s, s, s);
+        ctx.fillRect(7*s, 6*s, s, s);
+        ctx.fillRect(9*s, 6*s, s, s);
+        // Row 7 (legs)
+        ctx.fillRect(2*s, 7*s, s, s);
+        ctx.fillRect(4*s, 7*s, s, s);
+        ctx.fillRect(6*s, 7*s, s, s);
+        ctx.fillRect(8*s, 7*s, s, s);
+    } else if (type === 1) {
+        // Type 1: Classic "squid" alien — magenta/purple
+        ctx.fillStyle = '#E040FB';
+        // Row 0
+        ctx.fillRect(5*s, 0, s, s);
+        // Row 1
+        ctx.fillRect(4*s, s, 3*s, s);
+        // Row 2
+        ctx.fillRect(3*s, 2*s, 5*s, s);
+        // Row 3
+        ctx.fillRect(2*s, 3*s, 2*s, s);
+        ctx.fillRect(5*s, 3*s, s, s);
+        ctx.fillRect(7*s, 3*s, 2*s, s);
+        // Row 4
+        ctx.fillRect(2*s, 4*s, 7*s, s);
+        // Row 5
+        ctx.fillRect(3*s, 5*s, s, s);
+        ctx.fillRect(5*s, 5*s, s, s);
+        ctx.fillRect(7*s, 5*s, s, s);
+        // Row 6
+        ctx.fillRect(2*s, 6*s, 2*s, s);
+        ctx.fillRect(7*s, 6*s, 2*s, s);
+        // Row 7
+        ctx.fillRect(1*s, 7*s, s, s);
+        ctx.fillRect(9*s, 7*s, s, s);
+    } else {
+        // Type 2: Classic "octopus" alien — cyan
+        ctx.fillStyle = '#00BCD4';
+        // Row 0
+        ctx.fillRect(4*s, 0, 3*s, s);
+        // Row 1
+        ctx.fillRect(2*s, s, 7*s, s);
+        // Row 2
+        ctx.fillRect(1*s, 2*s, 9*s, s);
+        // Row 3
+        ctx.fillRect(1*s, 3*s, 2*s, s);
+        ctx.fillRect(4*s, 3*s, s, s);
+        ctx.fillRect(6*s, 3*s, s, s);
+        ctx.fillRect(8*s, 3*s, 2*s, s);
+        // Row 4
+        ctx.fillRect(1*s, 4*s, 9*s, s);
+        // Row 5
+        ctx.fillRect(2*s, 5*s, 3*s, s);
+        ctx.fillRect(6*s, 5*s, 3*s, s);
+        // Row 6
+        ctx.fillRect(1*s, 6*s, 2*s, s);
+        ctx.fillRect(8*s, 6*s, 2*s, s);
+        // Row 7
+        ctx.fillRect(3*s, 7*s, 2*s, s);
+        ctx.fillRect(6*s, 7*s, 2*s, s);
+    }
+
+    ctx.restore();
+}
+
+function renderInvaderPlaying() {
+    // Draw terrain (flat ground from transition)
+    drawTerrain();
+
+    // Draw ship at its current position (rotated sideways)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Draw all aliens
+    for (var i = 0; i < aliens.length; i++) {
+        drawAlien(aliens[i].x, aliens[i].y, ALIEN_SIZE, aliens[i].type);
+    }
+
+    // HUD: formation type and alien count
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('DEFEND AGAINST SECURITY THREATS', canvas.width / 2, 40);
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Aliens: ' + aliens.length, 10, 25);
+    ctx.fillText('Formation: ' + alienFormation.toUpperCase(), 10, 45);
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -551,6 +671,9 @@ function render() {
             break;
         case STATES.INVADER_TRANSITION:
             renderInvaderTransition();
+            break;
+        case STATES.INVADER_PLAYING:
+            renderInvaderPlaying();
             break;
         case STATES.CRASHED:
             renderCrashed();

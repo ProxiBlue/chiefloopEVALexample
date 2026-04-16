@@ -93,3 +93,27 @@ var TERRAIN_TRANSITION_DURATION = 1.5; // seconds to flatten terrain
 var TERRAIN_FLAT_Y_RATIO = 0.87;       // flat ground at 87% of canvas height
 var terrainTransitionTimer = 0;         // elapsed time in transition
 var terrainOriginalPoints = [];         // snapshot of terrain Y values before flattening
+
+// --- Alien Wave Configuration ---
+var ALIEN_SPEED = 120;                  // pixels per second (leftward)
+var ALIEN_SIZE = 28;                    // pixel size of each alien sprite
+var ALIEN_SPAWN_MARGIN = 50;            // extra px off-screen right before spawning
+
+// Grid formation bounds
+var ALIEN_GRID_ROWS_MIN = 3;
+var ALIEN_GRID_ROWS_MAX = 5;
+var ALIEN_GRID_COLS_MIN = 5;
+var ALIEN_GRID_COLS_MAX = 8;
+var ALIEN_GRID_SPACING_X = 50;          // horizontal spacing between grid aliens
+var ALIEN_GRID_SPACING_Y = 44;          // vertical spacing between grid rows
+
+// Random formation bounds
+var ALIEN_RANDOM_MIN = 15;
+var ALIEN_RANDOM_MAX = 30;
+var ALIEN_RANDOM_WIDTH = 350;           // width of the rectangular spawn area
+var ALIEN_RANDOM_HEIGHT = 300;          // height of the rectangular spawn area
+
+// --- Alien Wave State ---
+var aliens = [];                        // array of { x, y, type } objects
+var alienFormation = 'grid';            // 'grid' or 'random' — chosen at spawn time
+var aliensSpawned = false;              // whether wave has been spawned this round

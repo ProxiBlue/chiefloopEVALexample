@@ -1,5 +1,54 @@
 // --- Game Update & Physics ---
 
+// Spawn a wave of aliens off-screen to the right
+function spawnAlienWave() {
+    aliens = [];
+    aliensSpawned = true;
+
+    // Randomly pick formation type
+    alienFormation = Math.random() < 0.5 ? 'grid' : 'random';
+
+    var startX = canvas.width + ALIEN_SPAWN_MARGIN;
+    var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
+    // Vertical play area: from 60px (below HUD) to flatY - margin
+    var topY = 80;
+    var bottomY = flatY - 40;
+    var areaHeight = bottomY - topY;
+
+    if (alienFormation === 'grid') {
+        var rows = ALIEN_GRID_ROWS_MIN + Math.floor(Math.random() * (ALIEN_GRID_ROWS_MAX - ALIEN_GRID_ROWS_MIN + 1));
+        var cols = ALIEN_GRID_COLS_MIN + Math.floor(Math.random() * (ALIEN_GRID_COLS_MAX - ALIEN_GRID_COLS_MIN + 1));
+        // Center the grid vertically in the play area
+        var gridHeight = (rows - 1) * ALIEN_GRID_SPACING_Y;
+        var gridTopY = topY + (areaHeight - gridHeight) / 2;
+
+        for (var r = 0; r < rows; r++) {
+            // Alternate alien type per row for visual variety
+            var type = r % 3; // 0, 1, 2 — three sprite variants
+            for (var c = 0; c < cols; c++) {
+                aliens.push({
+                    x: startX + c * ALIEN_GRID_SPACING_X,
+                    y: gridTopY + r * ALIEN_GRID_SPACING_Y,
+                    type: type
+                });
+            }
+        }
+    } else {
+        // Random scattered formation
+        var count = ALIEN_RANDOM_MIN + Math.floor(Math.random() * (ALIEN_RANDOM_MAX - ALIEN_RANDOM_MIN + 1));
+        var randTopY = topY + (areaHeight - ALIEN_RANDOM_HEIGHT) / 2;
+        if (randTopY < topY) randTopY = topY;
+
+        for (var i = 0; i < count; i++) {
+            aliens.push({
+                x: startX + Math.random() * ALIEN_RANDOM_WIDTH,
+                y: randTopY + Math.random() * Math.min(ALIEN_RANDOM_HEIGHT, areaHeight),
+                type: Math.floor(Math.random() * 3)
+            });
+        }
+    }
+}
+
 function update(dt) {
     // Update animation timer for pad glow pulse
     animTime += dt;
@@ -70,7 +119,20 @@ function update(dt) {
             for (var i = 0; i < terrain.length; i++) {
                 terrain[i].y = flatY;
             }
+            // Spawn alien wave before entering playing state
+            spawnAlienWave();
             gameState = STATES.INVADER_PLAYING;
+        }
+    }
+
+    // Invader playing: move aliens leftward, remove those off-screen
+    if (gameState === STATES.INVADER_PLAYING) {
+        for (var i = aliens.length - 1; i >= 0; i--) {
+            aliens[i].x -= ALIEN_SPEED * dt;
+            // Remove alien when fully off the left edge
+            if (aliens[i].x < -ALIEN_SIZE) {
+                aliens.splice(i, 1);
+            }
         }
     }
 
