@@ -3,24 +3,25 @@
 // Update these values with your own dreamlo board keys.
 // To get keys: visit https://dreamlo.com and create a free leaderboard.
 //
-// SECURITY NOTE: dreamlo's free tier is designed for client-side use. The
-// private key is intentionally kept separate from the public key so it can
-// be rotated independently if the board is abused. For production use,
-// proxy score submissions through a server-side endpoint with proper auth.
+// ARCHITECTURE: Score submissions are sent to a server-side proxy (e.g. a
+// Cloudflare Worker) that holds the dreamlo private key. The private key
+// is NEVER included in client-side code. The proxy performs server-side
+// validation (rate limiting, score bounds, name sanitization) before
+// forwarding to dreamlo. See server/leaderboard-proxy.js for the proxy
+// implementation.
 var ONLINE_LEADERBOARD_CONFIG = {
     // dreamlo public key (used for reading scores — safe to expose)
     publicKey: 'your-public-key-here',
-    // Base URL for the dreamlo API
+    // Base URL for the dreamlo API (read-only operations)
     baseUrl: 'https://www.dreamlo.com/lb',
-    // Maximum allowed score value (reject anything above this as invalid)
+    // URL of the server-side score submission proxy.
+    // Deploy server/leaderboard-proxy.js as a Cloudflare Worker and set
+    // this to your worker URL (e.g. https://leaderboard-proxy.yourname.workers.dev)
+    submitProxyUrl: 'https://leaderboard-proxy.example.workers.dev',
+    // Maximum allowed score value (enforced server-side; client uses as UX hint)
     maxScore: 1000000,
-    // Minimum seconds between score submissions (client-side rate limit)
+    // Minimum seconds between score submissions (client-side UX throttle)
     submitCooldownSeconds: 10,
     // Fetch timeout in milliseconds
     fetchTimeoutMs: 10000
 };
-
-// dreamlo private key — split from config so it can be rotated separately.
-// In production, move score submission to a server-side proxy to avoid
-// exposing this key to the browser.
-var ONLINE_LEADERBOARD_PRIVATE_KEY = 'your-private-key-here';

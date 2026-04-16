@@ -5,8 +5,8 @@
 var _lastSubmitTime = 0;
 
 /**
- * Sanitize a string for safe DOM insertion — strips HTML tags and decodes
- * common HTML entities so leaderboard names cannot carry XSS payloads.
+ * Sanitize a string for safe DOM insertion — HTML-entity-encodes special
+ * characters so leaderboard names cannot carry XSS payloads.
  * @param {string} str
  * @returns {string}
  */
@@ -50,27 +50,25 @@ function _fetchWithTimeout(url, options, timeoutMs) {
 }
 
 /**
- * Submit a score to the online leaderboard.
- * Includes client-side rate limiting, score bounds checking, and a fetch
- * timeout.  These are defence-in-depth measures — for a tamper-proof
- * leaderboard, proxy submissions through a server.
+ * Submit a score to the online leaderboard via the server-side proxy.
+ * The proxy holds the dreamlo private key and performs server-side
+ * validation (rate limiting, score bounds, name sanitization).
+ * Client-side checks here are UX guardrails only.
  *
  * @param {string} playerName - Player name (max 20 characters)
- * @param {number} playerScore - Score (positive integer, capped by config)
+ * @param {number} playerScore - Score (positive integer)
  * @returns {Promise<boolean>} true if submission succeeded, false otherwise
  */
 function submitOnlineScore(playerName, playerScore) {
-    // --- Rate limiting ---
+    // --- Client-side UX throttle (server also enforces rate limits) ---
     var now = Date.now();
     var cooldownMs = (ONLINE_LEADERBOARD_CONFIG.submitCooldownSeconds || 10) * 1000;
     if (now - _lastSubmitTime < cooldownMs) {
-        console.warn('submitOnlineScore: rate limited — wait before resubmitting');
+        console.warn('submitOnlineScore: please wait before resubmitting');
         return Promise.resolve(false);
     }
 
-    // --- Input validation ---
-    // Sanitize player name: truncate to 20 chars, strip pipe (dreamlo delimiter)
-    // and angle brackets (prevent any HTML in name reaching the API).
+    // --- Client-side input pre-validation (UX only; server re-validates) ---
     var name = String(playerName)
         .replace(/[|<>"']/g, '')
         .substring(0, 20)
@@ -91,15 +89,21 @@ function submitOnlineScore(playerName, playerScore) {
         return Promise.resolve(false);
     }
 
-    var url = ONLINE_LEADERBOARD_CONFIG.baseUrl + '/' +
-        encodeURIComponent(ONLINE_LEADERBOARD_PRIVATE_KEY) + '/add/' +
-        encodeURIComponent(name) + '/' + scoreInt;
+    var proxyUrl = ONLINE_LEADERBOARD_CONFIG.submitProxyUrl;
+    if (!proxyUrl) {
+        console.error('submitOnlineScore: submitProxyUrl is not configured');
+        return Promise.resolve(false);
+    }
 
     var timeoutMs = ONLINE_LEADERBOARD_CONFIG.fetchTimeoutMs || 10000;
 
     _lastSubmitTime = now;
 
-    return _fetchWithTimeout(url, { method: 'GET' }, timeoutMs)
+    return _fetchWithTimeout(proxyUrl + '/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, score: scoreInt })
+    }, timeoutMs)
         .then(function (response) {
             if (!response.ok) {
                 console.error('submitOnlineScore: HTTP ' + response.status);
@@ -115,11 +119,11 @@ function submitOnlineScore(playerName, playerScore) {
 
 /**
  * Fetch top scores from the online leaderboard.
+ * Uses the public key directly against dreamlo (read-only, safe to expose).
  * @param {number} [limit=10] - Maximum number of scores to fetch (1–100)
  * @returns {Promise<Array<{name: string, score: number}>>} Array sorted by score descending, with HTML-safe names
  */
 function fetchOnlineScores(limit) {
-    // Validate and clamp the limit parameter
     var count = parseInt(limit, 10);
     if (isNaN(count) || count < 1) count = 10;
     if (count > 100) count = 100;
@@ -138,8 +142,6 @@ function fetchOnlineScores(limit) {
             return response.json();
         })
         .then(function (data) {
-            // dreamlo returns { dreamlo: { leaderboard: { entry: [...] } } }
-            // Single entry comes as object, not array
             var entries = [];
             try {
                 var raw = data.dreamlo.leaderboard.entry;
@@ -155,7 +157,6 @@ function fetchOnlineScores(limit) {
                 console.error('fetchOnlineScores: parse error', e);
                 return [];
             }
-            // Sort descending by score (dreamlo should already do this, but ensure it)
             entries.sort(function (a, b) { return b.score - a.score; });
             return entries;
         })
