@@ -81,3 +81,9 @@ var PR_TYPE_COLORS = {          // pad color by PR type
 // --- Ship / Fuel Constants ---
 var FUEL_MAX = 100;         // fuel units per level
 var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
+
+// --- Invader Liftoff Animation ---
+var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise
+var LIFTOFF_ROTATION_DURATION = 1;  // seconds for the 90-degree rotation
+var invaderLiftoffPhase = 'rising'; // 'rising' or 'rotating'
+var invaderLiftoffRotationTimer = 0; // elapsed time in rotation phase

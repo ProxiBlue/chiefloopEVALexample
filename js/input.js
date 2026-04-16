@@ -88,6 +88,12 @@ function handleKeyPress(key) {
             playClickSound();
             if (landedPRType === 'security') {
                 // Security pad: route to Space Invaders interlude
+                invaderLiftoffPhase = 'rising';
+                invaderLiftoffRotationTimer = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                ship.vx = 0;
+                ship.vy = 0;
                 gameState = STATES.INVADER_LIFTOFF;
             } else {
                 // Normal pad: advance to next level (endless progression)

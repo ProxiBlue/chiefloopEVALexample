@@ -399,6 +399,24 @@ function renderLanded() {
     }
 }
 
+function renderInvaderLiftoff() {
+    drawTerrain();
+
+    // Show thrust flame during rising phase (visual only, no fuel cost)
+    var showThrust = (invaderLiftoffPhase === 'rising');
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, showThrust, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    if (invaderLiftoffPhase === 'rising') {
+        ctx.fillText('SECURITY THREAT DETECTED', canvas.width / 2, 60);
+    } else {
+        ctx.fillText('ENGAGING DEFENSE MODE', canvas.width / 2, 60);
+    }
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -513,6 +531,9 @@ function render() {
             break;
         case STATES.LANDED:
             renderLanded();
+            break;
+        case STATES.INVADER_LIFTOFF:
+            renderInvaderLiftoff();
             break;
         case STATES.CRASHED:
             renderCrashed();
