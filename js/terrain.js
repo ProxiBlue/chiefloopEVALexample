@@ -206,6 +206,9 @@ function generateTerrain() {
     var usedSegments = {};
     var placedPads = [];
 
+    // Minimum pad width in segments: must be wider than the ship
+    var minPadSegs = Math.ceil((SHIP_SIZE + 10) / segWidth);
+
     // Get PRs for this level
     var levelPRs = getLevelPRs(currentLevel);
 
@@ -214,7 +217,7 @@ function generateTerrain() {
         for (var p = 0; p < levelPRs.length; p++) {
             var pr = levelPRs[p];
             var prType = pr.type || 'other';
-            var padWidth = (typeof PR_PAD_WIDTHS[prType] === 'number') ? PR_PAD_WIDTHS[prType] : (PR_PAD_WIDTHS.other || 2);
+            var padWidth = Math.max(minPadSegs, (typeof PR_PAD_WIDTHS[prType] === 'number') ? PR_PAD_WIDTHS[prType] : (PR_PAD_WIDTHS.other || 2));
             var padPoints = (typeof PR_PAD_POINTS[prType] === 'number') ? PR_PAD_POINTS[prType] : (PR_PAD_POINTS.other || 100);
 
             // Calculate target segment from PR merge date
@@ -273,7 +276,7 @@ function generateTerrain() {
 
     // Fallback: if fewer than 1 valid pad, generate a fallback pad
     if (placedPads.length < 1) {
-        var fallbackWidth = 2; // medium width
+        var fallbackWidth = Math.max(minPadSegs, 2); // medium width, at least ship-wide
         var fallbackIdx = Math.floor(segmentCount / 2) - 1;
         // Find non-overlapping spot near center
         for (var offset = 0; offset < segmentCount; offset++) {
