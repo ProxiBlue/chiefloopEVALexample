@@ -187,6 +187,25 @@ function update(dt) {
 
         if (t >= 1) {
             ship.y = sceneDescentTargetY;
+            // Freeze ship before countdown
+            ship.vx = 0;
+            ship.vy = 0;
+            ship.thrusting = false;
+            ship.rotating = null;
+            sceneCountdownTimer = 0;
+            gameState = STATES.SCENE_COUNTDOWN;
+        }
+    }
+
+    // Scene countdown: 3-2-1 overlay before giving control
+    if (gameState === STATES.SCENE_COUNTDOWN) {
+        sceneCountdownTimer += dt;
+        // No physics, no gravity, no wind — ship stays frozen
+        var totalDuration = SCENE_COUNTDOWN_STEP_DURATION * 3;
+        if (sceneCountdownTimer >= totalDuration) {
+            // Ensure zero velocity when control returns
+            ship.vx = 0;
+            ship.vy = 0;
             gameState = STATES.PLAYING;
         }
     }

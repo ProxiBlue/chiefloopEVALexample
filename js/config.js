@@ -8,6 +8,7 @@ var STATES = {
     SCENE_LIFTOFF: 'scene_liftoff',
     SCENE_SCROLL: 'scene_scroll',
     SCENE_DESCENT: 'scene_descent',
+    SCENE_COUNTDOWN: 'scene_countdown',
     INVADER_LIFTOFF: 'invader_liftoff',
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
@@ -93,6 +94,10 @@ var SCENE_DESCENT_DURATION = 1.0;   // seconds for descent from center to starti
 var sceneDescentTimer = 0;          // elapsed time in descent
 var sceneDescentStartY = 0;         // y position at start of descent (canvas.height / 2)
 var sceneDescentTargetY = 0;        // y position at end of descent (canvas.height / 3)
+
+// --- Scene Countdown (3-2-1 before control returns) ---
+var SCENE_COUNTDOWN_STEP_DURATION = 0.8; // seconds per countdown number
+var sceneCountdownTimer = 0;              // elapsed time in countdown
 
 // --- Scene Scroll (horizontal terrain transition between levels) ---
 var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll

@@ -430,6 +430,53 @@ function renderSceneDescent() {
     ctx.fillText('Level ' + (currentLevel + 1), canvas.width / 2, 90);
 }
 
+function renderSceneCountdown() {
+    drawTerrain();
+
+    // Ship visible but no thrust during countdown
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Determine which number to show (3, 2, 1)
+    var step = Math.floor(sceneCountdownTimer / SCENE_COUNTDOWN_STEP_DURATION);
+    var number = 3 - step; // 3, 2, 1
+    if (number < 1) number = 1;
+
+    // Large centered countdown number with high contrast
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+
+    // Glow effect behind the number
+    ctx.save();
+    ctx.shadowColor = '#4FC3F7';
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 120px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('' + number, cx, cy);
+    ctx.restore();
+
+    // Solid number on top
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 120px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('' + number, cx, cy);
+
+    // Reset textBaseline
+    ctx.textBaseline = 'alphabetic';
+
+    // Level indicator
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('GET READY', cx, 60);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '16px monospace';
+    ctx.fillText('Level ' + (currentLevel + 1), cx, 90);
+}
+
 function drawTerrainAtOffset(terrainPoints, pads, offsetX) {
     if (terrainPoints.length === 0) return;
 
@@ -934,6 +981,9 @@ function render() {
             break;
         case STATES.SCENE_DESCENT:
             renderSceneDescent();
+            break;
+        case STATES.SCENE_COUNTDOWN:
+            renderSceneCountdown();
             break;
         case STATES.INVADER_LIFTOFF:
             renderInvaderLiftoff();
