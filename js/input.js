@@ -23,6 +23,7 @@ function startNewGame() {
     levelCommits = [];
     repoFallbackNotice = '';
     score = 0;
+    securityPadScroll = false;
     GRAVITY = getLevelConfig(currentLevel).gravity;
     THRUST_POWER = GRAVITY * 2.5;
     resetShip();

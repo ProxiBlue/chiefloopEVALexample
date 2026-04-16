@@ -61,7 +61,6 @@ function update(dt) {
 
     // Track whether we're in invader mode for visual polish
     invaderMode = (gameState === STATES.INVADER_SCROLL_ROTATE ||
-                   gameState === STATES.INVADER_LIFTOFF ||
                    gameState === STATES.INVADER_TRANSITION ||
                    gameState === STATES.INVADER_PLAYING ||
                    gameState === STATES.INVADER_COMPLETE ||
@@ -257,39 +256,6 @@ function update(dt) {
             }
             terrainTransitionTimer = 0;
             gameState = STATES.INVADER_TRANSITION;
-        }
-    }
-
-    // Invader liftoff animation: rise then rotate
-    if (gameState === STATES.INVADER_LIFTOFF) {
-        var targetY = canvas.height / 2;
-
-        if (invaderLiftoffPhase === 'rising') {
-            // Move ship upward toward vertical center
-            ship.y -= LIFTOFF_RISE_SPEED * dt;
-            if (ship.y <= targetY) {
-                ship.y = targetY;
-                invaderLiftoffPhase = 'rotating';
-                invaderLiftoffRotationTimer = 0;
-            }
-        } else if (invaderLiftoffPhase === 'rotating') {
-            // Smoothly rotate 90 degrees clockwise over LIFTOFF_ROTATION_DURATION
-            invaderLiftoffRotationTimer += dt;
-            var t = Math.min(invaderLiftoffRotationTimer / LIFTOFF_ROTATION_DURATION, 1);
-            // Ease in-out for smooth rotation
-            var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-            ship.angle = eased * (Math.PI / 2);
-
-            if (t >= 1) {
-                ship.angle = Math.PI / 2;
-                // Snapshot current terrain for interpolation
-                terrainOriginalPoints = [];
-                for (var i = 0; i < terrain.length; i++) {
-                    terrainOriginalPoints.push(terrain[i].y);
-                }
-                terrainTransitionTimer = 0;
-                gameState = STATES.INVADER_TRANSITION;
-            }
         }
     }
 

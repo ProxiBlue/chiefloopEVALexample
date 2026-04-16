@@ -10,7 +10,6 @@ var STATES = {
     SCENE_DESCENT: 'scene_descent',
     SCENE_COUNTDOWN: 'scene_countdown',
     INVADER_SCROLL_ROTATE: 'invader_scroll_rotate',
-    INVADER_LIFTOFF: 'invader_liftoff',
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
     INVADER_COMPLETE: 'invader_complete',
@@ -123,10 +122,6 @@ var INVADER_SCROLL_ROTATE_DURATION = 1;             // seconds for 90-degree rot
 var invaderScrollRotateTimer = 0;                   // elapsed time in rotation after scroll
 
 // --- Invader Liftoff Animation ---
-var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise
-var LIFTOFF_ROTATION_DURATION = 1;  // seconds for the 90-degree rotation
-var invaderLiftoffPhase = 'rising'; // 'rising' or 'rotating'
-var invaderLiftoffRotationTimer = 0; // elapsed time in rotation phase
 
 // --- Invader Terrain Transition ---
 var TERRAIN_TRANSITION_DURATION = 1.5; // seconds to flatten terrain

@@ -688,24 +688,6 @@ function renderInvaderScrollRotate() {
     ctx.fillText('ENGAGING DEFENSE MODE', canvas.width / 2, 60);
 }
 
-function renderInvaderLiftoff() {
-    drawTerrain();
-
-    // Show thrust flame during rising phase (visual only, no fuel cost)
-    var showThrust = (invaderLiftoffPhase === 'rising');
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, showThrust, null);
-
-    // Status text
-    ctx.fillStyle = '#4FC3F7';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.textAlign = 'center';
-    if (invaderLiftoffPhase === 'rising') {
-        ctx.fillText('SECURITY THREAT DETECTED', canvas.width / 2, 60);
-    } else {
-        ctx.fillText('ENGAGING DEFENSE MODE', canvas.width / 2, 60);
-    }
-}
-
 function renderInvaderTransition() {
     // Draw terrain (it's being interpolated each frame by update)
     drawTerrain();
@@ -1061,9 +1043,6 @@ function render() {
             break;
         case STATES.INVADER_SCROLL_ROTATE:
             renderInvaderScrollRotate();
-            break;
-        case STATES.INVADER_LIFTOFF:
-            renderInvaderLiftoff();
             break;
         case STATES.INVADER_TRANSITION:
             renderInvaderTransition();
