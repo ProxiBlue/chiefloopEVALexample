@@ -231,28 +231,38 @@ function update(dt) {
         updateAlienExplosions(dt);
         invaderCompleteTimer += dt;
         if (invaderCompleteTimer >= INVADER_COMPLETE_DELAY) {
-            // Return to normal gameplay — advance to next level
+            // Return to normal gameplay — start return rotation
+            invaderReturnRotationTimer = 0;
             gameState = STATES.INVADER_RETURN;
         }
     }
 
-    // Invader return: reset and go back to normal landing gameplay
+    // Invader return: rotate ship back to vertical, then reset and resume normal gameplay
     if (gameState === STATES.INVADER_RETURN) {
-        // Clean up invader state
-        aliens = [];
-        bullets = [];
-        alienExplosions = [];
-        aliensSpawned = false;
-        bulletCooldownTimer = 0;
+        invaderReturnRotationTimer += dt;
+        var t = Math.min(invaderReturnRotationTimer / INVADER_RETURN_ROTATION_DURATION, 1);
+        // Ease in-out for smooth rotation
+        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        // Rotate from PI/2 (facing right) back to 0 (facing up)
+        ship.angle = (Math.PI / 2) * (1 - eased);
 
-        // Advance to next level
-        currentLevel++;
-        GRAVITY = getLevelConfig(currentLevel).gravity;
-        THRUST_POWER = GRAVITY * 2.5;
-        resetShip();
-        resetWind();
-        generateTerrain();
-        gameState = STATES.PLAYING;
+        if (t >= 1) {
+            // Clean up invader state
+            aliens = [];
+            bullets = [];
+            alienExplosions = [];
+            aliensSpawned = false;
+            bulletCooldownTimer = 0;
+
+            // Advance to next level
+            currentLevel++;
+            GRAVITY = getLevelConfig(currentLevel).gravity;
+            THRUST_POWER = GRAVITY * 2.5;
+            resetShip();
+            resetWind();
+            generateTerrain();
+            gameState = STATES.PLAYING;
+        }
     }
 
     if (gameState === STATES.PLAYING) {

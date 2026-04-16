@@ -621,6 +621,25 @@ function renderInvaderComplete() {
     ctx.fillText('Returning to mission...', cx, cy + 65);
 }
 
+function renderInvaderReturn() {
+    // Draw terrain (still flat from invader phase)
+    drawTerrain();
+
+    // Draw ship rotating back to vertical
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RETURNING TO MISSION', canvas.width / 2, 60);
+
+    // Show bonus points earned
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('Bonus: +' + invaderScore + ' pts', canvas.width / 2, 95);
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -747,6 +766,9 @@ function render() {
             break;
         case STATES.INVADER_COMPLETE:
             renderInvaderComplete();
+            break;
+        case STATES.INVADER_RETURN:
+            renderInvaderReturn();
             break;
         case STATES.CRASHED:
             renderCrashed();

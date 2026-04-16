@@ -143,3 +143,7 @@ var alienExplosions = [];               // array of particle groups from destroy
 // --- Invader Phase Completion ---
 var INVADER_COMPLETE_DELAY = 2.5;       // seconds to show results before returning
 var invaderCompleteTimer = 0;           // elapsed time in INVADER_COMPLETE state
+
+// --- Invader Return Transition ---
+var INVADER_RETURN_ROTATION_DURATION = 1; // seconds for 90-degree counter-clockwise rotation
+var invaderReturnRotationTimer = 0;       // elapsed time in return rotation
