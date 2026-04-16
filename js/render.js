@@ -564,23 +564,26 @@ function renderInvaderPlaying() {
     // Draw alien explosion particles
     drawAlienExplosions();
 
-    // HUD
+    // HUD — invader-specific (hides lander info: altitude, speeds, fuel bar)
     ctx.fillStyle = '#4FC3F7';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('DEFEND AGAINST SECURITY THREATS', canvas.width / 2, 40);
 
-    ctx.fillStyle = '#ccc';
+    ctx.fillStyle = '#fff';
     ctx.font = '14px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Aliens: ' + aliens.length, 10, 25);
-    ctx.fillText('Destroyed: ' + aliensDestroyed, 10, 45);
-    ctx.fillText('Score: ' + score, 10, 65);
+    ctx.fillText('Score: ' + (score + invaderScore), 10, 25);
 
-    // Invader bonus points (running total)
+    // Invader bonus points (running total for this wave)
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 14px monospace';
-    ctx.fillText('Bonus: +' + invaderScore + ' pts', 10, 85);
+    ctx.fillText('Bonus: +' + invaderScore + ' pts', 10, 45);
+
+    // Aliens remaining count
+    ctx.fillStyle = '#ccc';
+    ctx.font = '14px monospace';
+    ctx.fillText('Aliens Remaining: ' + aliens.length, 10, 65);
 
     // Controls hint
     ctx.fillStyle = '#555';
