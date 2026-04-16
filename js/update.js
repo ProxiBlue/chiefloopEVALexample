@@ -175,6 +175,7 @@ function update(dt) {
                 ship.thrusting = false;
                 ship.rotating = null;
                 invaderScrollRotateTimer = 0;
+                stopThrustSound();
                 gameState = STATES.INVADER_SCROLL_ROTATE;
             } else {
                 // Normal pad: begin descent from center to starting altitude
@@ -221,6 +222,7 @@ function update(dt) {
             ship.thrusting = false;
             ship.rotating = null;
             sceneCountdownTimer = 0;
+            stopThrustSound();
             gameState = STATES.SCENE_COUNTDOWN;
         }
     }

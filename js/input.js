@@ -112,6 +112,7 @@ function handleKeyPress(key) {
             ship.rotating = null;
             ship.vx = 0;
             ship.vy = 0;
+            startThrustSound();
             gameState = STATES.SCENE_LIFTOFF;
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;
