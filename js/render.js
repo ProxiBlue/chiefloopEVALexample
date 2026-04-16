@@ -417,6 +417,20 @@ function renderInvaderLiftoff() {
     }
 }
 
+function renderInvaderTransition() {
+    // Draw terrain (it's being interpolated each frame by update)
+    drawTerrain();
+
+    // Draw ship at its current position (rotated sideways from liftoff)
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Status text
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('PREPARING BATTLEFIELD', canvas.width / 2, 60);
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -534,6 +548,9 @@ function render() {
             break;
         case STATES.INVADER_LIFTOFF:
             renderInvaderLiftoff();
+            break;
+        case STATES.INVADER_TRANSITION:
+            renderInvaderTransition();
             break;
         case STATES.CRASHED:
             renderCrashed();

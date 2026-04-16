@@ -42,8 +42,35 @@ function update(dt) {
 
             if (t >= 1) {
                 ship.angle = Math.PI / 2;
+                // Snapshot current terrain for interpolation
+                terrainOriginalPoints = [];
+                for (var i = 0; i < terrain.length; i++) {
+                    terrainOriginalPoints.push(terrain[i].y);
+                }
+                terrainTransitionTimer = 0;
                 gameState = STATES.INVADER_TRANSITION;
             }
+        }
+    }
+
+    // Invader terrain transition: flatten terrain over time
+    if (gameState === STATES.INVADER_TRANSITION) {
+        terrainTransitionTimer += dt;
+        var t = Math.min(terrainTransitionTimer / TERRAIN_TRANSITION_DURATION, 1);
+        // Ease in-out for smooth flattening
+        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
+
+        for (var i = 0; i < terrain.length; i++) {
+            terrain[i].y = terrainOriginalPoints[i] + (flatY - terrainOriginalPoints[i]) * eased;
+        }
+
+        if (t >= 1) {
+            // Ensure terrain is exactly flat
+            for (var i = 0; i < terrain.length; i++) {
+                terrain[i].y = flatY;
+            }
+            gameState = STATES.INVADER_PLAYING;
         }
     }
 

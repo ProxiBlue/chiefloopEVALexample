@@ -87,3 +87,9 @@ var LIFTOFF_RISE_SPEED = 120;       // pixels per second during vertical rise
 var LIFTOFF_ROTATION_DURATION = 1;  // seconds for the 90-degree rotation
 var invaderLiftoffPhase = 'rising'; // 'rising' or 'rotating'
 var invaderLiftoffRotationTimer = 0; // elapsed time in rotation phase
+
+// --- Invader Terrain Transition ---
+var TERRAIN_TRANSITION_DURATION = 1.5; // seconds to flatten terrain
+var TERRAIN_FLAT_Y_RATIO = 0.87;       // flat ground at 87% of canvas height
+var terrainTransitionTimer = 0;         // elapsed time in transition
+var terrainOriginalPoints = [];         // snapshot of terrain Y values before flattening
