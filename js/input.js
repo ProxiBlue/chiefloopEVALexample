@@ -86,14 +86,19 @@ function handleKeyPress(key) {
             startNewGame();
         } else if (gameState === STATES.LANDED && celebrationReady) {
             playClickSound();
-            // Advance to next level (endless progression)
-            currentLevel++;
-            GRAVITY = getLevelConfig(currentLevel).gravity;
-            THRUST_POWER = GRAVITY * 2.5;
-            resetShip();
-            resetWind();
-            generateTerrain();
-            gameState = STATES.PLAYING;
+            if (landedPRType === 'security') {
+                // Security pad: route to Space Invaders interlude
+                gameState = STATES.INVADER_LIFTOFF;
+            } else {
+                // Normal pad: advance to next level (endless progression)
+                currentLevel++;
+                GRAVITY = getLevelConfig(currentLevel).gravity;
+                THRUST_POWER = GRAVITY * 2.5;
+                resetShip();
+                resetWind();
+                generateTerrain();
+                gameState = STATES.PLAYING;
+            }
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;
             if (isHighScore(score)) {

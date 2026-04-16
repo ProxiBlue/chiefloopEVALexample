@@ -4,7 +4,12 @@ var STATES = {
     PLAYING: 'playing',
     LANDED: 'landed',
     CRASHED: 'crashed',
-    GAMEOVER: 'gameover'
+    GAMEOVER: 'gameover',
+    INVADER_LIFTOFF: 'invader_liftoff',
+    INVADER_TRANSITION: 'invader_transition',
+    INVADER_PLAYING: 'invader_playing',
+    INVADER_COMPLETE: 'invader_complete',
+    INVADER_RETURN: 'invader_return'
 };
 
 var gameState = STATES.MENU;
