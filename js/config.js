@@ -88,9 +88,10 @@ var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
 
 // --- Scene Liftoff Animation (after normal landing) ---
 var SCENE_LIFTOFF_RISE_SPEED = 120; // pixels per second during vertical rise
+var sceneLiftoffStartY = 0;         // ship Y when liftoff began (set in input.js)
 
 // --- Scene Descent (ship descends to starting altitude after scroll) ---
-var SCENE_DESCENT_DURATION = 1.0;   // seconds for descent from center to starting altitude
+var SCENE_DESCENT_DURATION = 0.5;   // seconds for final descent settle (most descent happens during scroll)
 var sceneDescentTimer = 0;          // elapsed time in descent
 var sceneDescentStartY = 0;         // y position at start of descent (canvas.height / 2)
 var sceneDescentTargetY = 0;        // y position at end of descent (canvas.height / 3)
@@ -100,7 +101,7 @@ var SCENE_COUNTDOWN_STEP_DURATION = 0.8; // seconds per countdown number
 var sceneCountdownTimer = 0;              // elapsed time in countdown
 
 // --- Scene Scroll (horizontal terrain transition between levels) ---
-var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll
+var SCENE_SCROLL_DURATION = 3.0;    // seconds for the horizontal scroll (absorbs partial descent)
 var SCENE_SCROLL_BANK_ANGLE = 0.15; // radians (~8.6°) — max bank angle during scroll
 // Scroll state is encapsulated in a single object to prevent partial mutation.
 // null when no scroll is active; a frozen object during SCENE_SCROLL.

@@ -86,9 +86,26 @@ function update(dt) {
     }
 
     // Scene liftoff animation: rise to vertical center then begin horizontal scroll
+    // Uses eased deceleration and horizontal blend for seamless transition to scroll
     if (gameState === STATES.SCENE_LIFTOFF) {
         var targetY = canvas.height / 2;
-        ship.y -= SCENE_LIFTOFF_RISE_SPEED * dt;
+        var totalDist = sceneLiftoffStartY - targetY;
+        if (totalDist <= 0) totalDist = 1;
+        var progress = 1 - ((ship.y - targetY) / totalDist);
+        if (progress < 0) progress = 0;
+        if (progress > 1) progress = 1;
+
+        // Eased vertical speed: decelerates as ship nears center
+        var speedFactor = 1 - progress * 0.7;
+        if (speedFactor < 0.15) speedFactor = 0.15;
+        ship.y -= SCENE_LIFTOFF_RISE_SPEED * speedFactor * dt;
+
+        // In last 30% of rise, blend horizontal movement toward center
+        if (progress > 0.7) {
+            var blendFactor = (progress - 0.7) / 0.3;
+            ship.x += (canvas.width / 2 - ship.x) * blendFactor * 2 * dt;
+        }
+
         if (ship.y <= targetY) {
             ship.y = targetY;
             // Snapshot current terrain before generating new level
@@ -147,7 +164,12 @@ function update(dt) {
         // Ship flies across: from starting X to center (synchronized with terrain scroll)
         var shipStartX = sceneScrollState.shipStartX;
         ship.x = shipStartX + (canvas.width / 2 - shipStartX) * eased;
-        ship.y = canvas.height / 2;
+
+        // Y: smooth arc from center toward descent altitude (covers 85% during scroll)
+        // Blends liftoff momentum into descent — ship is never locked at a fixed Y
+        var scrollCenterY = canvas.height / 2;
+        var scrollTargetY = canvas.height / 3;
+        ship.y = scrollCenterY + (scrollTargetY - scrollCenterY) * 0.85 * eased;
 
         // Bank angle: smooth bell curve peaking at mid-scroll, direction depends on travel
         var bankDirection = (shipStartX < canvas.width / 2) ? 1 : -1;
@@ -183,8 +205,8 @@ function update(dt) {
                 invaderScrollRotateTimer = 0;
                 gameState = STATES.INVADER_SCROLL_ROTATE;
             } else {
-                // Normal pad: begin descent from center to starting altitude
-                sceneDescentStartY = canvas.height / 2;
+                // Normal pad: begin final descent settle from current position
+                sceneDescentStartY = ship.y;
                 sceneDescentTargetY = canvas.height / 3;
                 sceneDescentTimer = 0;
                 ship.x = canvas.width / 2;
