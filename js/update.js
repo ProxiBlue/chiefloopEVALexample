@@ -129,10 +129,8 @@ function update(dt) {
                     snapNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
                 }
             }
-            // Atomically set scroll state as a frozen object
-            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll);
-            // Center ship horizontally for the scroll
-            ship.x = canvas.width / 2;
+            // Atomically set scroll state as a frozen object (ship.x preserved for smooth transition)
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, ship.x);
             gameState = STATES.SCENE_SCROLL;
         }
     }
@@ -143,9 +141,16 @@ function update(dt) {
         var scrollTimer = sceneScrollState.timer + dt;
         var t = Math.min(scrollTimer / SCENE_SCROLL_DURATION, 1);
 
-        // Keep ship centered
-        ship.x = canvas.width / 2;
+        // Eased progress for synchronized terrain/ship movement
+        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        // Ship flies across: from starting X to center (synchronized with terrain scroll)
+        var shipStartX = sceneScrollState.shipStartX;
+        ship.x = shipStartX + (canvas.width / 2 - shipStartX) * eased;
         ship.y = canvas.height / 2;
+
+        // Bank angle: smooth bell curve peaking at mid-scroll, giving a sense of active flight
+        ship.angle = SCENE_SCROLL_BANK_ANGLE * Math.sin(t * Math.PI);
 
         if (t >= 1) {
             // Scroll complete — finalize new terrain from the frozen snapshot
@@ -199,7 +204,8 @@ function update(dt) {
                 oldPads: sceneScrollState.oldPads,
                 newTerrain: sceneScrollState.newTerrain,
                 newPads: sceneScrollState.newPads,
-                isInvaderScroll: sceneScrollState.isInvaderScroll
+                isInvaderScroll: sceneScrollState.isInvaderScroll,
+                shipStartX: sceneScrollState.shipStartX
             });
         }
     }

@@ -101,18 +101,20 @@ var sceneCountdownTimer = 0;              // elapsed time in countdown
 
 // --- Scene Scroll (horizontal terrain transition between levels) ---
 var SCENE_SCROLL_DURATION = 2.5;    // seconds for the horizontal scroll
+var SCENE_SCROLL_BANK_ANGLE = 0.15; // radians (~8.6°) — max bank angle during scroll
 // Scroll state is encapsulated in a single object to prevent partial mutation.
 // null when no scroll is active; a frozen object during SCENE_SCROLL.
 var sceneScrollState = null;        // { timer, oldTerrain, oldPads, newTerrain, newPads }
 
-function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll) {
+function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, shipStartX) {
     return Object.freeze({
         timer: 0,
         oldTerrain: oldTerrain,
         oldPads: oldPads,
         newTerrain: newTerrain,
         newPads: newPads,
-        isInvaderScroll: !!isInvaderScroll
+        isInvaderScroll: !!isInvaderScroll,
+        shipStartX: shipStartX
     });
 }
 
