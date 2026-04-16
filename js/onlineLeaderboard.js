@@ -1,8 +1,12 @@
 // --- Online Leaderboard Utility ---
 // Requires: js/onlineConfig.js (loaded before this file)
 
+// --- Rate limit constants (easy to tune) ---
+var RATE_LIMIT_MAX_SUBMISSIONS = 3;       // max submissions allowed per window
+var RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // sliding window duration in ms (5 minutes)
+
 // --- Private state ---
-var _lastSubmitTime = 0;
+var _submitTimestamps = []; // timestamps of recent submissions (for rate limiting)
 var _gameSessionToken = null; // one-time-use token from server
 
 /**
@@ -119,11 +123,14 @@ function submitOnlineScore(playerName, playerScore) {
     var token = _gameSessionToken;
     _gameSessionToken = null; // consume the token (one-time-use)
 
-    // --- Client-side UX throttle (server also enforces per-IP rate limits) ---
+    // --- Client-side sliding-window rate limit (server also enforces per-IP rate limits) ---
     var now = Date.now();
-    var cooldownMs = (ONLINE_LEADERBOARD_CONFIG.submitCooldownSeconds || 10) * 1000;
-    if (now - _lastSubmitTime < cooldownMs) {
-        console.warn('submitOnlineScore: please wait before resubmitting');
+    // Remove timestamps outside the current window
+    _submitTimestamps = _submitTimestamps.filter(function (ts) {
+        return now - ts < RATE_LIMIT_WINDOW_MS;
+    });
+    if (_submitTimestamps.length >= RATE_LIMIT_MAX_SUBMISSIONS) {
+        console.warn('submitOnlineScore: rate limit exceeded — submission silently skipped');
         return Promise.resolve(false);
     }
 
@@ -156,7 +163,7 @@ function submitOnlineScore(playerName, playerScore) {
 
     var timeoutMs = ONLINE_LEADERBOARD_CONFIG.fetchTimeoutMs || 10000;
 
-    _lastSubmitTime = now;
+    _submitTimestamps.push(now);
 
     return _fetchWithTimeout(proxyUrl + '/submit', {
         method: 'POST',

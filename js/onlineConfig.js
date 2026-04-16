@@ -20,8 +20,6 @@ var ONLINE_LEADERBOARD_CONFIG = {
     submitProxyUrl: 'https://leaderboard-proxy.example.workers.dev',
     // Maximum allowed score value (enforced server-side; client uses as UX hint)
     maxScore: 1000000,
-    // Minimum seconds between score submissions (client-side UX throttle)
-    submitCooldownSeconds: 10,
     // Fetch timeout in milliseconds
     fetchTimeoutMs: 10000
 };
