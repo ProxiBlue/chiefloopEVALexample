@@ -149,8 +149,9 @@ function update(dt) {
         ship.x = shipStartX + (canvas.width / 2 - shipStartX) * eased;
         ship.y = canvas.height / 2;
 
-        // Bank angle: smooth bell curve peaking at mid-scroll, giving a sense of active flight
-        ship.angle = SCENE_SCROLL_BANK_ANGLE * Math.sin(t * Math.PI);
+        // Bank angle: smooth bell curve peaking at mid-scroll, direction depends on travel
+        var bankDirection = (shipStartX < canvas.width / 2) ? 1 : -1;
+        ship.angle = bankDirection * SCENE_SCROLL_BANK_ANGLE * Math.sin(t * Math.PI);
 
         if (t >= 1) {
             // Scroll complete — finalize new terrain from the frozen snapshot

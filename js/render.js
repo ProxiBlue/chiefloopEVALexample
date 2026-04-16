@@ -657,9 +657,9 @@ function renderSceneScroll() {
 
     ctx.restore();
 
-    // Draw ship hovering at center (thrust flame + side thrusters visible during scroll)
-    // Side thrusters bank toward the new level (right) to show active navigation
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, 'right');
+    // Draw ship with thrust flame + side thrusters in the direction of travel
+    var thrusterDir = (sceneScrollState.shipStartX < canvas.width / 2) ? 'right' : 'left';
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, thrusterDir);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
