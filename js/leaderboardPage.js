@@ -1,6 +1,8 @@
 (function () {
     var REFRESH_COOLDOWN_MS = 10000;
+    var AUTO_REFRESH_INTERVAL_MS = 60000;
     var _lastFetchTime = 0;
+    var _hasLoadedOnce = false;
 
     /**
      * HTML-entity-encode special characters for defence-in-depth.
@@ -134,39 +136,38 @@
             });
     }
 
-    function loadScores() {
-        var now = Date.now();
-        var statusEl = document.getElementById('status');
-        var tableEl = document.getElementById('leaderboardTable');
-        var bodyEl = document.getElementById('leaderboardBody');
-        var btnEl = document.getElementById('refreshBtn');
+    /**
+     * Update the "Last updated" timestamp display.
+     */
+    function updateTimestamp() {
+        var el = document.getElementById('lastUpdated');
+        var now = new Date();
+        var hours = now.getHours();
+        var minutes = now.getMinutes();
+        var seconds = now.getSeconds();
+        var timeStr = (hours < 10 ? '0' : '') + hours + ':' +
+                      (minutes < 10 ? '0' : '') + minutes + ':' +
+                      (seconds < 10 ? '0' : '') + seconds;
+        el.textContent = 'Last updated: ' + timeStr;
+    }
 
-        if (now - _lastFetchTime < REFRESH_COOLDOWN_MS) {
-            return;
-        }
+    /**
+     * Render scores into the table body.
+     * Updates rows in place to avoid flicker on auto-refresh.
+     */
+    function renderScores(scores, bodyEl) {
+        var existingRows = bodyEl.children;
+        var i;
 
-        statusEl.className = 'loading';
-        statusEl.textContent = 'Loading scores...';
-        tableEl.classList.remove('visible');
-        btnEl.disabled = true;
-        _lastFetchTime = now;
-
-        fetchScores(50).then(function (scores) {
-            enableRefreshAfterCooldown(btnEl);
-            if (!scores || scores.length === 0) {
-                statusEl.className = '';
-                statusEl.textContent = 'No scores yet. Be the first to play!';
-                return;
-            }
-
-            statusEl.textContent = '';
-            statusEl.className = '';
-            while (bodyEl.firstChild) {
-                bodyEl.removeChild(bodyEl.firstChild);
-            }
-
-            for (var i = 0; i < scores.length; i++) {
-                var tr = document.createElement('tr');
+        for (i = 0; i < scores.length; i++) {
+            var tr;
+            if (i < existingRows.length) {
+                tr = existingRows[i];
+                tr.children[0].textContent = i + 1;
+                tr.children[1].textContent = scores[i].name;
+                tr.children[2].textContent = scores[i].score.toLocaleString();
+            } else {
+                tr = document.createElement('tr');
 
                 var rankTd = document.createElement('td');
                 rankTd.textContent = i + 1;
@@ -182,8 +183,50 @@
 
                 bodyEl.appendChild(tr);
             }
+        }
 
+        while (bodyEl.children.length > scores.length) {
+            bodyEl.removeChild(bodyEl.lastChild);
+        }
+    }
+
+    function loadScores() {
+        var now = Date.now();
+        var statusEl = document.getElementById('status');
+        var tableEl = document.getElementById('leaderboardTable');
+        var bodyEl = document.getElementById('leaderboardBody');
+        var btnEl = document.getElementById('refreshBtn');
+
+        if (now - _lastFetchTime < REFRESH_COOLDOWN_MS) {
+            return;
+        }
+
+        btnEl.disabled = true;
+        _lastFetchTime = now;
+
+        if (!_hasLoadedOnce) {
+            statusEl.className = 'loading';
+            statusEl.textContent = 'Loading scores...';
+            tableEl.classList.remove('visible');
+        }
+
+        fetchScores(50).then(function (scores) {
+            enableRefreshAfterCooldown(btnEl);
+            if (!scores || scores.length === 0) {
+                statusEl.className = '';
+                statusEl.textContent = 'No scores yet. Be the first to play!';
+                tableEl.classList.remove('visible');
+                updateTimestamp();
+                _hasLoadedOnce = true;
+                return;
+            }
+
+            statusEl.textContent = '';
+            statusEl.className = '';
+            renderScores(scores, bodyEl);
             tableEl.classList.add('visible');
+            updateTimestamp();
+            _hasLoadedOnce = true;
         }).catch(function () {
             enableRefreshAfterCooldown(btnEl);
             statusEl.className = 'error';
@@ -202,4 +245,6 @@
     document.getElementById('refreshBtn').addEventListener('click', loadScores);
 
     loadScores();
+
+    setInterval(loadScores, AUTO_REFRESH_INTERVAL_MS);
 })();

@@ -102,3 +102,9 @@ tbody td:last-child {
 tbody tr:hover {
     background: #1a1a1a;
 }
+#lastUpdated {
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    margin-top: 16px;
+}
