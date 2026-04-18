@@ -1103,9 +1103,31 @@ function renderBugfixReturn() {
 
 function drawMissileBuilding(b) {
     if (b.height <= 0) return;
-    var top = b.baseY - b.height;
     var left = b.x - b.width / 2;
 
+    // Destroyed buildings render as a low jagged rubble silhouette (AC#2).
+    if (b.destroyed) {
+        var rubbleH = 8;
+        var rubbleTop = b.baseY - rubbleH;
+        ctx.fillStyle = '#37474F';
+        ctx.beginPath();
+        ctx.moveTo(left, b.baseY);
+        ctx.lineTo(left, rubbleTop + 2);
+        ctx.lineTo(left + b.width * 0.2, rubbleTop + 5);
+        ctx.lineTo(left + b.width * 0.4, rubbleTop);
+        ctx.lineTo(left + b.width * 0.6, rubbleTop + 4);
+        ctx.lineTo(left + b.width * 0.8, rubbleTop + 1);
+        ctx.lineTo(left + b.width, rubbleTop + 3);
+        ctx.lineTo(left + b.width, b.baseY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#1B1B1B';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        return;
+    }
+
+    var top = b.baseY - b.height;
     ctx.fillStyle = '#546E7A';
     ctx.fillRect(left, top, b.width, b.height);
     ctx.strokeStyle = '#263238';
@@ -1132,6 +1154,20 @@ function drawMissileBattery(bat) {
     var bodyW = 30, bodyH = 18;
     var bodyX = bat.x - bodyW / 2;
     var bodyY = bat.y - bodyH;
+
+    // Destroyed battery: charred stub, no launcher, no ammo readout (AC#3).
+    if (bat.destroyed) {
+        ctx.fillStyle = '#3E2723';
+        ctx.fillRect(bodyX, bodyY + bodyH * 0.55, bodyW, bodyH * 0.45);
+        ctx.strokeStyle = '#1B0000';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bodyX + 0.5, bodyY + bodyH * 0.55 + 0.5, bodyW - 1, bodyH * 0.45 - 1);
+        // A couple of debris nubs on top
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(bodyX + 4, bodyY + bodyH * 0.45, 5, 4);
+        ctx.fillRect(bodyX + bodyW - 9, bodyY + bodyH * 0.50, 4, 4);
+        return;
+    }
 
     ctx.fillStyle = '#4CAF50';
     ctx.fillRect(bodyX, bodyY, bodyW, bodyH);
@@ -1236,6 +1272,21 @@ function drawMissileExplosion(exp) {
     ctx.restore();
 }
 
+function drawMissileDestructionParticles() {
+    if (!missileDestructionParticles.length) return;
+    ctx.save();
+    for (var i = 0; i < missileDestructionParticles.length; i++) {
+        var p = missileDestructionParticles[i];
+        var alpha = Math.max(0, p.life / p.maxLife);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, Math.max(0.5, p.size * alpha), 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
 function drawMissileWorld() {
     drawTerrain();
     for (var i = 0; i < missileBuildings.length; i++) {
@@ -1253,6 +1304,7 @@ function drawMissileWorld() {
     for (var i = 0; i < missileExplosions.length; i++) {
         drawMissileExplosion(missileExplosions[i]);
     }
+    drawMissileDestructionParticles();
     drawMissileCrosshair();
 }
 

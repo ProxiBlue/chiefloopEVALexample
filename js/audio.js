@@ -216,6 +216,44 @@ function playLaunchSound() {
     osc.stop(t + 0.25);
 }
 
+// Low boom for building/battery destruction (AC#6). Deliberately distinct from
+// playLaunchSound (rising high-pitch whoosh) and the interceptor detonation
+// visual — heavy sub-bass sine + filtered noise layer, longer tail.
+function playDestructionSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+
+    // Sub-bass thud
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(110, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.7);
+    var oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(0.55, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.8);
+
+    // Rumble noise layer
+    var noiseBuffer = createNoiseBuffer(ctx, 0.8);
+    var noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    var noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.28, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(600, t);
+    lp.frequency.exponentialRampToValueAtTime(120, t + 0.7);
+    noise.connect(lp);
+    lp.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + 0.75);
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

@@ -290,6 +290,7 @@ var missileInterceptors = [];             // active outgoing interceptors
 var missileExplosions = [];               // active explosion particle groups
 var missileBuildings = [];                // city buildings (defended targets)
 var missileBatteries = [];                // defense batteries (ammo + positions)
+var missileDestructionParticles = [];     // red/orange debris particles from destroyed buildings/batteries
 
 // --- Missile Per-Game Counters ---
 var missileScore = 0;                     // bonus points earned during missile phase

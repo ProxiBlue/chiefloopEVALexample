@@ -168,6 +168,7 @@ function setupMissileWorld() {
     missileExplosions = [];
     missileBuildings = [];
     missileBatteries = [];
+    missileDestructionParticles = [];
 
     missileCrosshairX = canvas.width / 2;
     missileCrosshairY = canvas.height / 2;
@@ -219,6 +220,27 @@ function setupMissileWorld() {
     }
 }
 
+// Red/orange debris burst for a destroyed building or battery (AC#2). Emits a
+// fan of particles with downward gravity so they settle like rubble.
+function spawnMissileDestructionBurst(x, y) {
+    var colors = ['#FF3B30', '#FF6B00', '#FF8A00', '#FFB300', '#E53935', '#D84315'];
+    for (var i = 0; i < 28; i++) {
+        var angle = -Math.PI + Math.random() * Math.PI; // upward hemisphere
+        var speed = 60 + Math.random() * 180;
+        var life = 0.5 + Math.random() * 0.6;
+        missileDestructionParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 2 + Math.random() * 3,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+}
+
 // Spawn a single wave of incoming missiles. Each missile gets a random spawn X
 // along the top of the screen, a random live building or battery as its target
 // (locked at spawn), a per-missile speed around the level-scaled base, and a
@@ -233,16 +255,18 @@ function spawnMissileWave() {
     );
 
     // Gather live targets: buildings (aim for roof midpoint) + batteries.
+    // Each target carries its origin array + index so impact resolution can mark
+    // the exact entry destroyed without a second proximity search.
     var targets = [];
     for (var bi = 0; bi < missileBuildings.length; bi++) {
         var b = missileBuildings[bi];
         if (b.destroyed) continue;
-        targets.push({ x: b.x, y: b.baseY - b.targetHeight / 2 });
+        targets.push({ x: b.x, y: b.baseY - b.targetHeight / 2, kind: 'building', idx: bi });
     }
     for (var gi = 0; gi < missileBatteries.length; gi++) {
         var bat = missileBatteries[gi];
         if (bat.destroyed) continue;
-        targets.push({ x: bat.x, y: bat.y });
+        targets.push({ x: bat.x, y: bat.y, kind: 'battery', idx: gi });
     }
     if (targets.length === 0) return;
 
@@ -267,6 +291,8 @@ function spawnMissileWave() {
             originY: spawnY,
             targetX: target.x,
             targetY: target.y,
+            targetKind: target.kind,
+            targetIdx: target.idx,
             vx: (dx / dist) * speed,
             vy: (dy / dist) * speed,
             totalDist: dist,
@@ -987,6 +1013,8 @@ function update(dt) {
                     y: q.originY,
                     targetX: q.targetX,
                     targetY: q.targetY,
+                    targetKind: q.targetKind,
+                    targetIdx: q.targetIdx,
                     vx: q.vx,
                     vy: q.vy,
                     totalDist: q.totalDist,
@@ -1002,13 +1030,8 @@ function update(dt) {
             var idx = im.x - im.originX;
             var idy = im.y - im.originY;
             var itrav = Math.sqrt(idx * idx + idy * idy);
-            if (itrav >= im.totalDist) {
-                // Missile reached target — push an impact explosion (AC#8: "explode
-                // on impact"). `kind:'impact'` distinguishes from interceptor blasts
-                // so the explosion age loop can skip the incoming-collision credit
-                // for impact blasts (an enemy missile's impact must not wrongly
-                // destroy/credit neighbouring enemy missiles). US-008 will attach
-                // building/battery damage keyed off the same kind marker.
+            // AC#1: detonate when within 5px of target Y (or arrived by distance).
+            if (Math.abs(im.y - im.targetY) <= 5 || itrav >= im.totalDist) {
                 missileExplosions.push({
                     x: im.targetX,
                     y: im.targetY,
@@ -1018,6 +1041,28 @@ function update(dt) {
                     radius: 0,
                     kind: 'impact'
                 });
+                // Mark the specific target destroyed (AC#2, AC#3). Stays destroyed
+                // for the remainder of the mini-game (AC#4) since setupMissileWorld
+                // is only called on mini-game entry, never between waves.
+                var hit = false;
+                if (im.targetKind === 'building' &&
+                    typeof im.targetIdx === 'number' &&
+                    missileBuildings[im.targetIdx] &&
+                    !missileBuildings[im.targetIdx].destroyed) {
+                    missileBuildings[im.targetIdx].destroyed = true;
+                    hit = true;
+                } else if (im.targetKind === 'battery' &&
+                    typeof im.targetIdx === 'number' &&
+                    missileBatteries[im.targetIdx] &&
+                    !missileBatteries[im.targetIdx].destroyed) {
+                    missileBatteries[im.targetIdx].destroyed = true;
+                    missileBatteries[im.targetIdx].ammo = 0; // AC#3: remaining ammo lost
+                    hit = true;
+                }
+                if (hit) {
+                    spawnMissileDestructionBurst(im.targetX, im.targetY);
+                    if (typeof playDestructionSound === 'function') playDestructionSound();
+                }
                 missileIncoming.splice(iI, 1);
             }
         }
@@ -1077,6 +1122,17 @@ function update(dt) {
                     }
                 }
             }
+        }
+
+        // Age destruction debris particles (building/battery impacts). Simple
+        // ballistic motion + gravity + life countdown; splice on life <= 0.
+        for (var dpi = missileDestructionParticles.length - 1; dpi >= 0; dpi--) {
+            var dp = missileDestructionParticles[dpi];
+            dp.x += dp.vx * dt;
+            dp.y += dp.vy * dt;
+            dp.vy += 220 * dt;
+            dp.life -= dt;
+            if (dp.life <= 0) missileDestructionParticles.splice(dpi, 1);
         }
 
         // Wave progression: once the current wave has been fully consumed
