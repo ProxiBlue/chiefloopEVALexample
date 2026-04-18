@@ -1335,9 +1335,57 @@ function renderMissilePlaying() {
     ctx.textAlign = 'left';
     ctx.fillText('Intercepted: ' + missilesIntercepted, 20, 24);
     ctx.fillText('Score: ' + missileScore, 20, 44);
+    ctx.fillText('Wave: ' + missileWaveCurrent + ' / ' + missileWaveTotal, 20, 64);
 
     ctx.textAlign = 'right';
     ctx.fillText('Arrows to aim · Space to fire', canvas.width - 20, 24);
+
+    // "WAVE N/M" banner (AC#4). Visible while missileWaveAnnounceTimer > 0 —
+    // set on each spawnMissileWave() call and ticked down in the update block.
+    if (missileWaveAnnounceTimer > 0) {
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('WAVE ' + missileWaveCurrent + ' / ' + missileWaveTotal,
+                     canvas.width / 2, 80);
+    }
+}
+
+// Results screen shown after all waves cleared with at least one building
+// surviving (AC#5). Lingering explosions/particles continue to tick via the
+// MISSILE_COMPLETE update block so the scene finishes its effects cleanly.
+function renderMissileComplete() {
+    drawMissileWorld();
+
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CITY DEFENDED!', cx, cy - 60);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('Intercepted: ' + missilesIntercepted + ' / ' + missilesTotal,
+                 cx, cy - 20);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('Bonus: +' + missileEndBonus + ' pts', cx, cy + 15);
+
+    ctx.fillStyle = '#888';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('Returning to mission...', cx, cy + 55);
+}
+
+// Missile return is a one-tick pass-through (clearMissileState + level++ +
+// resetShip + gameState = PLAYING all happen in the same update call), so this
+// render is defensive — in practice the switch reaches PLAYING before the next
+// frame. Draws a plain terrain + ship so a stalled frame never shows garbage.
+function renderMissileReturn() {
+    drawTerrain();
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
 }
 
 function renderInvaderReturn() {
@@ -1518,6 +1566,12 @@ function render() {
             break;
         case STATES.MISSILE_PLAYING:
             renderMissilePlaying();
+            break;
+        case STATES.MISSILE_COMPLETE:
+            renderMissileComplete();
+            break;
+        case STATES.MISSILE_RETURN:
+            renderMissileReturn();
             break;
         case STATES.CRASHED:
             renderCrashed();

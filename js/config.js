@@ -273,6 +273,7 @@ var MISSILE_WAVE_COUNT_BASE = 1;          // base number of waves per round
 var MISSILE_WAVE_COUNT_PER_LEVEL = 1;     // extra wave every 3 levels (applied via floor(level/3))
 var MISSILE_WAVE_COUNT_MAX = 3;           // hard cap on waves per round
 var MISSILE_WAVE_DELAY = 1.5;             // seconds between waves
+var MISSILE_WAVE_ANNOUNCE_DURATION = 1.5; // seconds the "WAVE N/M" banner stays visible
 
 // --- Missile Scoring ---
 var MISSILE_POINTS_PER_INTERCEPT = 25;            // points per intercepted incoming missile
@@ -301,8 +302,10 @@ var missileWaveTotal = 0;                 // total waves for this round
 var missileWaveTimer = 0;                 // seconds elapsed since the current wave started
 var missileWaveSpawnQueue = [];           // pending incoming-missile spawns for the current wave
 var missileInterWaveTimer = 0;            // seconds elapsed since current wave was fully cleared; gated by MISSILE_WAVE_DELAY to trigger next wave
+var missileWaveAnnounceTimer = 0;         // countdown while the "WAVE N/M" banner is visible (>0 = visible)
 var missileCompleteTimer = 0;             // elapsed time in MISSILE_COMPLETE state
 var missileTransitionTimer = 0;           // elapsed time in MISSILE_TRANSITION state
+var missileEndBonus = 0;                  // surviving-building + unused-ammo bonus awarded on win (shown in MISSILE_COMPLETE)
 
 // --- Missile Incoming Label Pool (PRD section 8) ---
 // Randomised per incoming missile for flavour — purely cosmetic.

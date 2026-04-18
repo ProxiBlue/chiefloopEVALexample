@@ -104,6 +104,44 @@ function crashShipInBugfix(reason) {
     gameState = STATES.CRASHED;
 }
 
+// Route the ship to STATES.CRASHED from the missile mini-game (US-009 lose path).
+// Mirrors crashShipInBugfix but names the reason "All defenses destroyed" so the
+// crash screen explains why the player lost without having control of the ship.
+function crashShipInMissile(reason) {
+    ship.vx = 0;
+    ship.vy = 0;
+    ship.thrusting = false;
+    landingResult = reason;
+    spawnExplosion(ship.x, ship.y);
+    startScreenShake();
+    stopThrustSound();
+    playExplosionSound();
+    gameState = STATES.CRASHED;
+}
+
+// Reset all per-round missile-command state — entities, particle bursts, wave
+// counters, and UI timers. Called on (a) crash from MISSILE_PLAYING (loss-path
+// cleanup) and (b) MISSILE_RETURN transition (next-level fresh state).
+function clearMissileState() {
+    missileIncoming = [];
+    missileInterceptors = [];
+    missileExplosions = [];
+    missileBuildings = [];
+    missileBatteries = [];
+    missileDestructionParticles = [];
+    missileWaveSpawnQueue = [];
+    missileScore = 0;
+    missilesIntercepted = 0;
+    missilesTotal = 0;
+    missileWaveCurrent = 0;
+    missileWaveTotal = 0;
+    missileWaveTimer = 0;
+    missileInterWaveTimer = 0;
+    missileWaveAnnounceTimer = 0;
+    missileCompleteTimer = 0;
+    missileEndBonus = 0;
+}
+
 // Reset all per-round bugfix state — entities, particle bursts, and counters.
 // Called on (a) crash from BUGFIX_PLAYING (loss-path cleanup, US-010 AC#5) and
 // (b) BUGFIX_RETURN transition (next-level fresh state).
@@ -163,6 +201,9 @@ function setupMissileWorld() {
     missileWaveTimer = 0;
     missileWaveSpawnQueue = [];
     missileInterWaveTimer = 0;
+    missileWaveAnnounceTimer = 0;
+    missileCompleteTimer = 0;
+    missileEndBonus = 0;
     missileIncoming = [];
     missileInterceptors = [];
     missileExplosions = [];
@@ -303,6 +344,7 @@ function spawnMissileWave() {
     missilesTotal += count;
     missileWaveTimer = 0;
     missileWaveCurrent++;
+    missileWaveAnnounceTimer = MISSILE_WAVE_ANNOUNCE_DURATION;
 }
 
 function update(dt) {
@@ -980,11 +1022,18 @@ function update(dt) {
         }
     }
 
-    // Missile playing: minimal scaffold — player aims crosshair with arrow keys.
-    // Interceptor firing, wave spawning, collisions, and completion belong to
-    // follow-up stories (US-005+); this block only prevents a post-transition
-    // freeze and gives the player visible control.
+    // Missile playing: player aims crosshair with arrow keys, fires interceptors
+    // with Space. Wave progression, win, and lose conditions are all resolved
+    // here (US-009). See tail of this block for the wave-complete / all-destroyed
+    // branches that route to MISSILE_COMPLETE or CRASHED.
     if (gameState === STATES.MISSILE_PLAYING) {
+        // Decrement the "WAVE N/M" announce banner so it naturally disappears
+        // after MISSILE_WAVE_ANNOUNCE_DURATION seconds.
+        if (missileWaveAnnounceTimer > 0) {
+            missileWaveAnnounceTimer -= dt;
+            if (missileWaveAnnounceTimer < 0) missileWaveAnnounceTimer = 0;
+        }
+
         var aimLeft  = !!(keys['ArrowLeft']  || keys['a'] || keys['A']);
         var aimRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
         var aimUp    = !!(keys['ArrowUp']    || keys['w'] || keys['W']);
@@ -1119,6 +1168,10 @@ function update(dt) {
                         missileIncoming.splice(mi, 1);
                         missilesIntercepted++;
                         missileScore += MISSILE_POINTS_PER_INTERCEPT;
+                        // Credit global score now so partial progress survives a
+                        // later loss (AC#7: partial missileScore stays in score
+                        // even on loss).
+                        score += MISSILE_POINTS_PER_INTERCEPT;
                     }
                 }
             }
@@ -1139,7 +1192,8 @@ function update(dt) {
         // (spawn queue empty AND no live incoming remaining) and more waves are
         // configured for this round, wait MISSILE_WAVE_DELAY seconds of idle
         // time then spawn the next wave. `missileInterWaveTimer` resets on each
-        // successful spawn so subsequent waves observe the same gap.
+        // successful spawn so subsequent waves observe the same gap. Batteries
+        // do NOT regenerate ammo between waves (AC#3: ammo is scarce).
         if (missileWaveCurrent > 0 &&
             missileWaveCurrent < missileWaveTotal &&
             missileWaveSpawnQueue.length === 0 &&
@@ -1150,6 +1204,94 @@ function update(dt) {
                 spawnMissileWave();
             }
         }
+
+        // Win / lose resolution (AC#5, AC#6). `anyBuildingAlive` drives both:
+        // - no buildings AND no batteries → immediate loss (nothing left to do)
+        // - all waves drained AND any building alive → win
+        // - all waves drained AND no building alive → loss (spec: win requires
+        //   a surviving building; otherwise even if batteries remain the city
+        //   is lost).
+        // Any missileScore already credited to `score` stays (AC#7) because the
+        // interception branch above writes directly to `score` on each kill, and
+        // `clearMissileState()` only clears the mini-game-local counters.
+        var anyBuildingAlive = false;
+        for (var bCheck = 0; bCheck < missileBuildings.length; bCheck++) {
+            if (!missileBuildings[bCheck].destroyed) { anyBuildingAlive = true; break; }
+        }
+        var anyBatteryAlive = false;
+        for (var gCheck = 0; gCheck < missileBatteries.length; gCheck++) {
+            if (!missileBatteries[gCheck].destroyed) { anyBatteryAlive = true; break; }
+        }
+        var allWavesDrained =
+            missileWaveCurrent >= missileWaveTotal &&
+            missileWaveSpawnQueue.length === 0 &&
+            missileIncoming.length === 0;
+        if (!anyBuildingAlive && !anyBatteryAlive) {
+            crashShipInMissile('All defenses destroyed');
+            clearMissileState();
+        } else if (allWavesDrained && !anyBuildingAlive) {
+            crashShipInMissile('City lost — no buildings survived');
+            clearMissileState();
+        } else if (allWavesDrained && anyBuildingAlive) {
+            // Award end-of-round bonus (surviving buildings + unused ammo) once,
+            // then transition to MISSILE_COMPLETE for the brief results screen.
+            var survivors = 0;
+            for (var sCheck = 0; sCheck < missileBuildings.length; sCheck++) {
+                if (!missileBuildings[sCheck].destroyed) survivors++;
+            }
+            var remainingAmmo = 0;
+            for (var aCheck = 0; aCheck < missileBatteries.length; aCheck++) {
+                var batC = missileBatteries[aCheck];
+                if (!batC.destroyed) remainingAmmo += batC.ammo;
+            }
+            missileEndBonus =
+                survivors * MISSILE_POINTS_PER_BUILDING_SURVIVING +
+                remainingAmmo * MISSILE_AMMO_BONUS_MULTIPLIER;
+            missileScore += missileEndBonus;
+            score += missileEndBonus;
+            missileCompleteTimer = 0;
+            gameState = STATES.MISSILE_COMPLETE;
+        }
+    }
+
+    // Missile complete: brief results window (waves cleared, intercept count,
+    // bonus breakdown), then transition to MISSILE_RETURN. Particle/explosion
+    // ticks continue so any lingering effects finish visually during the delay.
+    if (gameState === STATES.MISSILE_COMPLETE) {
+        for (var epi = missileExplosions.length - 1; epi >= 0; epi--) {
+            var exC = missileExplosions[epi];
+            exC.timer += dt;
+            var pC = exC.timer / exC.duration;
+            if (pC >= 1) { missileExplosions.splice(epi, 1); continue; }
+            var envC = pC < 0.5 ? (pC / 0.5) : (1 - (pC - 0.5) / 0.5);
+            exC.radius = exC.maxRadius * envC;
+        }
+        for (var dpC = missileDestructionParticles.length - 1; dpC >= 0; dpC--) {
+            var dpE = missileDestructionParticles[dpC];
+            dpE.x += dpE.vx * dt;
+            dpE.y += dpE.vy * dt;
+            dpE.vy += 220 * dt;
+            dpE.life -= dt;
+            if (dpE.life <= 0) missileDestructionParticles.splice(dpC, 1);
+        }
+        missileCompleteTimer += dt;
+        if (missileCompleteTimer >= MISSILE_COMPLETE_DELAY) {
+            gameState = STATES.MISSILE_RETURN;
+        }
+    }
+
+    // Missile return: clear mini-game state, advance to the next level, reset
+    // ship + wind + terrain, then resume normal flight. Mirrors BUGFIX_RETURN —
+    // no ship-rotation animation since the missile mini-game hides the ship.
+    if (gameState === STATES.MISSILE_RETURN) {
+        clearMissileState();
+        currentLevel++;
+        GRAVITY = getLevelConfig(currentLevel).gravity;
+        THRUST_POWER = GRAVITY * 2.5;
+        resetShip();
+        resetWind();
+        generateTerrain();
+        gameState = STATES.PLAYING;
     }
 
     if (gameState === STATES.PLAYING) {
