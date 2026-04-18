@@ -885,6 +885,25 @@ function update(dt) {
         }
     }
 
+    // Missile playing: minimal scaffold — player aims crosshair with arrow keys.
+    // Interceptor firing, wave spawning, collisions, and completion belong to
+    // follow-up stories (US-005+); this block only prevents a post-transition
+    // freeze and gives the player visible control.
+    if (gameState === STATES.MISSILE_PLAYING) {
+        var aimLeft  = !!(keys['ArrowLeft']  || keys['a'] || keys['A']);
+        var aimRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        var aimUp    = !!(keys['ArrowUp']    || keys['w'] || keys['W']);
+        var aimDown  = !!(keys['ArrowDown']  || keys['s'] || keys['S']);
+        if (aimLeft)  missileCrosshairX -= MISSILE_CROSSHAIR_SPEED * dt;
+        if (aimRight) missileCrosshairX += MISSILE_CROSSHAIR_SPEED * dt;
+        if (aimUp)    missileCrosshairY -= MISSILE_CROSSHAIR_SPEED * dt;
+        if (aimDown)  missileCrosshairY += MISSILE_CROSSHAIR_SPEED * dt;
+        if (missileCrosshairX < 0) missileCrosshairX = 0;
+        if (missileCrosshairX > canvas.width) missileCrosshairX = canvas.width;
+        if (missileCrosshairY < 0) missileCrosshairY = 0;
+        if (missileCrosshairY > canvas.height) missileCrosshairY = canvas.height;
+    }
+
     if (gameState === STATES.PLAYING) {
         // Ship rotation
         var rotatingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);

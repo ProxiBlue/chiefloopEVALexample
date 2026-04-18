@@ -1193,6 +1193,24 @@ function renderMissileTransition() {
     }
 }
 
+function renderMissilePlaying() {
+    drawMissileWorld();
+
+    ctx.fillStyle = '#F44336';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MISSILE COMMAND', canvas.width / 2, 30);
+
+    ctx.fillStyle = '#ECEFF1';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Intercepted: ' + missilesIntercepted, 20, 24);
+    ctx.fillText('Score: ' + missileScore, 20, 44);
+
+    ctx.textAlign = 'right';
+    ctx.fillText('Arrows to aim · Space to fire', canvas.width - 20, 24);
+}
+
 function renderInvaderReturn() {
     // Draw terrain (still flat from invader phase)
     drawTerrain();
@@ -1368,6 +1386,9 @@ function render() {
             break;
         case STATES.MISSILE_TRANSITION:
             renderMissileTransition();
+            break;
+        case STATES.MISSILE_PLAYING:
+            renderMissilePlaying();
             break;
         case STATES.CRASHED:
             renderCrashed();

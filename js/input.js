@@ -134,6 +134,31 @@ function handleKeyPress(key) {
             // No cooldown, no cap — every Space press drops one bomb (AC#1). Bombs self-clear
             // via gravity/terrain/off-canvas within seconds, so they don't accumulate unbounded.
             bombs.push({ x: ship.x, y: ship.y, vx: ship.vx, vy: ship.vy });
+        } else if (gameState === STATES.MISSILE_PLAYING) {
+            // Fire an interceptor from the battery nearest the crosshair that still has ammo.
+            // The interceptor flight/blast/collision behavior is US-005+ scope — here we
+            // only decrement ammo and record the intent so the Space key is wired up.
+            var nearestIdx = -1;
+            var nearestDist = Infinity;
+            for (var i = 0; i < missileBatteries.length; i++) {
+                var b = missileBatteries[i];
+                if (b.ammo <= 0) continue;
+                var d = Math.abs(b.x - missileCrosshairX);
+                if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+            }
+            if (nearestIdx >= 0) {
+                missileBatteries[nearestIdx].ammo--;
+                missileInterceptors.push({
+                    x: missileBatteries[nearestIdx].x,
+                    y: missileBatteries[nearestIdx].y,
+                    targetX: missileCrosshairX,
+                    targetY: missileCrosshairY
+                });
+            }
+        } else if (gameState === STATES.MISSILE_TRANSITION) {
+            // Transition is an animation — swallow Space so it can't trigger
+            // downstream state handlers (e.g. advance, restart) mid-animation.
+            return;
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;
             if (score > 0) {
