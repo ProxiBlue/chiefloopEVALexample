@@ -1192,6 +1192,32 @@ function drawMissileInterceptor(inter) {
     ctx.fill();
 }
 
+function drawMissileIncoming(inc) {
+    // Bright red trail from origin to current position, with a small bright head
+    // and a cosmetic label rendered above the head.
+    ctx.strokeStyle = '#FF3B30';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(inc.originX, inc.originY);
+    ctx.lineTo(inc.x, inc.y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFCDD2';
+    ctx.beginPath();
+    ctx.arc(inc.x, inc.y, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (inc.label) {
+        ctx.save();
+        ctx.fillStyle = '#FF8A80';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(inc.label, inc.x + 6, inc.y - 4);
+        ctx.restore();
+    }
+}
+
 function drawMissileExplosion(exp) {
     if (exp.radius <= 0) return;
     var p = exp.timer / exp.duration;
@@ -1220,6 +1246,9 @@ function drawMissileWorld() {
     }
     for (var i = 0; i < missileInterceptors.length; i++) {
         drawMissileInterceptor(missileInterceptors[i]);
+    }
+    for (var i = 0; i < missileIncoming.length; i++) {
+        drawMissileIncoming(missileIncoming[i]);
     }
     for (var i = 0; i < missileExplosions.length; i++) {
         drawMissileExplosion(missileExplosions[i]);

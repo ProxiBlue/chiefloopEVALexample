@@ -156,7 +156,12 @@ function setupMissileWorld() {
     missilesIntercepted = 0;
     missilesTotal = 0;
     missileWaveCurrent = 0;
-    missileWaveTotal = 0;
+    missileWaveTotal = Math.min(
+        MISSILE_WAVE_COUNT_MAX,
+        MISSILE_WAVE_COUNT_BASE + Math.floor(currentLevel / 3) * MISSILE_WAVE_COUNT_PER_LEVEL
+    );
+    missileWaveTimer = 0;
+    missileWaveSpawnQueue = [];
     missileIncoming = [];
     missileInterceptors = [];
     missileExplosions = [];
@@ -211,6 +216,66 @@ function setupMissileWorld() {
             labelIdx++;
         }
     }
+}
+
+// Spawn a single wave of incoming missiles. Each missile gets a random spawn X
+// along the top of the screen, a random live building or battery as its target
+// (locked at spawn), a per-missile speed around the level-scaled base, and a
+// stagger delay in [0, 2) seconds. Entries sit in `missileWaveSpawnQueue` until
+// their delay elapses, then get promoted into `missileIncoming` (see the
+// MISSILE_PLAYING update block). Label per missile is pulled from
+// `MISSILE_INCOMING_LABEL_POOL` (PRD section 8).
+function spawnMissileWave() {
+    var count = Math.min(
+        MISSILE_INCOMING_MAX,
+        MISSILE_INCOMING_BASE_COUNT + currentLevel * MISSILE_INCOMING_PER_LEVEL
+    );
+
+    // Gather live targets: buildings (aim for roof midpoint) + batteries.
+    var targets = [];
+    for (var bi = 0; bi < missileBuildings.length; bi++) {
+        var b = missileBuildings[bi];
+        if (b.destroyed) continue;
+        targets.push({ x: b.x, y: b.baseY - b.targetHeight / 2 });
+    }
+    for (var gi = 0; gi < missileBatteries.length; gi++) {
+        var bat = missileBatteries[gi];
+        if (bat.destroyed) continue;
+        targets.push({ x: bat.x, y: bat.y });
+    }
+    if (targets.length === 0) return;
+
+    var baseSpeed = MISSILE_INCOMING_BASE_SPEED + currentLevel * MISSILE_INCOMING_SPEED_PER_LEVEL;
+
+    for (var m = 0; m < count; m++) {
+        var delay = Math.random() * 2;
+        var spawnX = Math.random() * canvas.width;
+        var spawnY = 0;
+        var target = targets[Math.floor(Math.random() * targets.length)];
+        var speed = baseSpeed + (Math.random() * 2 - 1) * MISSILE_INCOMING_SPEED_VARIANCE;
+        if (speed < 10) speed = 10;
+        var dx = target.x - spawnX;
+        var dy = target.y - spawnY;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        var label = MISSILE_INCOMING_LABEL_POOL[
+            Math.floor(Math.random() * MISSILE_INCOMING_LABEL_POOL.length)
+        ];
+        missileWaveSpawnQueue.push({
+            delay: delay,
+            originX: spawnX,
+            originY: spawnY,
+            targetX: target.x,
+            targetY: target.y,
+            vx: (dx / dist) * speed,
+            vy: (dy / dist) * speed,
+            totalDist: dist,
+            label: label
+        });
+    }
+
+    missilesTotal += count;
+    missileWaveTimer = 0;
+    missileWaveCurrent++;
 }
 
 function update(dt) {
@@ -881,6 +946,9 @@ function update(dt) {
             for (var j = 0; j < missileBuildings.length; j++) {
                 missileBuildings[j].height = missileBuildings[j].targetHeight;
             }
+            // Kick off wave 1 at MISSILE_PLAYING entry so the stagger clock and
+            // spawn queue are already primed when the playing block first ticks.
+            spawnMissileWave();
             gameState = STATES.MISSILE_PLAYING;
         }
     }
@@ -902,6 +970,41 @@ function update(dt) {
         if (missileCrosshairX > canvas.width) missileCrosshairX = canvas.width;
         if (missileCrosshairY < 0) missileCrosshairY = 0;
         if (missileCrosshairY > canvas.height) missileCrosshairY = canvas.height;
+
+        // Wave spawning: promote queued missiles to live once their stagger delay
+        // elapses, then advance live missiles along their frozen trajectories.
+        // Missiles that reach their target are removed (impact explosion +
+        // building/battery damage belongs to US-008).
+        missileWaveTimer += dt;
+        for (var qi = missileWaveSpawnQueue.length - 1; qi >= 0; qi--) {
+            var q = missileWaveSpawnQueue[qi];
+            if (missileWaveTimer >= q.delay) {
+                missileIncoming.push({
+                    originX: q.originX,
+                    originY: q.originY,
+                    x: q.originX,
+                    y: q.originY,
+                    targetX: q.targetX,
+                    targetY: q.targetY,
+                    vx: q.vx,
+                    vy: q.vy,
+                    totalDist: q.totalDist,
+                    label: q.label
+                });
+                missileWaveSpawnQueue.splice(qi, 1);
+            }
+        }
+        for (var iI = missileIncoming.length - 1; iI >= 0; iI--) {
+            var im = missileIncoming[iI];
+            im.x += im.vx * dt;
+            im.y += im.vy * dt;
+            var idx = im.x - im.originX;
+            var idy = im.y - im.originY;
+            var itrav = Math.sqrt(idx * idx + idy * idy);
+            if (itrav >= im.totalDist) {
+                missileIncoming.splice(iI, 1);
+            }
+        }
 
         // Advance interceptors along their locked trajectories. When an interceptor
         // reaches (or passes) its target coordinates, it detonates — spawning an

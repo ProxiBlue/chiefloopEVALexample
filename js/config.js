@@ -297,8 +297,35 @@ var missilesIntercepted = 0;              // count of incoming missiles intercep
 var missilesTotal = 0;                    // total incoming missiles spawned this round
 var missileWaveCurrent = 0;               // current wave index (0-based) within this round
 var missileWaveTotal = 0;                 // total waves for this round
+var missileWaveTimer = 0;                 // seconds elapsed since the current wave started
+var missileWaveSpawnQueue = [];           // pending incoming-missile spawns for the current wave
 var missileCompleteTimer = 0;             // elapsed time in MISSILE_COMPLETE state
 var missileTransitionTimer = 0;           // elapsed time in MISSILE_TRANSITION state
+
+// --- Missile Incoming Label Pool (PRD section 8) ---
+// Randomised per incoming missile for flavour — purely cosmetic.
+var MISSILE_INCOMING_LABEL_POOL = [
+    '<<<<<<< HEAD',
+    '=======',
+    '>>>>>>> feature/xyz',
+    'CONFLICT',
+    'merge failed',
+    'diverged',
+    'cherry-pick',
+    'rebase --abort',
+    'force push',
+    'detached HEAD',
+    'unresolved',
+    'both modified',
+    'accept theirs',
+    'accept ours',
+    'stash pop',
+    'reset --hard',
+    'CVE-2024-XXXX',
+    '0-day',
+    'injection',
+    'overflow'
+];
 
 // --- Security Mini-Game Cycling Counter ---
 // Increments on each security pad landing. Reset to 0 on game over / new game
