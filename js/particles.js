@@ -272,6 +272,48 @@ function updateBombParticles(dt) {
     }
 }
 
+// --- Bug Explosion Particles (killed bugs) ---
+var BUG_EXPLOSION_COLORS = ['#FFEB3B', '#FFD966', '#FFBB44', '#F44336', '#FF6644'];
+
+function spawnBugExplosion(x, y) {
+    var particles = [];
+    for (var i = 0; i < 10; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 30 + Math.random() * 80;
+        var life = 0.3 + Math.random() * 0.4;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 2.5,
+            color: BUG_EXPLOSION_COLORS[Math.floor(Math.random() * BUG_EXPLOSION_COLORS.length)]
+        });
+    }
+    bugExplosions.push(particles);
+}
+
+function updateBugExplosions(dt) {
+    for (var g = bugExplosions.length - 1; g >= 0; g--) {
+        var group = bugExplosions[g];
+        for (var i = group.length - 1; i >= 0; i--) {
+            var p = group[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vy += 40 * dt;
+            p.life -= dt;
+            if (p.life <= 0) {
+                group.splice(i, 1);
+            }
+        }
+        if (group.length === 0) {
+            bugExplosions.splice(g, 1);
+        }
+    }
+}
+
 // --- Screen Shake ---
 var screenShake = 0;
 var SCREEN_SHAKE_DURATION = 0.3;

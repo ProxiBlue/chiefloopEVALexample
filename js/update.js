@@ -615,32 +615,62 @@ function update(dt) {
                 continue;
             }
 
-            // Terrain collision: bomb y reached terrain height at its x
+            // Determine explosion center: terrain contact → at terrain y; bug in radius → at bomb.
+            var blastX = null;
+            var blastY = null;
             var hit = getTerrainYAtX(bomb.x);
             if (hit && bomb.y >= hit.y) {
-                spawnBombExplosion(bomb.x, hit.y);
+                blastX = bomb.x;
+                blastY = hit.y;
+            } else {
+                for (var gi = 0; gi < bugs.length; gi++) {
+                    var bug = bugs[gi];
+                    var dx = bomb.x - bug.x;
+                    var dy = bomb.y - bug.y;
+                    if (dx * dx + dy * dy <= BUGFIX_BOMB_BLAST_RADIUS * BUGFIX_BOMB_BLAST_RADIUS) {
+                        blastX = bomb.x;
+                        blastY = bomb.y;
+                        break;
+                    }
+                }
+            }
+
+            if (blastX !== null) {
+                spawnBombExplosion(blastX, blastY);
+                // Kill all bugs within blast radius of the explosion center
+                var R2 = BUGFIX_BOMB_BLAST_RADIUS * BUGFIX_BOMB_BLAST_RADIUS;
+                for (var gj = bugs.length - 1; gj >= 0; gj--) {
+                    var bgk = bugs[gj];
+                    var kdx = blastX - bgk.x;
+                    var kdy = blastY - bgk.y;
+                    if (kdx * kdx + kdy * kdy <= R2) {
+                        bugfixScore += bgk.points;
+                        score += bgk.points;
+                        bugsKilled++;
+                        spawnBugExplosion(bgk.x, bgk.y);
+                        bugs.splice(gj, 1);
+                    }
+                }
                 bombs.splice(bi, 1);
                 continue;
             }
-
-            // Bug proximity: within blast radius of any bug
-            var exploded = false;
-            for (var gi = 0; gi < bugs.length; gi++) {
-                var bug = bugs[gi];
-                var dx = bomb.x - bug.x;
-                var dy = bomb.y - bug.y;
-                if (dx * dx + dy * dy <= BUGFIX_BOMB_BLAST_RADIUS * BUGFIX_BOMB_BLAST_RADIUS) {
-                    spawnBombExplosion(bomb.x, bomb.y);
-                    bombs.splice(bi, 1);
-                    exploded = true;
-                    break;
-                }
-            }
-            if (exploded) continue;
         }
 
         // Update bomb particle lifetimes (trail + explosion share bombParticles)
         updateBombParticles(dt);
+        // Update bug-death explosion particles
+        updateBugExplosions(dt);
+
+        // Win condition: all bugs cleared → enter BUGFIX_COMPLETE with fuel-remaining bonus.
+        // Per AC: random per-game choice between BUGFIX_FUEL_BONUS_LOW / _HIGH as multiplier on (fuel / FUEL_MAX).
+        if (bugsTotal > 0 && bugsKilled >= bugsTotal) {
+            var fuelMult = Math.random() < 0.5 ? BUGFIX_FUEL_BONUS_LOW : BUGFIX_FUEL_BONUS_HIGH;
+            var fuelBonus = Math.round(fuelMult * (ship.fuel / FUEL_MAX));
+            bugfixScore += fuelBonus;
+            score += fuelBonus;
+            bugfixCompleteTimer = 0;
+            gameState = STATES.BUGFIX_COMPLETE;
+        }
     }
 
     if (gameState === STATES.PLAYING) {
