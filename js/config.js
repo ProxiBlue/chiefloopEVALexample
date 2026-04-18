@@ -299,6 +299,7 @@ var missileWaveCurrent = 0;               // current wave index (0-based) within
 var missileWaveTotal = 0;                 // total waves for this round
 var missileWaveTimer = 0;                 // seconds elapsed since the current wave started
 var missileWaveSpawnQueue = [];           // pending incoming-missile spawns for the current wave
+var missileInterWaveTimer = 0;            // seconds elapsed since current wave was fully cleared; gated by MISSILE_WAVE_DELAY to trigger next wave
 var missileCompleteTimer = 0;             // elapsed time in MISSILE_COMPLETE state
 var missileTransitionTimer = 0;           // elapsed time in MISSILE_TRANSITION state
 

@@ -162,6 +162,7 @@ function setupMissileWorld() {
     );
     missileWaveTimer = 0;
     missileWaveSpawnQueue = [];
+    missileInterWaveTimer = 0;
     missileIncoming = [];
     missileInterceptors = [];
     missileExplosions = [];
@@ -1002,6 +1003,21 @@ function update(dt) {
             var idy = im.y - im.originY;
             var itrav = Math.sqrt(idx * idx + idy * idy);
             if (itrav >= im.totalDist) {
+                // Missile reached target — push an impact explosion (AC#8: "explode
+                // on impact"). `kind:'impact'` distinguishes from interceptor blasts
+                // so the explosion age loop can skip the incoming-collision credit
+                // for impact blasts (an enemy missile's impact must not wrongly
+                // destroy/credit neighbouring enemy missiles). US-008 will attach
+                // building/battery damage keyed off the same kind marker.
+                missileExplosions.push({
+                    x: im.targetX,
+                    y: im.targetY,
+                    timer: 0,
+                    duration: 0.5,
+                    maxRadius: MISSILE_INTERCEPTOR_BLAST_RADIUS,
+                    radius: 0,
+                    kind: 'impact'
+                });
                 missileIncoming.splice(iI, 1);
             }
         }
@@ -1024,7 +1040,8 @@ function update(dt) {
                     timer: 0,
                     duration: 0.5,
                     maxRadius: MISSILE_INTERCEPTOR_BLAST_RADIUS,
-                    radius: 0
+                    radius: 0,
+                    kind: 'interceptor'
                 });
                 missileInterceptors.splice(ii, 1);
             }
@@ -1045,15 +1062,36 @@ function update(dt) {
             // Expand to maxRadius at p=0.5, shrink back toward 0 at p=1.
             var env = p < 0.5 ? (p / 0.5) : (1 - (p - 0.5) / 0.5);
             exp.radius = exp.maxRadius * env;
-            for (var mi = missileIncoming.length - 1; mi >= 0; mi--) {
-                var inc = missileIncoming[mi];
-                var ix = inc.x - exp.x;
-                var iy = inc.y - exp.y;
-                if (Math.sqrt(ix * ix + iy * iy) <= exp.radius) {
-                    missileIncoming.splice(mi, 1);
-                    missilesIntercepted++;
-                    missileScore += MISSILE_POINTS_PER_INTERCEPT;
+            // Only interceptor blasts destroy incoming missiles + credit the player.
+            // Impact blasts (enemy missile hitting its target) must NOT credit the
+            // player with interception and must NOT chain-delete other incoming.
+            if (exp.kind !== 'impact') {
+                for (var mi = missileIncoming.length - 1; mi >= 0; mi--) {
+                    var inc = missileIncoming[mi];
+                    var ix = inc.x - exp.x;
+                    var iy = inc.y - exp.y;
+                    if (Math.sqrt(ix * ix + iy * iy) <= exp.radius) {
+                        missileIncoming.splice(mi, 1);
+                        missilesIntercepted++;
+                        missileScore += MISSILE_POINTS_PER_INTERCEPT;
+                    }
                 }
+            }
+        }
+
+        // Wave progression: once the current wave has been fully consumed
+        // (spawn queue empty AND no live incoming remaining) and more waves are
+        // configured for this round, wait MISSILE_WAVE_DELAY seconds of idle
+        // time then spawn the next wave. `missileInterWaveTimer` resets on each
+        // successful spawn so subsequent waves observe the same gap.
+        if (missileWaveCurrent > 0 &&
+            missileWaveCurrent < missileWaveTotal &&
+            missileWaveSpawnQueue.length === 0 &&
+            missileIncoming.length === 0) {
+            missileInterWaveTimer += dt;
+            if (missileInterWaveTimer >= MISSILE_WAVE_DELAY) {
+                missileInterWaveTimer = 0;
+                spawnMissileWave();
             }
         }
     }
