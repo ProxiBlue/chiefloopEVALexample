@@ -560,6 +560,10 @@ function update(dt) {
             ship.y = 0;
             ship.vy = 0;
         }
+
+        // Terrain collision — reuse shared checkCollision (routes to CRASHED on impact).
+        // US-009 will refine the bugfix-specific lose condition; this wires the detection path.
+        checkCollision();
     }
 
     if (gameState === STATES.PLAYING) {
