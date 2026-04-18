@@ -221,6 +221,53 @@ function drawAlienExplosions() {
     ctx.globalAlpha = 1;
 }
 
+// --- Bomb Particles (trail + explosion) ---
+var BOMB_TRAIL_COLORS = ['#FFBB44', '#FF9234', '#F37121'];
+var BOMB_EXPLOSION_COLORS = ['#F37121', '#FF9234', '#FFBB44', '#FFD966', '#FFEB3B'];
+
+function spawnBombTrail(x, y) {
+    bombParticles.push({
+        x: x,
+        y: y,
+        vx: 0,
+        vy: 0,
+        life: 0.3,
+        maxLife: 0.3,
+        size: 1.5 + Math.random() * 1.5,
+        color: BOMB_TRAIL_COLORS[Math.floor(Math.random() * BOMB_TRAIL_COLORS.length)]
+    });
+}
+
+function spawnBombExplosion(x, y) {
+    for (var i = 0; i < 16; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 40 + Math.random() * 120;
+        var life = 0.4 + Math.random() * 0.5;
+        bombParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 2 + Math.random() * 3,
+            color: BOMB_EXPLOSION_COLORS[Math.floor(Math.random() * BOMB_EXPLOSION_COLORS.length)]
+        });
+    }
+}
+
+function updateBombParticles(dt) {
+    for (var i = bombParticles.length - 1; i >= 0; i--) {
+        var p = bombParticles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) {
+            bombParticles.splice(i, 1);
+        }
+    }
+}
+
 // --- Screen Shake ---
 var screenShake = 0;
 var SCREEN_SHAKE_DURATION = 0.3;
