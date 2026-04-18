@@ -25,6 +25,8 @@ function startNewGame() {
     score = 0;
     securityPadScroll = false;
     bugfixPadScroll = false;
+    missilePadScroll = false;
+    securityMiniGameCount = 0;
     GRAVITY = getLevelConfig(currentLevel).gravity;
     THRUST_POWER = GRAVITY * 2.5;
     resetShip();
@@ -105,9 +107,19 @@ function handleKeyPress(key) {
             // Both security and non-security pads use the same liftoff + scroll transition
             securityPadScroll = (landedPRType === 'security');
             bugfixPadScroll = (landedPRType === 'bugfix');
+            missilePadScroll = false;
+            // Security pads alternate mini-games: odd count -> invaders, even -> missile command.
+            // Overrides the securityPadScroll set above on even landings.
+            if (securityPadScroll) {
+                securityMiniGameCount++;
+                if (securityMiniGameCount % 2 === 0) {
+                    securityPadScroll = false;
+                    missilePadScroll = true;
+                }
+            }
             // Increment level at the start of the transition (non-security only;
-            // security pads advance in INVADER_RETURN after the invader phase)
-            if (!securityPadScroll) {
+            // security pads advance after their mini-game phase)
+            if (!securityPadScroll && !missilePadScroll) {
                 currentLevel++;
             }
             ship.thrusting = false;

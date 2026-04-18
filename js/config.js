@@ -115,7 +115,7 @@ var SCENE_SCROLL_BANK_ANGLE = 0.15; // radians (~8.6°) — max bank angle durin
 // null when no scroll is active; a frozen object during SCENE_SCROLL.
 var sceneScrollState = null;        // { timer, oldTerrain, oldPads, newTerrain, newPads }
 
-function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, isBugfixScroll, shipStartX) {
+function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, isBugfixScroll, isMissileScroll, shipStartX) {
     return Object.freeze({
         timer: 0,
         oldTerrain: oldTerrain,
@@ -124,6 +124,7 @@ function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInva
         newPads: newPads,
         isInvaderScroll: !!isInvaderScroll,
         isBugfixScroll: !!isBugfixScroll,
+        isMissileScroll: !!isMissileScroll,
         shipStartX: shipStartX
     });
 }
@@ -131,6 +132,7 @@ function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInva
 // --- Security Pad Scroll-to-Invader Transition ---
 var securityPadScroll = false;                      // true when scroll is for security pad (invader interlude)
 var bugfixPadScroll = false;                        // true when scroll is for bugfix pad (bugfix interlude)
+var missilePadScroll = false;                       // true when scroll is for security pad (missile command interlude)
 var INVADER_SCROLL_ROTATE_DURATION = 1;             // seconds for 90-degree rotation after scroll
 var invaderScrollRotateTimer = 0;                   // elapsed time in rotation after scroll
 
@@ -299,6 +301,7 @@ var missileCompleteTimer = 0;             // elapsed time in MISSILE_COMPLETE st
 var missileTransitionTimer = 0;           // elapsed time in MISSILE_TRANSITION state
 
 // --- Security Mini-Game Cycling Counter ---
-// Increments on each security pad landing. Persists for the session.
-// Odd value -> invaders mini-game, even value -> missile command mini-game.
+// Increments on each security pad landing. Reset to 0 on game over / new game
+// (see startNewGame in js/input.js). Odd value -> invaders mini-game,
+// even value -> missile command mini-game.
 var securityMiniGameCount = 0;

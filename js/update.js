@@ -189,14 +189,14 @@ function update(dt) {
             var snapNewTerrain;
             var snapNewPads;
 
-            if (securityPadScroll) {
-                // Security pad: generate flat invader-style terrain (no level advance)
+            if (securityPadScroll || missilePadScroll) {
+                // Security pad (invader OR missile command): flat terrain, no pads, no level advance
                 var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
                 snapNewTerrain = [];
                 for (var i = 0; i < terrain.length; i++) {
                     snapNewTerrain.push({ x: terrain[i].x, y: flatY });
                 }
-                snapNewPads = []; // No landing pads on invader terrain
+                snapNewPads = []; // No landing pads on mini-game terrain
             } else {
                 // Normal pad: level already incremented at spacebar press — apply config and generate terrain
                 GRAVITY = getLevelConfig(currentLevel).gravity;
@@ -214,7 +214,7 @@ function update(dt) {
                 }
             }
             // Atomically set scroll state as a frozen object (ship.x preserved for smooth transition)
-            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, ship.x);
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, missilePadScroll, ship.x);
             gameState = STATES.SCENE_SCROLL;
         }
     }
@@ -241,9 +241,9 @@ function update(dt) {
 
         // Y: smooth arc from center toward target altitude
         // Normal path: descend toward canvas.height/3 (covers 85% during scroll)
-        // Invader path: stay at canvas.height/2 (INVADER_SCROLL_ROTATE expects center)
+        // Invader + missile paths: stay at canvas.height/2 (mini-game entries expect center)
         var scrollCenterY = canvas.height / 2;
-        if (!sceneScrollState.isInvaderScroll) {
+        if (!sceneScrollState.isInvaderScroll && !sceneScrollState.isMissileScroll) {
             var scrollTargetY = canvas.height / 3;
             ship.y = scrollCenterY + (scrollTargetY - scrollCenterY) * 0.85 * eased;
         } else {
@@ -260,6 +260,7 @@ function update(dt) {
             var newP = sceneScrollState.newPads;
             var wasInvaderScroll = sceneScrollState.isInvaderScroll;
             var wasBugfixScroll = sceneScrollState.isBugfixScroll;
+            var wasMissileScroll = sceneScrollState.isMissileScroll;
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
                 terrain.push({ x: newT[i].x, y: newT[i].y });
@@ -283,6 +284,7 @@ function update(dt) {
                 ship.thrusting = false;
                 ship.rotating = null;
                 invaderScrollRotateTimer = 0;
+                ship.fuel = FUEL_MAX;
                 gameState = STATES.INVADER_SCROLL_ROTATE;
             } else if (wasBugfixScroll) {
                 // Bugfix pad: enter bugfix transition directly (no 90° rotation)
@@ -297,6 +299,17 @@ function update(dt) {
                 bugfixTransitionTimer = 0;
                 spawnBugWave();
                 gameState = STATES.BUGFIX_TRANSITION;
+            } else if (wasMissileScroll) {
+                // Security pad (even count): enter missile command transition
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 2;
+                ship.angle = 0;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                missileTransitionTimer = 0;
+                gameState = STATES.MISSILE_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
                 sceneDescentStartY = ship.y;
@@ -309,7 +322,7 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
-                // Fuel carries over from previous level — do NOT reset
+                ship.fuel = FUEL_MAX;
                 gameState = STATES.SCENE_DESCENT;
             }
         } else {
@@ -322,6 +335,7 @@ function update(dt) {
                 newPads: sceneScrollState.newPads,
                 isInvaderScroll: sceneScrollState.isInvaderScroll,
                 isBugfixScroll: sceneScrollState.isBugfixScroll,
+                isMissileScroll: sceneScrollState.isMissileScroll,
                 shipStartX: sceneScrollState.shipStartX
             });
         }
