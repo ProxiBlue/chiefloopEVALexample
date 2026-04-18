@@ -135,25 +135,44 @@ function handleKeyPress(key) {
             // via gravity/terrain/off-canvas within seconds, so they don't accumulate unbounded.
             bombs.push({ x: ship.x, y: ship.y, vx: ship.vx, vy: ship.vy });
         } else if (gameState === STATES.MISSILE_PLAYING) {
-            // Fire an interceptor from the battery nearest the crosshair that still has ammo.
-            // The interceptor flight/blast/collision behavior is US-005+ scope — here we
-            // only decrement ammo and record the intent so the Space key is wired up.
-            var nearestIdx = -1;
-            var nearestDist = Infinity;
+            // Pick the battery with the MOST remaining ammo; break ties by proximity
+            // of the battery to the crosshair (closest wins). Batteries with 0 ammo
+            // are skipped entirely. If none have ammo, the keypress is a no-op.
+            var pickedIdx = -1;
+            var bestAmmo = -1;
+            var bestDist = Infinity;
             for (var i = 0; i < missileBatteries.length; i++) {
                 var b = missileBatteries[i];
                 if (b.ammo <= 0) continue;
-                var d = Math.abs(b.x - missileCrosshairX);
-                if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+                var dx = b.x - missileCrosshairX;
+                var dy = b.y - missileCrosshairY;
+                var d = Math.sqrt(dx * dx + dy * dy);
+                if (b.ammo > bestAmmo || (b.ammo === bestAmmo && d < bestDist)) {
+                    bestAmmo = b.ammo;
+                    bestDist = d;
+                    pickedIdx = i;
+                }
             }
-            if (nearestIdx >= 0) {
-                missileBatteries[nearestIdx].ammo--;
+            if (pickedIdx >= 0) {
+                var bat = missileBatteries[pickedIdx];
+                bat.ammo--;
+                // Lock target at fire time (not tracked). Pre-compute unit velocity
+                // so the update loop can advance x/y at MISSILE_INTERCEPTOR_SPEED.
+                var tdx = missileCrosshairX - bat.x;
+                var tdy = missileCrosshairY - bat.y;
+                var tdist = Math.sqrt(tdx * tdx + tdy * tdy) || 1;
                 missileInterceptors.push({
-                    x: missileBatteries[nearestIdx].x,
-                    y: missileBatteries[nearestIdx].y,
+                    launchX: bat.x,
+                    launchY: bat.y,
+                    x: bat.x,
+                    y: bat.y,
                     targetX: missileCrosshairX,
-                    targetY: missileCrosshairY
+                    targetY: missileCrosshairY,
+                    vx: (tdx / tdist) * MISSILE_INTERCEPTOR_SPEED,
+                    vy: (tdy / tdist) * MISSILE_INTERCEPTOR_SPEED,
+                    totalDist: tdist
                 });
+                if (typeof playLaunchSound === 'function') playLaunchSound();
             }
         } else if (gameState === STATES.MISSILE_TRANSITION) {
             // Transition is an animation — swallow Space so it can't trigger

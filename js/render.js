@@ -1177,6 +1177,39 @@ function drawMissileCrosshair() {
     ctx.stroke();
 }
 
+function drawMissileInterceptor(inter) {
+    // Bright green trail with a white-hot leading head.
+    ctx.strokeStyle = '#00ff66';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(inter.launchX, inter.launchY);
+    ctx.lineTo(inter.x, inter.y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(inter.x, inter.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawMissileExplosion(exp) {
+    if (exp.radius <= 0) return;
+    var p = exp.timer / exp.duration;
+    ctx.save();
+    ctx.globalAlpha = 0.85 * (1 - p);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0 * (1 - p);
+    ctx.strokeStyle = '#00ff66';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+}
+
 function drawMissileWorld() {
     drawTerrain();
     for (var i = 0; i < missileBuildings.length; i++) {
@@ -1184,6 +1217,12 @@ function drawMissileWorld() {
     }
     for (var i = 0; i < missileBatteries.length; i++) {
         drawMissileBattery(missileBatteries[i]);
+    }
+    for (var i = 0; i < missileInterceptors.length; i++) {
+        drawMissileInterceptor(missileInterceptors[i]);
+    }
+    for (var i = 0; i < missileExplosions.length; i++) {
+        drawMissileExplosion(missileExplosions[i]);
     }
     drawMissileCrosshair();
 }

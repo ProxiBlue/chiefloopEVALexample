@@ -194,6 +194,28 @@ function playAlienDestroySound() {
     osc.stop(t + 0.18);
 }
 
+function playLaunchSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, t);
+    osc.frequency.exponentialRampToValueAtTime(900, t + 0.18);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1200, t);
+    lp.frequency.exponentialRampToValueAtTime(3000, t + 0.2);
+    osc.connect(lp);
+    lp.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.25);
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

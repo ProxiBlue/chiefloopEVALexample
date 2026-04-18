@@ -902,6 +902,57 @@ function update(dt) {
         if (missileCrosshairX > canvas.width) missileCrosshairX = canvas.width;
         if (missileCrosshairY < 0) missileCrosshairY = 0;
         if (missileCrosshairY > canvas.height) missileCrosshairY = canvas.height;
+
+        // Advance interceptors along their locked trajectories. When an interceptor
+        // reaches (or passes) its target coordinates, it detonates — spawning an
+        // explosion that expands then shrinks over ~0.5s. Detonations destroy any
+        // incoming missile whose position falls inside the blast radius.
+        for (var ii = missileInterceptors.length - 1; ii >= 0; ii--) {
+            var inter = missileInterceptors[ii];
+            inter.x += inter.vx * dt;
+            inter.y += inter.vy * dt;
+            var rdx = inter.x - inter.launchX;
+            var rdy = inter.y - inter.launchY;
+            var travelled = Math.sqrt(rdx * rdx + rdy * rdy);
+            if (travelled >= inter.totalDist) {
+                missileExplosions.push({
+                    x: inter.targetX,
+                    y: inter.targetY,
+                    timer: 0,
+                    duration: 0.5,
+                    maxRadius: MISSILE_INTERCEPTOR_BLAST_RADIUS,
+                    radius: 0
+                });
+                missileInterceptors.splice(ii, 1);
+            }
+        }
+
+        // Age explosions; compute current radius as an expand-then-shrink envelope
+        // over [0, duration]. Check collisions against incoming missiles whose
+        // centres fall within the current radius. (Incoming missiles arrive in a
+        // later story — the check is a safe no-op until then.)
+        for (var ei = missileExplosions.length - 1; ei >= 0; ei--) {
+            var exp = missileExplosions[ei];
+            exp.timer += dt;
+            var p = exp.timer / exp.duration;
+            if (p >= 1) {
+                missileExplosions.splice(ei, 1);
+                continue;
+            }
+            // Expand to maxRadius at p=0.5, shrink back toward 0 at p=1.
+            var env = p < 0.5 ? (p / 0.5) : (1 - (p - 0.5) / 0.5);
+            exp.radius = exp.maxRadius * env;
+            for (var mi = missileIncoming.length - 1; mi >= 0; mi--) {
+                var inc = missileIncoming[mi];
+                var ix = inc.x - exp.x;
+                var iy = inc.y - exp.y;
+                if (Math.sqrt(ix * ix + iy * iy) <= exp.radius) {
+                    missileIncoming.splice(mi, 1);
+                    missilesIntercepted++;
+                    missileScore += MISSILE_POINTS_PER_INTERCEPT;
+                }
+            }
+        }
     }
 
     if (gameState === STATES.PLAYING) {
