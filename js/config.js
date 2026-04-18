@@ -209,7 +209,6 @@ var BUGFIX_BUG_SPEED_VARIANCE = 20;       // +/- speed variance per bug in px/s
 var BUGFIX_BOMB_SIZE = 4;                 // bomb radius in pixels
 var BUGFIX_BOMB_BLAST_RADIUS = 28;        // blast radius in pixels
 var BUGFIX_BOMB_GRAVITY_SCALE = 1.0;      // uses level gravity
-var BUGFIX_MAX_BOMBS = 12;                // hard cap on concurrent bombs (DoS guard: bounds bombs[] × bugs[] inner loop)
 var BUGFIX_MAX_BOMB_PARTICLES = 300;      // hard cap on bombParticles[] (trail + explosion combined)
 
 // --- Bugfix Scoring ---
