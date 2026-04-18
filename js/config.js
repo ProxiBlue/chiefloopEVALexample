@@ -13,7 +13,11 @@ var STATES = {
     INVADER_TRANSITION: 'invader_transition',
     INVADER_PLAYING: 'invader_playing',
     INVADER_COMPLETE: 'invader_complete',
-    INVADER_RETURN: 'invader_return'
+    INVADER_RETURN: 'invader_return',
+    BUGFIX_TRANSITION: 'bugfix_transition',
+    BUGFIX_PLAYING: 'bugfix_playing',
+    BUGFIX_COMPLETE: 'bugfix_complete',
+    BUGFIX_RETURN: 'bugfix_return'
 };
 
 var gameState = STATES.MENU;
