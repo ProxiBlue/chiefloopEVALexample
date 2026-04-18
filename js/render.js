@@ -899,6 +899,33 @@ function renderInvaderComplete() {
     ctx.fillText('Returning to mission...', cx, cy + 65);
 }
 
+function renderBugfixComplete() {
+    drawTerrain();
+
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    // Results overlay (bugs cleared + fuel bonus)
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BUG FIX COMPLETE!', cx, cy - 60);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText('Bugs Cleared: ' + bugsKilled + ' / ' + bugsTotal, cx, cy - 15);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('Fuel Bonus: +' + bugfixFuelBonus + ' pts', cx, cy + 25);
+
+    ctx.fillStyle = '#888';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('Returning to mission...', cx, cy + 65);
+}
+
 function renderInvaderReturn() {
     // Draw terrain (still flat from invader phase)
     drawTerrain();
@@ -1059,6 +1086,9 @@ function render() {
             break;
         case STATES.INVADER_RETURN:
             renderInvaderReturn();
+            break;
+        case STATES.BUGFIX_COMPLETE:
+            renderBugfixComplete();
             break;
         case STATES.CRASHED:
             renderCrashed();

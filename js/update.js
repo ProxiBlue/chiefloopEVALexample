@@ -63,6 +63,7 @@ function spawnBugWave() {
     bugExplosions = [];
     bugfixScore = 0;
     bugsKilled = 0;
+    bugfixFuelBonus = 0;
 
     var count = 3 + currentLevel * 2;
     bugsTotal = count;
@@ -113,6 +114,7 @@ function clearBugfixState() {
     bugExplosions = [];
     bugsKilled = 0;
     bugsTotal = 0;
+    bugfixFuelBonus = 0;
 }
 
 function update(dt) {
@@ -722,6 +724,7 @@ function update(dt) {
             bugfixCompleteTimer = 0;
             var fuelMult = Math.random() < 0.5 ? BUGFIX_FUEL_BONUS_LOW : BUGFIX_FUEL_BONUS_HIGH;
             var fuelBonus = Math.round(fuelMult * (ship.fuel / FUEL_MAX));
+            bugfixFuelBonus = fuelBonus;
             bugfixScore += fuelBonus;
             score += fuelBonus;
         }

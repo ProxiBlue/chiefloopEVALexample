@@ -234,5 +234,6 @@ var bugExplosions = [];                   // particle groups from destroyed bugs
 var bugfixScore = 0;                      // bonus points earned during bugfix phase
 var bugsKilled = 0;                       // count of bugs killed this round
 var bugsTotal = 0;                        // total bugs spawned this round
+var bugfixFuelBonus = 0;                  // fuel-remaining bonus awarded on win (shown in BUGFIX_COMPLETE)
 var bugfixCompleteTimer = 0;              // elapsed time in BUGFIX_COMPLETE state
 var bugfixTransitionTimer = 0;            // elapsed time in BUGFIX_TRANSITION state
