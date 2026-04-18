@@ -55,6 +55,38 @@ function spawnAlienWave() {
     invaderTotalAliens = aliens.length;
 }
 
+// Spawn a wave of bugs along the current terrain surface for the bugfix mini-game
+function spawnBugWave() {
+    bugs = [];
+    bombs = [];
+    bombParticles = [];
+    bugExplosions = [];
+    bugfixScore = 0;
+    bugsKilled = 0;
+
+    var count = 3 + currentLevel * 2;
+    bugsTotal = count;
+
+    for (var i = 0; i < count; i++) {
+        var x = BUGFIX_BUG_SIZE + Math.random() * (canvas.width - 2 * BUGFIX_BUG_SIZE);
+        var hit = getTerrainYAtX(x);
+        var surfaceY = hit ? hit.y : canvas.height * TERRAIN_FLAT_Y_RATIO;
+        var y = surfaceY - BUGFIX_BUG_SIZE / 2;
+        var isHigh = Math.random() < 0.5;
+        var speed = BUGFIX_BUG_BASE_SPEED + currentLevel * BUGFIX_BUG_SPEED_PER_LEVEL
+                    + (Math.random() * 2 - 1) * BUGFIX_BUG_SPEED_VARIANCE;
+        bugs.push({
+            x: x,
+            y: y,
+            isHigh: isHigh,
+            color: isHigh ? BUGFIX_BUG_COLOR_HIGH : BUGFIX_BUG_COLOR_LOW,
+            points: isHigh ? BUGFIX_BUG_POINTS_HIGH : BUGFIX_BUG_POINTS_LOW,
+            direction: Math.random() < 0.5 ? -1 : 1,
+            speed: speed
+        });
+    }
+}
+
 function update(dt) {
     // Update animation timer for pad glow pulse
     animTime += dt;
@@ -231,7 +263,9 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
+                ship.fuel = FUEL_MAX;
                 bugfixTransitionTimer = 0;
+                spawnBugWave();
                 gameState = STATES.BUGFIX_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
@@ -474,6 +508,14 @@ function update(dt) {
             resetWind();
             generateTerrain();
             gameState = STATES.PLAYING;
+        }
+    }
+
+    // Bugfix transition: brief intro between landing and bugfix gameplay
+    if (gameState === STATES.BUGFIX_TRANSITION) {
+        bugfixTransitionTimer += dt;
+        if (bugfixTransitionTimer >= BUGFIX_TRANSITION_DURATION) {
+            gameState = STATES.BUGFIX_PLAYING;
         }
     }
 
