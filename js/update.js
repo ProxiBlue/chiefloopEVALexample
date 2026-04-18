@@ -103,6 +103,18 @@ function crashShipInBugfix(reason) {
     gameState = STATES.CRASHED;
 }
 
+// Reset all per-round bugfix state — entities, particle bursts, and counters.
+// Called on (a) crash from BUGFIX_PLAYING (loss-path cleanup, US-010 AC#5) and
+// (b) BUGFIX_RETURN transition (next-level fresh state).
+function clearBugfixState() {
+    bugs = [];
+    bombs = [];
+    bombParticles = [];
+    bugExplosions = [];
+    bugsKilled = 0;
+    bugsTotal = 0;
+}
+
 function update(dt) {
     // Update animation timer for pad glow pulse
     animTime += dt;
@@ -713,6 +725,40 @@ function update(dt) {
             bugfixScore += fuelBonus;
             score += fuelBonus;
         }
+
+        // Loss-path cleanup (US-010 AC#5): any path that left BUGFIX_PLAYING via
+        // CRASHED this tick (terrain via checkCollision, ship-vs-bug, self-blast)
+        // clears bugfix entities + counters so the crash/gameover screens don't
+        // render stale bugs/bombs/particles from the dead round.
+        if (gameState === STATES.CRASHED) {
+            clearBugfixState();
+        }
+    }
+
+    // Bugfix complete: brief results window (bugs cleared, fuel bonus already
+    // accrued on win), then transition to BUGFIX_RETURN. Particle bursts continue
+    // to tick so explosions finish visually during the delay.
+    if (gameState === STATES.BUGFIX_COMPLETE) {
+        updateBombParticles(dt);
+        updateBugExplosions(dt);
+        bugfixCompleteTimer += dt;
+        if (bugfixCompleteTimer >= BUGFIX_COMPLETE_DELAY) {
+            gameState = STATES.BUGFIX_RETURN;
+        }
+    }
+
+    // Bugfix return: clear mini-game state, advance to next level, reset ship +
+    // wind + terrain, then resume normal flight. Mirrors INVADER_RETURN's tail
+    // (without the rotation animation — bugfix entry had no 90° rotation either).
+    if (gameState === STATES.BUGFIX_RETURN) {
+        clearBugfixState();
+        currentLevel++;
+        GRAVITY = getLevelConfig(currentLevel).gravity;
+        THRUST_POWER = GRAVITY * 2.5;
+        resetShip();
+        resetWind();
+        generateTerrain();
+        gameState = STATES.PLAYING;
     }
 
     if (gameState === STATES.PLAYING) {

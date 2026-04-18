@@ -198,6 +198,7 @@ var invaderMode = false;                  // true when in any INVADER_* state (c
 
 // --- Bugfix Mini-Game Transition ---
 var BUGFIX_TRANSITION_DURATION = 1.0;     // seconds — analog of invader transition
+var BUGFIX_COMPLETE_DELAY = 2.0;          // seconds to show win results before returning
 
 // --- Bugfix Bug Configuration ---
 var BUGFIX_BUG_SIZE = 12;                 // pixel size of each bug
