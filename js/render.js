@@ -899,19 +899,182 @@ function renderInvaderComplete() {
     ctx.fillText('Returning to mission...', cx, cy + 65);
 }
 
-function renderBugfixComplete() {
+// --- Bug Sprite Drawing ---
+// 12px pixel-art bug rendered on a 6x6 grid. Two-frame shuffle animation:
+// frame 0 and frame 1 alternate leg positions to create a walking effect.
+function drawBug(x, y, size, color, frame) {
+    var s = size / 6;
+    ctx.save();
+    ctx.translate(x - size / 2, y - size / 2);
+    ctx.fillStyle = color;
+
+    // Body (rows 0-3) — oval-ish blob
+    ctx.fillRect(s, 0, 4 * s, s);         // row 0: .####.
+    ctx.fillRect(0, s, 6 * s, s);          // row 1: ######
+    ctx.fillRect(0, 2 * s, 6 * s, s);      // row 2: ######
+    ctx.fillRect(s, 3 * s, 4 * s, s);      // row 3: .####.
+
+    // Legs (rows 4-5) — 3 per side, positions swap by frame
+    if (frame === 0) {
+        // row 4: #....#   (outer legs out)
+        ctx.fillRect(0, 4 * s, s, s);
+        ctx.fillRect(5 * s, 4 * s, s, s);
+        // row 5: .#..#.   (inner legs tucked)
+        ctx.fillRect(s, 5 * s, s, s);
+        ctx.fillRect(4 * s, 5 * s, s, s);
+    } else {
+        // row 4: .#..#.   (legs swap)
+        ctx.fillRect(s, 4 * s, s, s);
+        ctx.fillRect(4 * s, 4 * s, s, s);
+        // row 5: #....#
+        ctx.fillRect(0, 5 * s, s, s);
+        ctx.fillRect(5 * s, 5 * s, s, s);
+    }
+
+    ctx.restore();
+}
+
+function drawBombs() {
+    for (var i = 0; i < bombs.length; i++) {
+        var b = bombs[i];
+        ctx.fillStyle = '#FFBB44';
+        ctx.shadowColor = '#FF9234';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, BUGFIX_BOMB_SIZE, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+}
+
+function drawBombParticles() {
+    for (var i = 0; i < bombParticles.length; i++) {
+        var p = bombParticles[i];
+        var alpha = Math.max(0, p.life / p.maxLife);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawBugExplosions() {
+    for (var g = 0; g < bugExplosions.length; g++) {
+        var group = bugExplosions[g];
+        for (var i = 0; i < group.length; i++) {
+            var p = group[i];
+            var alpha = Math.max(0, p.life / p.maxLife);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+
+// HUD swap: replaces altitude/velocity/angle panel from renderPlaying with
+// bugfix-specific info (bugs remaining, fuel bar, score).
+function drawBugfixHUD() {
+    var fuelPct = ship.fuel / FUEL_MAX;
+
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+
+    // Bugs remaining
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Bugs: ' + bugs.length + ' / ' + bugsTotal, 10, 25);
+
+    // Score (current global score + bugfix bonus)
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('Score: ' + score, 10, 45);
+
+    // Bugfix bonus running total
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('Bonus: +' + bugfixScore + ' pts', 10, 65);
+
+    // Fuel bar
+    var fuelBarW = 120;
+    var fuelBarH = 14;
+    var fuelBarX = 10;
+    var fuelBarY = 78;
+
+    ctx.fillStyle = '#333';
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+    var fuelColor;
+    if (fuelPct > 0.5) {
+        fuelColor = '#4CAF50';
+    } else if (fuelPct > 0.25) {
+        fuelColor = '#FFC107';
+    } else {
+        fuelColor = '#f44336';
+    }
+    ctx.fillStyle = fuelColor;
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+
+    // Level indicator
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Level: ' + (currentLevel + 1), 10, fuelBarY + 36);
+}
+
+function drawBugfixWorld() {
     drawTerrain();
 
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    for (var i = 0; i < bugs.length; i++) {
+        drawBug(bugs[i].x, bugs[i].y, BUGFIX_BUG_SIZE, bugs[i].color, bugs[i].animFrame);
+    }
 
-    // Results overlay (bugs cleared + fuel bonus)
+    drawBombs();
+    drawBombParticles();
+    drawBugExplosions();
+
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating);
+}
+
+function renderBugfixTransition() {
+    drawBugfixWorld();
+    drawBugfixHUD();
+
+    ctx.fillStyle = '#FFB300';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BUGS DETECTED — ELIMINATE THEM', canvas.width / 2, 40);
+}
+
+function renderBugfixPlaying() {
+    drawBugfixWorld();
+    drawBugfixHUD();
+
+    // Controls hint
+    ctx.fillStyle = '#555';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SPACE to drop bombs | Arrow keys / WASD to fly', canvas.width / 2, canvas.height - 30);
+}
+
+function renderBugfixComplete() {
+    drawBugfixWorld();
+    drawBugfixHUD();
+
+    // Results overlay
     var cx = canvas.width / 2;
     var cy = canvas.height / 2;
 
     ctx.fillStyle = '#4CAF50';
     ctx.font = 'bold 36px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('BUG FIX COMPLETE!', cx, cy - 60);
+    ctx.fillText('BUGS CLEARED!', cx, cy - 60);
 
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 28px sans-serif';
@@ -924,6 +1087,16 @@ function renderBugfixComplete() {
     ctx.fillStyle = '#888';
     ctx.font = '18px sans-serif';
     ctx.fillText('Returning to mission...', cx, cy + 65);
+}
+
+function renderBugfixReturn() {
+    drawBugfixWorld();
+    drawBugfixHUD();
+
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RETURNING TO MISSION', canvas.width / 2, 40);
 }
 
 function renderInvaderReturn() {
@@ -1087,8 +1260,17 @@ function render() {
         case STATES.INVADER_RETURN:
             renderInvaderReturn();
             break;
+        case STATES.BUGFIX_TRANSITION:
+            renderBugfixTransition();
+            break;
+        case STATES.BUGFIX_PLAYING:
+            renderBugfixPlaying();
+            break;
         case STATES.BUGFIX_COMPLETE:
             renderBugfixComplete();
+            break;
+        case STATES.BUGFIX_RETURN:
+            renderBugfixReturn();
             break;
         case STATES.CRASHED:
             renderCrashed();
