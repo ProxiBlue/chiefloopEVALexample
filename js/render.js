@@ -1155,11 +1155,20 @@ function drawMissileBattery(bat) {
 function drawMissileCrosshair() {
     var cx = missileCrosshairX;
     var cy = missileCrosshairY;
-    ctx.strokeStyle = '#F44336';
-    ctx.lineWidth = 2;
+    var t = (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000;
+    var pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
+
+    ctx.save();
+    ctx.strokeStyle = '#00ff66';
+    ctx.globalAlpha = 0.25 + 0.25 * pulse;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 12 + pulse * 6, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+
+    ctx.strokeStyle = '#00ff66';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(cx - 14, cy); ctx.lineTo(cx - 4, cy);
     ctx.moveTo(cx + 4, cy);  ctx.lineTo(cx + 14, cy);
