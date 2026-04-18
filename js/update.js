@@ -519,6 +519,49 @@ function update(dt) {
         }
     }
 
+    // Bugfix playing: normal lander physics (gravity + thrust + rotation) without wind.
+    // Top clamp (y >= 0) prevents the ship from escaping the play area upward.
+    if (gameState === STATES.BUGFIX_PLAYING) {
+        var rotatingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
+        var rotatingRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        if (rotatingLeft) {
+            ship.angle -= ship.rotationSpeed * dt;
+        }
+        if (rotatingRight) {
+            ship.angle += ship.rotationSpeed * dt;
+        }
+        ship.rotating = rotatingLeft ? 'left' : rotatingRight ? 'right' : null;
+
+        ship.vy += GRAVITY * PIXELS_PER_METER * dt;
+
+        var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+        ship.thrusting = wantsThrust && ship.fuel > 0;
+        if (ship.thrusting) {
+            ship.fuel -= FUEL_BURN_RATE * dt;
+            if (ship.fuel < 0) ship.fuel = 0;
+            ship.vx += Math.sin(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
+            ship.vy += -Math.cos(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
+            startThrustSound();
+        } else {
+            stopThrustSound();
+        }
+
+        ship.x += ship.vx * dt;
+        ship.y += ship.vy * dt;
+
+        if (ship.x < 0) {
+            ship.x = 0;
+            ship.vx = 0;
+        } else if (ship.x > canvas.width) {
+            ship.x = canvas.width;
+            ship.vx = 0;
+        }
+        if (ship.y < 0) {
+            ship.y = 0;
+            ship.vy = 0;
+        }
+    }
+
     if (gameState === STATES.PLAYING) {
         // Ship rotation
         var rotatingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
