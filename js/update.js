@@ -321,7 +321,7 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
-                ship.fuel = FUEL_MAX;
+                // Fuel carries over from previous level — do NOT reset
                 gameState = STATES.SCENE_DESCENT;
             }
         } else {
