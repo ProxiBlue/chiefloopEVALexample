@@ -241,3 +241,64 @@ var bugsTotal = 0;                        // total bugs spawned this round
 var bugfixFuelBonus = 0;                  // fuel-remaining bonus awarded on win (shown in BUGFIX_COMPLETE)
 var bugfixCompleteTimer = 0;              // elapsed time in BUGFIX_COMPLETE state
 var bugfixTransitionTimer = 0;            // elapsed time in BUGFIX_TRANSITION state
+
+// --- Missile Command Mini-Game Transition ---
+var MISSILE_TRANSITION_DURATION = 1.5;    // seconds — terrain flattens, buildings rise
+var MISSILE_COMPLETE_DELAY = 2.0;         // seconds to show results before returning
+
+// --- Missile City / Building Configuration ---
+var MISSILE_BUILDING_COUNT = 6;           // number of buildings in the defended city
+var MISSILE_BUILDING_WIDTH = 40;          // pixel width of each building
+var MISSILE_BUILDING_MIN_HEIGHT = 30;     // minimum building height in pixels
+var MISSILE_BUILDING_MAX_HEIGHT = 80;     // maximum building height in pixels
+
+// --- Missile Defense Battery Configuration ---
+var MISSILE_BATTERY_COUNT = 3;            // number of defense batteries (left, center, right)
+var MISSILE_BATTERY_AMMO = 10;            // interceptors available per battery
+var MISSILE_INTERCEPTOR_SPEED = 350;      // interceptor travel speed in px/s
+var MISSILE_INTERCEPTOR_BLAST_RADIUS = 40; // blast radius of interceptor detonation in pixels
+
+// --- Missile Incoming Configuration ---
+var MISSILE_INCOMING_BASE_COUNT = 6;      // base count of incoming missiles
+var MISSILE_INCOMING_PER_LEVEL = 2;       // extra incoming missiles per level
+var MISSILE_INCOMING_MAX = 20;            // hard cap on incoming missiles per round
+var MISSILE_INCOMING_BASE_SPEED = 40;     // base descent speed in px/s
+var MISSILE_INCOMING_SPEED_PER_LEVEL = 8; // additional speed per level in px/s
+var MISSILE_INCOMING_SPEED_VARIANCE = 10; // +/- speed variance per missile in px/s
+
+// --- Missile Wave Configuration ---
+var MISSILE_WAVE_COUNT_BASE = 1;          // base number of waves per round
+var MISSILE_WAVE_COUNT_PER_LEVEL = 1;     // extra wave every 3 levels (applied via floor(level/3))
+var MISSILE_WAVE_COUNT_MAX = 3;           // hard cap on waves per round
+var MISSILE_WAVE_DELAY = 1.5;             // seconds between waves
+
+// --- Missile Scoring ---
+var MISSILE_POINTS_PER_INTERCEPT = 25;            // points per intercepted incoming missile
+var MISSILE_POINTS_PER_BUILDING_SURVIVING = 100;  // points per building still standing at end
+var MISSILE_AMMO_BONUS_MULTIPLIER = 5;            // points per unused interceptor
+
+// --- Missile Crosshair (player aim reticle) ---
+var MISSILE_CROSSHAIR_SPEED = 400;        // crosshair movement speed in px/s
+var missileCrosshairX = 0;                // current crosshair X position
+var missileCrosshairY = 0;                // current crosshair Y position
+
+// --- Missile State Arrays ---
+var missileIncoming = [];                 // active incoming missiles
+var missileInterceptors = [];             // active outgoing interceptors
+var missileExplosions = [];               // active explosion particle groups
+var missileBuildings = [];                // city buildings (defended targets)
+var missileBatteries = [];                // defense batteries (ammo + positions)
+
+// --- Missile Per-Game Counters ---
+var missileScore = 0;                     // bonus points earned during missile phase
+var missilesIntercepted = 0;              // count of incoming missiles intercepted this round
+var missilesTotal = 0;                    // total incoming missiles spawned this round
+var missileWaveCurrent = 0;               // current wave index (0-based) within this round
+var missileWaveTotal = 0;                 // total waves for this round
+var missileCompleteTimer = 0;             // elapsed time in MISSILE_COMPLETE state
+var missileTransitionTimer = 0;           // elapsed time in MISSILE_TRANSITION state
+
+// --- Security Mini-Game Cycling Counter ---
+// Increments on each security pad landing. Persists for the session.
+// Odd value -> invaders mini-game, even value -> missile command mini-game.
+var securityMiniGameCount = 0;
