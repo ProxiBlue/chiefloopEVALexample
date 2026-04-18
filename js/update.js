@@ -663,13 +663,15 @@ function update(dt) {
 
         // Win condition: all bugs cleared → enter BUGFIX_COMPLETE with fuel-remaining bonus.
         // Per AC: random per-game choice between BUGFIX_FUEL_BONUS_LOW / _HIGH as multiplier on (fuel / FUEL_MAX).
-        if (bugsTotal > 0 && bugsKilled >= bugsTotal) {
+        // Guard on gameState === BUGFIX_PLAYING + transition FIRST so the bonus cannot double-apply
+        // if this block is re-entered in the same tick (defence against a multi-bomb salvo exploit).
+        if (gameState === STATES.BUGFIX_PLAYING && bugsTotal > 0 && bugsKilled >= bugsTotal) {
+            gameState = STATES.BUGFIX_COMPLETE;
+            bugfixCompleteTimer = 0;
             var fuelMult = Math.random() < 0.5 ? BUGFIX_FUEL_BONUS_LOW : BUGFIX_FUEL_BONUS_HIGH;
             var fuelBonus = Math.round(fuelMult * (ship.fuel / FUEL_MAX));
             bugfixScore += fuelBonus;
             score += fuelBonus;
-            bugfixCompleteTimer = 0;
-            gameState = STATES.BUGFIX_COMPLETE;
         }
     }
 
