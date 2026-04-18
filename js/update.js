@@ -117,6 +117,102 @@ function clearBugfixState() {
     bugfixFuelBonus = 0;
 }
 
+// Best-effort filename extraction for missile-command building labels.
+// Order per AC#4: landedPRTitle -> levelCommits messages -> generic fallbacks.
+// Returns exactly `count` labels (pads with fallback list when sources dry up).
+function collectMissileBuildingLabels(count) {
+    var labels = [];
+    var fileRe = /[\w\-]+\.[a-zA-Z]{1,5}/g;
+    var sources = [];
+    if (typeof landedPRTitle === 'string' && landedPRTitle) {
+        sources.push(landedPRTitle);
+    }
+    if (typeof levelCommits !== 'undefined' && levelCommits && levelCommits.length) {
+        for (var ci = 0; ci < levelCommits.length && sources.length < 20; ci++) {
+            var c = levelCommits[ci];
+            if (c && typeof c.message === 'string') sources.push(c.message);
+        }
+    }
+    for (var si = 0; si < sources.length && labels.length < count; si++) {
+        var matches = sources[si].match(fileRe);
+        if (!matches) continue;
+        for (var mi = 0; mi < matches.length && labels.length < count; mi++) {
+            if (labels.indexOf(matches[mi]) === -1) labels.push(matches[mi]);
+        }
+    }
+    var fallback = ['main.go', 'config.ts', 'handler.js', 'auth.py', 'index.html', 'schema.sql'];
+    for (var fi = 0; labels.length < count && fi < fallback.length; fi++) {
+        if (labels.indexOf(fallback[fi]) === -1) labels.push(fallback[fi]);
+    }
+    return labels.slice(0, count);
+}
+
+// Initialize missile-command battlefield state on entry to MISSILE_TRANSITION.
+// Resets all counters + arrays (AC#8), snapshots terrain for the flatten
+// animation (AC#2), positions the crosshair at center (AC#6), and seeds
+// batteries (AC#5) + buildings with filename labels (AC#3, AC#4).
+function setupMissileWorld() {
+    missileScore = 0;
+    missilesIntercepted = 0;
+    missilesTotal = 0;
+    missileWaveCurrent = 0;
+    missileWaveTotal = 0;
+    missileIncoming = [];
+    missileInterceptors = [];
+    missileExplosions = [];
+    missileBuildings = [];
+    missileBatteries = [];
+
+    missileCrosshairX = canvas.width / 2;
+    missileCrosshairY = canvas.height / 2;
+
+    terrainOriginalPoints = [];
+    for (var ti = 0; ti < terrain.length; ti++) {
+        terrainOriginalPoints.push(terrain[ti].y);
+    }
+
+    var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
+
+    var batteryXs = [];
+    for (var bi = 0; bi < MISSILE_BATTERY_COUNT; bi++) {
+        var bx = canvas.width * (bi + 1) / (MISSILE_BATTERY_COUNT + 1);
+        batteryXs.push(bx);
+        missileBatteries.push({
+            x: bx,
+            y: flatY,
+            ammo: MISSILE_BATTERY_AMMO,
+            destroyed: false
+        });
+    }
+
+    var labels = collectMissileBuildingLabels(MISSILE_BUILDING_COUNT);
+    var gaps = MISSILE_BATTERY_COUNT - 1;
+    var perGap = Math.floor(MISSILE_BUILDING_COUNT / gaps);
+    var remainder = MISSILE_BUILDING_COUNT - perGap * gaps;
+    var labelIdx = 0;
+    var heightRange = MISSILE_BUILDING_MAX_HEIGHT - MISSILE_BUILDING_MIN_HEIGHT;
+    for (var gi = 0; gi < gaps; gi++) {
+        var leftX = batteryXs[gi];
+        var rightX = batteryXs[gi + 1];
+        var countInGap = perGap + (gi < remainder ? 1 : 0);
+        for (var bIdx = 0; bIdx < countInGap; bIdx++) {
+            var frac = (bIdx + 1) / (countInGap + 1);
+            var x = leftX + (rightX - leftX) * frac;
+            var targetHeight = MISSILE_BUILDING_MIN_HEIGHT + Math.floor(Math.random() * (heightRange + 1));
+            missileBuildings.push({
+                x: x,
+                baseY: flatY,
+                width: MISSILE_BUILDING_WIDTH,
+                targetHeight: targetHeight,
+                height: 0,
+                label: labels[labelIdx] || '',
+                destroyed: false
+            });
+            labelIdx++;
+        }
+    }
+}
+
 function update(dt) {
     // Update animation timer for pad glow pulse
     animTime += dt;
@@ -308,6 +404,7 @@ function update(dt) {
                 ship.thrusting = false;
                 ship.rotating = null;
                 missileTransitionTimer = 0;
+                setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
@@ -754,6 +851,38 @@ function update(dt) {
         resetWind();
         generateTerrain();
         gameState = STATES.PLAYING;
+    }
+
+    // Missile transition: combined 90° ship rotation + terrain flatten + building
+    // rise animation. Terrain is already flat at entry (security-pad scroll gives
+    // flat terrain) so the flatten lerp is a safe no-op — matches invader flow.
+    if (gameState === STATES.MISSILE_TRANSITION) {
+        missileTransitionTimer += dt;
+        var t = Math.min(missileTransitionTimer / MISSILE_TRANSITION_DURATION, 1);
+        var eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        ship.angle = eased * (Math.PI / 2);
+
+        var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
+        for (var i = 0; i < terrain.length; i++) {
+            var origY = terrainOriginalPoints[i] != null ? terrainOriginalPoints[i] : flatY;
+            terrain[i].y = origY + (flatY - origY) * eased;
+        }
+
+        for (var j = 0; j < missileBuildings.length; j++) {
+            missileBuildings[j].height = missileBuildings[j].targetHeight * eased;
+        }
+
+        if (t >= 1) {
+            ship.angle = Math.PI / 2;
+            for (var i = 0; i < terrain.length; i++) {
+                terrain[i].y = flatY;
+            }
+            for (var j = 0; j < missileBuildings.length; j++) {
+                missileBuildings[j].height = missileBuildings[j].targetHeight;
+            }
+            gameState = STATES.MISSILE_PLAYING;
+        }
     }
 
     if (gameState === STATES.PLAYING) {

@@ -1099,6 +1099,100 @@ function renderBugfixReturn() {
     ctx.fillText('RETURNING TO MISSION', canvas.width / 2, 40);
 }
 
+// --- Missile Command drawing helpers ---
+
+function drawMissileBuilding(b) {
+    if (b.height <= 0) return;
+    var top = b.baseY - b.height;
+    var left = b.x - b.width / 2;
+
+    ctx.fillStyle = '#546E7A';
+    ctx.fillRect(left, top, b.width, b.height);
+    ctx.strokeStyle = '#263238';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(left + 0.5, top + 0.5, b.width - 1, b.height - 1);
+
+    ctx.fillStyle = '#FFEB3B';
+    var winW = 4, winH = 4, stepX = 8, stepY = 8;
+    for (var wy = top + 6; wy + winH < b.baseY - 2; wy += stepY) {
+        for (var wx = left + 4; wx + winW < left + b.width - 4; wx += stepX) {
+            ctx.fillRect(wx, wy, winW, winH);
+        }
+    }
+
+    if (b.label && b.height > 14) {
+        ctx.fillStyle = '#ECEFF1';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(b.label, b.x, top - 4);
+    }
+}
+
+function drawMissileBattery(bat) {
+    var bodyW = 30, bodyH = 18;
+    var bodyX = bat.x - bodyW / 2;
+    var bodyY = bat.y - bodyH;
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.fillRect(bodyX, bodyY, bodyW, bodyH);
+    ctx.strokeStyle = '#1B5E20';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bodyX + 0.5, bodyY + 0.5, bodyW - 1, bodyH - 1);
+
+    ctx.strokeStyle = '#2E7D32';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(bat.x, bodyY + bodyH / 2);
+    ctx.lineTo(bat.x, bodyY - 10);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(bat.ammo), bat.x, bodyY - 14);
+}
+
+function drawMissileCrosshair() {
+    var cx = missileCrosshairX;
+    var cy = missileCrosshairY;
+    ctx.strokeStyle = '#F44336';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - 14, cy); ctx.lineTo(cx - 4, cy);
+    ctx.moveTo(cx + 4, cy);  ctx.lineTo(cx + 14, cy);
+    ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy - 4);
+    ctx.moveTo(cx, cy + 4);  ctx.lineTo(cx, cy + 14);
+    ctx.stroke();
+}
+
+function drawMissileWorld() {
+    drawTerrain();
+    for (var i = 0; i < missileBuildings.length; i++) {
+        drawMissileBuilding(missileBuildings[i]);
+    }
+    for (var i = 0; i < missileBatteries.length; i++) {
+        drawMissileBattery(missileBatteries[i]);
+    }
+    drawMissileCrosshair();
+}
+
+function renderMissileTransition() {
+    drawMissileWorld();
+    // Ship is intentionally hidden — player will control batteries, not the ship.
+
+    // Flashing "INCOMING MERGE CONFLICTS!" banner (~3 Hz flash)
+    var flashOn = Math.floor(missileTransitionTimer * 6) % 2 === 0;
+    if (flashOn) {
+        ctx.fillStyle = '#F44336';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('INCOMING MERGE CONFLICTS!', canvas.width / 2, 60);
+    }
+}
+
 function renderInvaderReturn() {
     // Draw terrain (still flat from invader phase)
     drawTerrain();
@@ -1271,6 +1365,9 @@ function render() {
             break;
         case STATES.BUGFIX_RETURN:
             renderBugfixReturn();
+            break;
+        case STATES.MISSILE_TRANSITION:
+            renderMissileTransition();
             break;
         case STATES.CRASHED:
             renderCrashed();
