@@ -193,3 +193,40 @@ var invaderReturnRotationTimer = 0;       // elapsed time in return rotation
 // --- Invader Visual Polish ---
 var STAR_SCROLL_SPEED = 30;               // pixels per second leftward during invader states
 var invaderMode = false;                  // true when in any INVADER_* state (controls visual style)
+
+// --- Bugfix Mini-Game Transition ---
+var BUGFIX_TRANSITION_DURATION = 1.0;     // seconds — analog of invader transition
+
+// --- Bugfix Bug Configuration ---
+var BUGFIX_BUG_SIZE = 12;                 // pixel size of each bug
+var BUGFIX_BUG_BASE_SPEED = 60;           // base bug speed in px/s
+var BUGFIX_BUG_SPEED_PER_LEVEL = 10;      // additional bug speed per level in px/s
+var BUGFIX_BUG_SPEED_VARIANCE = 20;       // +/- speed variance per bug in px/s
+
+// --- Bugfix Bomb Configuration ---
+var BUGFIX_BOMB_SIZE = 4;                 // bomb radius in pixels
+var BUGFIX_BOMB_BLAST_RADIUS = 28;        // blast radius in pixels
+var BUGFIX_BOMB_GRAVITY_SCALE = 1.0;      // uses level gravity
+
+// --- Bugfix Scoring ---
+var BUGFIX_BUG_POINTS_LOW = 50;           // points for low-value bug (yellow)
+var BUGFIX_BUG_POINTS_HIGH = 100;         // points for high-value bug (red)
+var BUGFIX_FUEL_BONUS_LOW = 100;          // fuel bonus (low tier)
+var BUGFIX_FUEL_BONUS_HIGH = 200;         // fuel bonus (high tier)
+
+// --- Bugfix Bug Colours ---
+var BUGFIX_BUG_COLOR_LOW = '#FFEB3B';     // yellow — low-value bug
+var BUGFIX_BUG_COLOR_HIGH = '#F44336';    // red — high-value bug
+
+// --- Bugfix State Arrays ---
+var bugs = [];                            // active bugs on screen
+var bombs = [];                           // active bombs in flight
+var bombParticles = [];                   // visual particles from bomb explosions
+var bugExplosions = [];                   // particle groups from destroyed bugs
+
+// --- Bugfix Per-Game Counters ---
+var bugfixScore = 0;                      // bonus points earned during bugfix phase
+var bugsKilled = 0;                       // count of bugs killed this round
+var bugsTotal = 0;                        // total bugs spawned this round
+var bugfixCompleteTimer = 0;              // elapsed time in BUGFIX_COMPLETE state
+var bugfixTransitionTimer = 0;            // elapsed time in BUGFIX_TRANSITION state
