@@ -75,14 +75,15 @@ function spawnBugWave() {
         var isHigh = Math.random() < 0.5;
         var speed = BUGFIX_BUG_BASE_SPEED + currentLevel * BUGFIX_BUG_SPEED_PER_LEVEL
                     + (Math.random() * 2 - 1) * BUGFIX_BUG_SPEED_VARIANCE;
+        var direction = Math.random() < 0.5 ? -1 : 1;
         bugs.push({
             x: x,
             y: y,
-            isHigh: isHigh,
+            vx: direction * speed,
             color: isHigh ? BUGFIX_BUG_COLOR_HIGH : BUGFIX_BUG_COLOR_LOW,
             points: isHigh ? BUGFIX_BUG_POINTS_HIGH : BUGFIX_BUG_POINTS_LOW,
-            direction: Math.random() < 0.5 ? -1 : 1,
-            speed: speed
+            animFrame: 0,
+            animTimer: 0
         });
     }
 }
@@ -564,6 +565,38 @@ function update(dt) {
         // Terrain collision — reuse shared checkCollision (routes to CRASHED on impact).
         // US-009 will refine the bugfix-specific lose condition; this wires the detection path.
         checkCollision();
+
+        // Bugs: walk along terrain surface, reverse at edges (terrain bounds or steep delta),
+        // re-stick y to terrain each frame, tick 2-frame shuffle animation.
+        var terrainMinX = terrain.length > 0 ? terrain[0].x : 0;
+        var terrainMaxX = terrain.length > 0 ? terrain[terrain.length - 1].x : canvas.width;
+        var animPeriod = 1 / BUGFIX_BUG_ANIM_FPS;
+        for (var ui = 0; ui < bugs.length; ui++) {
+            var bg = bugs[ui];
+            var nextX = bg.x + bg.vx * dt;
+            var currentHit = getTerrainYAtX(bg.x);
+            var nextHit = getTerrainYAtX(nextX);
+            var reverse = false;
+            if (nextX <= terrainMinX || nextX >= terrainMaxX || !nextHit) {
+                reverse = true;
+            } else if (currentHit && Math.abs(nextHit.y - currentHit.y) > BUGFIX_BUG_EDGE_STEEPNESS) {
+                reverse = true;
+            }
+            if (reverse) {
+                bg.vx = -bg.vx;
+            } else {
+                bg.x = nextX;
+            }
+            var surfaceHit = getTerrainYAtX(bg.x);
+            var bugSurfaceY = surfaceHit ? surfaceHit.y : canvas.height * TERRAIN_FLAT_Y_RATIO;
+            bg.y = bugSurfaceY - BUGFIX_BUG_SIZE / 2;
+
+            bg.animTimer += dt;
+            if (bg.animTimer >= animPeriod) {
+                bg.animFrame = bg.animFrame === 0 ? 1 : 0;
+                bg.animTimer -= animPeriod;
+            }
+        }
 
         // Bombs: gravity integration, trail particles, terrain + bug-blast explosions,
         // silent removal off-canvas. Iterate back-to-front so splice is safe.

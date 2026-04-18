@@ -204,6 +204,8 @@ var BUGFIX_BUG_SIZE = 12;                 // pixel size of each bug
 var BUGFIX_BUG_BASE_SPEED = 60;           // base bug speed in px/s
 var BUGFIX_BUG_SPEED_PER_LEVEL = 10;      // additional bug speed per level in px/s
 var BUGFIX_BUG_SPEED_VARIANCE = 20;       // +/- speed variance per bug in px/s
+var BUGFIX_BUG_ANIM_FPS = 4;              // shuffle animation frame rate (2-frame toggle)
+var BUGFIX_BUG_EDGE_STEEPNESS = 20;       // px delta in terrain height that counts as an "edge" — reverse vx
 
 // --- Bugfix Bomb Configuration ---
 var BUGFIX_BOMB_SIZE = 4;                 // bomb radius in pixels
