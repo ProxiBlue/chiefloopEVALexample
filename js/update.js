@@ -88,6 +88,21 @@ function spawnBugWave() {
     }
 }
 
+// Route the ship to STATES.CRASHED via the same FX+sound pipeline as the
+// shared terrain-collision crash (see checkCollision's else branch). Used by
+// the bugfix lose paths (US-009): ship-vs-bug touch and ship-in-bomb-blast.
+function crashShipInBugfix(reason) {
+    ship.vx = 0;
+    ship.vy = 0;
+    ship.thrusting = false;
+    landingResult = reason;
+    spawnExplosion(ship.x, ship.y);
+    startScreenShake();
+    stopThrustSound();
+    playExplosionSound();
+    gameState = STATES.CRASHED;
+}
+
 function update(dt) {
     // Update animation timer for pad glow pulse
     animTime += dt;
@@ -563,8 +578,24 @@ function update(dt) {
         }
 
         // Terrain collision — reuse shared checkCollision (routes to CRASHED on impact).
-        // US-009 will refine the bugfix-specific lose condition; this wires the detection path.
         checkCollision();
+
+        // Ship-vs-bug collision (US-009): any remaining bug touching the ship
+        // crashes it. Guard on gameState in case checkCollision already routed
+        // to CRASHED/LANDED this tick.
+        if (gameState === STATES.BUGFIX_PLAYING) {
+            var shipBugR = (SHIP_SIZE / 2) + (BUGFIX_BUG_SIZE / 2);
+            var shipBugR2 = shipBugR * shipBugR;
+            for (var ci = 0; ci < bugs.length; ci++) {
+                var cb = bugs[ci];
+                var cdx = cb.x - ship.x;
+                var cdy = cb.y - ship.y;
+                if (cdx * cdx + cdy * cdy <= shipBugR2) {
+                    crashShipInBugfix('Hit a bug');
+                    break;
+                }
+            }
+        }
 
         // Bugs: walk along terrain surface, reverse at edges (terrain bounds or steep delta),
         // re-stick y to terrain each frame, tick 2-frame shuffle animation.
@@ -649,6 +680,15 @@ function update(dt) {
                         bugsKilled++;
                         spawnBugExplosion(bgk.x, bgk.y);
                         bugs.splice(gj, 1);
+                    }
+                }
+                // Ship-in-blast (US-009): self-bombing risk. If the ship is
+                // within blast radius of the detonation center, crash it.
+                if (gameState === STATES.BUGFIX_PLAYING) {
+                    var sdx = blastX - ship.x;
+                    var sdy = blastY - ship.y;
+                    if (sdx * sdx + sdy * sdy <= R2) {
+                        crashShipInBugfix('Caught in own bomb blast');
                     }
                 }
                 bombs.splice(bi, 1);
