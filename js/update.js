@@ -599,15 +599,8 @@ function update(dt) {
         // to CRASHED/LANDED this tick.
         if (gameState === STATES.BUGFIX_PLAYING) {
             var shipBugR = (SHIP_SIZE / 2) + (BUGFIX_BUG_SIZE / 2);
-            var shipBugR2 = shipBugR * shipBugR;
-            for (var ci = 0; ci < bugs.length; ci++) {
-                var cb = bugs[ci];
-                var cdx = cb.x - ship.x;
-                var cdy = cb.y - ship.y;
-                if (cdx * cdx + cdy * cdy <= shipBugR2) {
-                    crashShipInBugfix('Hit a bug');
-                    break;
-                }
+            if (entitiesInRadius(ship.x, ship.y, shipBugR, bugs).length > 0) {
+                crashShipInBugfix('Hit a bug');
             }
         }
 
@@ -663,47 +656,33 @@ function update(dt) {
             // Determine explosion center: terrain contact → at terrain y; bug in radius → at bomb.
             var blastX = null;
             var blastY = null;
-            var hit = getTerrainYAtX(bomb.x);
-            if (hit && bomb.y >= hit.y) {
+            var terrainHit = bombHitsTerrain(bomb, terrain);
+            if (terrainHit) {
+                blastX = terrainHit.x;
+                blastY = terrainHit.y;
+            } else if (entitiesInRadius(bomb.x, bomb.y, BUGFIX_BOMB_BLAST_RADIUS, bugs).length > 0) {
                 blastX = bomb.x;
-                blastY = hit.y;
-            } else {
-                for (var gi = 0; gi < bugs.length; gi++) {
-                    var bug = bugs[gi];
-                    var dx = bomb.x - bug.x;
-                    var dy = bomb.y - bug.y;
-                    if (dx * dx + dy * dy <= BUGFIX_BOMB_BLAST_RADIUS * BUGFIX_BOMB_BLAST_RADIUS) {
-                        blastX = bomb.x;
-                        blastY = bomb.y;
-                        break;
-                    }
-                }
+                blastY = bomb.y;
             }
 
             if (blastX !== null) {
                 spawnBombExplosion(blastX, blastY);
                 // Kill all bugs within blast radius of the explosion center
-                var R2 = BUGFIX_BOMB_BLAST_RADIUS * BUGFIX_BOMB_BLAST_RADIUS;
+                var killed = entitiesInRadius(blastX, blastY, BUGFIX_BOMB_BLAST_RADIUS, bugs);
                 for (var gj = bugs.length - 1; gj >= 0; gj--) {
-                    var bgk = bugs[gj];
-                    var kdx = blastX - bgk.x;
-                    var kdy = blastY - bgk.y;
-                    if (kdx * kdx + kdy * kdy <= R2) {
-                        bugfixScore += bgk.points;
-                        score += bgk.points;
+                    if (killed.indexOf(bugs[gj]) !== -1) {
+                        var victim = bugs[gj];
+                        bugfixScore += victim.points;
+                        score += victim.points;
                         bugsKilled++;
-                        spawnBugExplosion(bgk.x, bgk.y);
+                        spawnBugExplosion(victim.x, victim.y);
                         bugs.splice(gj, 1);
                     }
                 }
                 // Ship-in-blast (US-009): self-bombing risk. If the ship is
                 // within blast radius of the detonation center, crash it.
-                if (gameState === STATES.BUGFIX_PLAYING) {
-                    var sdx = blastX - ship.x;
-                    var sdy = blastY - ship.y;
-                    if (sdx * sdx + sdy * sdy <= R2) {
-                        crashShipInBugfix('Caught in own bomb blast');
-                    }
+                if (gameState === STATES.BUGFIX_PLAYING && entitiesInRadius(blastX, blastY, BUGFIX_BOMB_BLAST_RADIUS, [ship]).length > 0) {
+                    crashShipInBugfix('Caught in own bomb blast');
                 }
                 bombs.splice(bi, 1);
                 continue;

@@ -16,17 +16,46 @@ function getShipBottomEdge() {
     ];
 }
 
-// Get the terrain Y at a given X by interpolating between terrain points
-function getTerrainYAtX(px) {
-    for (var i = 0; i < terrain.length - 1; i++) {
-        var t0 = terrain[i];
-        var t1 = terrain[i + 1];
-        if (px >= t0.x && px <= t1.x) {
-            var t = (px - t0.x) / (t1.x - t0.x);
+// Interpolated terrain Y at x across the given terrain points. Returns { y, segIndex } or null if x is out of range.
+function getTerrainHeightAt(x, terrainPoints) {
+    for (var i = 0; i < terrainPoints.length - 1; i++) {
+        var t0 = terrainPoints[i];
+        var t1 = terrainPoints[i + 1];
+        if (x >= t0.x && x <= t1.x) {
+            var t = (x - t0.x) / (t1.x - t0.x);
             return { y: t0.y + t * (t1.y - t0.y), segIndex: i };
         }
     }
     return null;
+}
+
+// Back-compat wrapper: uses the global `terrain` array.
+function getTerrainYAtX(px) {
+    return getTerrainHeightAt(px, terrain);
+}
+
+// Returns the terrain contact point { x, y } if the bomb has touched the terrain, else null.
+function bombHitsTerrain(bomb, terrainPoints) {
+    var hit = getTerrainHeightAt(bomb.x, terrainPoints);
+    if (hit && bomb.y >= hit.y) {
+        return { x: bomb.x, y: hit.y };
+    }
+    return null;
+}
+
+// Returns entities within radius r of (cx, cy). Squared-distance compare.
+function entitiesInRadius(cx, cy, r, entities) {
+    var r2 = r * r;
+    var result = [];
+    for (var i = 0; i < entities.length; i++) {
+        var e = entities[i];
+        var dx = e.x - cx;
+        var dy = e.y - cy;
+        if (dx * dx + dy * dy <= r2) {
+            result.push(e);
+        }
+    }
+    return result;
 }
 
 // Get altitude: distance from ship bottom to terrain directly below
