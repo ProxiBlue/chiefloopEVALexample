@@ -17,7 +17,11 @@ var STATES = {
     BUGFIX_TRANSITION: 'bugfix_transition',
     BUGFIX_PLAYING: 'bugfix_playing',
     BUGFIX_COMPLETE: 'bugfix_complete',
-    BUGFIX_RETURN: 'bugfix_return'
+    BUGFIX_RETURN: 'bugfix_return',
+    MISSILE_TRANSITION: 'missile_transition',
+    MISSILE_PLAYING: 'missile_playing',
+    MISSILE_COMPLETE: 'missile_complete',
+    MISSILE_RETURN: 'missile_return'
 };
 
 var gameState = STATES.MENU;
