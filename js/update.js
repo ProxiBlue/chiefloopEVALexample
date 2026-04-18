@@ -284,7 +284,6 @@ function update(dt) {
                 ship.thrusting = false;
                 ship.rotating = null;
                 invaderScrollRotateTimer = 0;
-                ship.fuel = FUEL_MAX;
                 gameState = STATES.INVADER_SCROLL_ROTATE;
             } else if (wasBugfixScroll) {
                 // Bugfix pad: enter bugfix transition directly (no 90° rotation)
