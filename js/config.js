@@ -111,7 +111,7 @@ var SCENE_SCROLL_BANK_ANGLE = 0.15; // radians (~8.6°) — max bank angle durin
 // null when no scroll is active; a frozen object during SCENE_SCROLL.
 var sceneScrollState = null;        // { timer, oldTerrain, oldPads, newTerrain, newPads }
 
-function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, shipStartX) {
+function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, isBugfixScroll, shipStartX) {
     return Object.freeze({
         timer: 0,
         oldTerrain: oldTerrain,
@@ -119,12 +119,14 @@ function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInva
         newTerrain: newTerrain,
         newPads: newPads,
         isInvaderScroll: !!isInvaderScroll,
+        isBugfixScroll: !!isBugfixScroll,
         shipStartX: shipStartX
     });
 }
 
 // --- Security Pad Scroll-to-Invader Transition ---
 var securityPadScroll = false;                      // true when scroll is for security pad (invader interlude)
+var bugfixPadScroll = false;                        // true when scroll is for bugfix pad (bugfix interlude)
 var INVADER_SCROLL_ROTATE_DURATION = 1;             // seconds for 90-degree rotation after scroll
 var invaderScrollRotateTimer = 0;                   // elapsed time in rotation after scroll
 

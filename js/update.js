@@ -152,7 +152,7 @@ function update(dt) {
                 }
             }
             // Atomically set scroll state as a frozen object (ship.x preserved for smooth transition)
-            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, ship.x);
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, ship.x);
             gameState = STATES.SCENE_SCROLL;
         }
     }
@@ -197,6 +197,7 @@ function update(dt) {
             var newT = sceneScrollState.newTerrain;
             var newP = sceneScrollState.newPads;
             var wasInvaderScroll = sceneScrollState.isInvaderScroll;
+            var wasBugfixScroll = sceneScrollState.isBugfixScroll;
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
                 terrain.push({ x: newT[i].x, y: newT[i].y });
@@ -221,6 +222,17 @@ function update(dt) {
                 ship.rotating = null;
                 invaderScrollRotateTimer = 0;
                 gameState = STATES.INVADER_SCROLL_ROTATE;
+            } else if (wasBugfixScroll) {
+                // Bugfix pad: enter bugfix transition directly (no 90° rotation)
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 2;
+                ship.angle = 0;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                bugfixTransitionTimer = 0;
+                gameState = STATES.BUGFIX_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
                 sceneDescentStartY = ship.y;
@@ -245,6 +257,7 @@ function update(dt) {
                 newTerrain: sceneScrollState.newTerrain,
                 newPads: sceneScrollState.newPads,
                 isInvaderScroll: sceneScrollState.isInvaderScroll,
+                isBugfixScroll: sceneScrollState.isBugfixScroll,
                 shipStartX: sceneScrollState.shipStartX
             });
         }

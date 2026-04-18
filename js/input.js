@@ -24,6 +24,7 @@ function startNewGame() {
     repoFallbackNotice = '';
     score = 0;
     securityPadScroll = false;
+    bugfixPadScroll = false;
     GRAVITY = getLevelConfig(currentLevel).gravity;
     THRUST_POWER = GRAVITY * 2.5;
     resetShip();
@@ -103,6 +104,7 @@ function handleKeyPress(key) {
             playClickSound();
             // Both security and non-security pads use the same liftoff + scroll transition
             securityPadScroll = (landedPRType === 'security');
+            bugfixPadScroll = (landedPRType === 'bugfix');
             // Increment level at the start of the transition (non-security only;
             // security pads advance in INVADER_RETURN after the invader phase)
             if (!securityPadScroll) {
