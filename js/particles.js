@@ -226,6 +226,9 @@ var BOMB_TRAIL_COLORS = ['#FFBB44', '#FF9234', '#F37121'];
 var BOMB_EXPLOSION_COLORS = ['#F37121', '#FF9234', '#FFBB44', '#FFD966', '#FFEB3B'];
 
 function spawnBombTrail(x, y) {
+    // Cap bombParticles[] to prevent unbounded growth under bomb flood (DoS guard).
+    // Trails are cosmetic — dropping frames when saturated is acceptable.
+    if (bombParticles.length >= BUGFIX_MAX_BOMB_PARTICLES) return;
     bombParticles.push({
         x: x,
         y: y,
@@ -240,6 +243,7 @@ function spawnBombTrail(x, y) {
 
 function spawnBombExplosion(x, y) {
     for (var i = 0; i < 16; i++) {
+        if (bombParticles.length >= BUGFIX_MAX_BOMB_PARTICLES) return;
         var angle = Math.random() * Math.PI * 2;
         var speed = 40 + Math.random() * 120;
         var life = 0.4 + Math.random() * 0.5;

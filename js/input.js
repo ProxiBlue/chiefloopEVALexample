@@ -119,8 +119,11 @@ function handleKeyPress(key) {
             gameState = STATES.SCENE_LIFTOFF;
         } else if (gameState === STATES.BUGFIX_PLAYING) {
             // Drop a bomb from the ship's current position with the ship's current velocity.
-            // No cooldown — every Space press drops one bomb.
-            bombs.push({ x: ship.x, y: ship.y, vx: ship.vx, vy: ship.vy });
+            // No cooldown — every Space press drops one bomb, but hard-cap concurrent bombs
+            // to bound the per-frame bombs×bugs inner loop (DoS guard against key-repeat flood).
+            if (bombs.length < BUGFIX_MAX_BOMBS) {
+                bombs.push({ x: ship.x, y: ship.y, vx: ship.vx, vy: ship.vy });
+            }
         } else if (gameState === STATES.CRASHED && explosionFinished) {
             gameOverLevel = currentLevel + 1;
             if (score > 0) {
