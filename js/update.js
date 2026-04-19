@@ -1948,6 +1948,7 @@ function update(dt) {
                         bugfixScore += victim.points;
                         score += victim.points;
                         bugsKilled++;
+                        ship.fuel = Math.min(ship.fuel + BUGFIX_FUEL_PER_KILL, FUEL_MAX + FUEL_EXTENSION_MAX);
                         spawnBugExplosion(victim.x, victim.y);
                         bugs.splice(gj, 1);
                     }
