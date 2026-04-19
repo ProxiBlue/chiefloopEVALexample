@@ -2512,20 +2512,24 @@ function renderDriveTransition() {
         var wheelY = buggyScreenY + DRIVE_WHEEL_OFFSET_Y;
 
         ctx.save();
-        ctx.fillStyle = '#888';
+        ctx.fillStyle = '#111';
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(wheelLX, wheelY, wheelRadius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
         ctx.beginPath();
         ctx.arc(wheelRX, wheelY, wheelRadius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
 
-        ctx.fillStyle = '#333';
+        ctx.fillStyle = '#444';
         ctx.beginPath();
-        ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.3), 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.3), 0, Math.PI * 2);
         ctx.fill();
 
         ctx.strokeStyle = '#333';
@@ -2584,20 +2588,24 @@ function renderDrivePlaying() {
     var wheelY = buggyScreenY + DRIVE_WHEEL_OFFSET_Y;
 
     ctx.save();
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = '#111';
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(wheelLX, wheelY, wheelRadius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
     ctx.beginPath();
     ctx.arc(wheelRX, wheelY, wheelRadius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
 
-    ctx.fillStyle = '#333';
+    ctx.fillStyle = '#444';
     ctx.beginPath();
-    ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+    ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.3), 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+    ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.3), 0, Math.PI * 2);
     ctx.fill();
 
     ctx.strokeStyle = '#333';
@@ -2658,20 +2666,24 @@ function renderDriveComplete() {
         var wheelY = buggyScreenY + DRIVE_WHEEL_OFFSET_Y;
 
         ctx.save();
-        ctx.fillStyle = '#888';
+        ctx.fillStyle = '#111';
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(wheelLX, wheelY, wheelRadius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
         ctx.beginPath();
         ctx.arc(wheelRX, wheelY, wheelRadius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
 
-        ctx.fillStyle = '#333';
+        ctx.fillStyle = '#444';
         ctx.beginPath();
-        ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.3), 0, Math.PI * 2);
         ctx.fill();
         ctx.beginPath();
-        ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.3), 0, Math.PI * 2);
         ctx.fill();
 
         ctx.strokeStyle = '#333';

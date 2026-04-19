@@ -1278,9 +1278,20 @@ function update(dt) {
         if (screenShake < 0) screenShake = 0;
     }
 
+    // Kill thrust sound in any state that doesn't actively manage it.
+    // Only PLAYING, BUGFIX_PLAYING, TECHDEBT_PLAYING, INVADER_PLAYING,
+    // SCENE_LIFTOFF, and SCENE_SCROLL handle thrust sound themselves.
+    var thrustStates = [
+        STATES.PLAYING, STATES.BUGFIX_PLAYING, STATES.TECHDEBT_PLAYING,
+        STATES.INVADER_PLAYING, STATES.SCENE_LIFTOFF, STATES.SCENE_SCROLL,
+        STATES.DRIVE_PLAYING
+    ];
+    if (thrustStates.indexOf(gameState) === -1) {
+        stopThrustSound();
+    }
+
     // Update explosion particles during crash
     if (gameState === STATES.CRASHED) {
-        stopThrustSound();
         updateExplosion(dt);
     }
 

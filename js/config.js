@@ -640,7 +640,7 @@ var DRIVE_GRAVITY = 500;                  // gravity (px/s²) — stronger than 
 var DRIVE_JUMP_FUEL_COST = 5;             // fuel consumed per jump
 
 // --- Feature Drive Wheel Configuration ---
-var DRIVE_WHEEL_RADIUS = 6;               // wheel radius in px
+var DRIVE_WHEEL_RADIUS = 10;              // wheel radius in px
 var DRIVE_WHEEL_OFFSET_X = 10;            // spoke X offset magnitude (-10 left, +10 right) relative to M center
 var DRIVE_WHEEL_OFFSET_Y = 18;            // wheel Y offset (bottom of M)
 
