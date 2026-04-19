@@ -12,7 +12,7 @@ function renderMenu() {
     ctx.fillText('This is a fan-made game compilation by ProxiBlue. It is not official or associated with Mage-OS.', cx, canvas.height - 16);
 
     // Draw ship logo on menu (Mage-OS "M" logo)
-    drawShip(cx, baseY, 0, 60);
+    drawShip(cx, baseY, 0, 60, false, null, false);
 
     // Title
     ctx.fillStyle = '#f26322';
@@ -126,7 +126,7 @@ function renderPlaying() {
     drawTerrain();
 
     // Draw ship
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
 
     // --- HUD ---
     var vyMs = ship.vy / PIXELS_PER_METER;
@@ -283,7 +283,7 @@ function renderLanded() {
     drawTerrain();
 
     // Ship remains visible on the pad
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Draw celebration particles
     drawCelebration();
@@ -404,7 +404,7 @@ function renderSceneLiftoff() {
 
     // Show thrust flame during rise for both normal and security pad (invader) paths
     // 5th param = true enables main thrust flame visual (no fuel cost)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null, false);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
@@ -421,7 +421,7 @@ function renderSceneDescent() {
     drawTerrain();
 
     // Ship descends with thrust flame visible
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, null, false);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
@@ -439,7 +439,7 @@ function renderSceneCountdown() {
     drawTerrain();
 
     // Ship visible but no thrust during countdown
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Determine which number to show (3, 2, 1)
     var step = Math.floor(sceneCountdownTimer / SCENE_COUNTDOWN_STEP_DURATION);
@@ -662,7 +662,7 @@ function renderSceneScroll() {
     // 5th param = true: main thrust flame visible during scroll
     // 6th param = thrusterDir: side thrusters fire in direction of horizontal travel
     var thrusterDir = (sceneScrollState.shipStartX < canvas.width / 2) ? 'right' : 'left';
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, thrusterDir);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, true, thrusterDir, false);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
@@ -683,7 +683,7 @@ function renderInvaderScrollRotate() {
     drawTerrain();
 
     // Draw ship rotating (no thrust during rotation)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
@@ -697,7 +697,7 @@ function renderInvaderTransition() {
     drawTerrain();
 
     // Draw ship at its current position (rotated sideways from liftoff)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';
@@ -806,7 +806,7 @@ function renderInvaderPlaying() {
     drawTerrain();
 
     // Draw ship at its current position (rotated sideways)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Draw all bullets as short laser-line segments
     ctx.strokeStyle = BULLET_COLOR;
@@ -872,7 +872,7 @@ function renderInvaderComplete() {
     drawTerrain();
 
     // Draw ship
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Draw any remaining alien explosion particles
     drawAlienExplosions();
@@ -1039,7 +1039,7 @@ function drawBugfixWorld() {
     drawBombParticles();
     drawBugExplosions();
 
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
 }
 
 function renderBugfixTransition() {
@@ -1420,7 +1420,7 @@ function renderMissileComplete() {
 // machine advances to PLAYING. Mirrors renderInvaderReturn.
 function renderMissileReturn() {
     drawTerrain();
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     ctx.fillStyle = '#4FC3F7';
     ctx.font = 'bold 24px sans-serif';
@@ -1439,7 +1439,7 @@ function renderInvaderReturn() {
     drawTerrain();
 
     // Draw ship rotating back to vertical
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
     // Status text
     ctx.fillStyle = '#4FC3F7';

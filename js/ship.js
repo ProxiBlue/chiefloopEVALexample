@@ -65,7 +65,7 @@ function resetShip() {
     ship.fuel = FUEL_MAX;
 }
 
-function drawShip(x, y, angle, size, thrusting, rotating) {
+function drawShip(x, y, angle, size, thrusting, rotating, retroThrusting) {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
@@ -317,6 +317,47 @@ function drawShip(x, y, angle, size, thrusting, rotating) {
         ctx.lineTo(lJetX, lJetY - lInnerLen);
         ctx.lineTo(lJetX + lInnerW, lJetY);
         ctx.fillStyle = lInnerGrad;
+        ctx.fill();
+    }
+
+    // --- Retro thruster flames at the two top tips of the M ---
+    // Fire outward/forward from the ship's nose (upward in ship frame),
+    // opposite the main thrust direction. 70% scale, blue-white tint to
+    // visually distinguish braking from main-engine orange exhaust.
+    if (retroThrusting) {
+        var retroScale = 0.7;
+        var retroFlameOriginY = halfH * 0.94;
+
+        // Left top tip: SVG (0, 30.8)
+        var retroLX = 0 * jnx - halfW;
+        var retroLY = 30.8 * jny - halfH;
+        var retroLLen = s * retroScale * (0.4 + Math.random() * 0.25);
+        var retroLWidth = retroFlameOriginY * retroScale * (0.35 + Math.random() * 0.08);
+
+        var retroLGrad = ctx.createLinearGradient(retroLX, retroLY, retroLX, retroLY - retroLLen);
+        retroLGrad.addColorStop(0, '#88CCFF');
+        retroLGrad.addColorStop(1, '#FFFFFF');
+        ctx.beginPath();
+        ctx.moveTo(retroLX - retroLWidth, retroLY);
+        ctx.lineTo(retroLX, retroLY - retroLLen);
+        ctx.lineTo(retroLX + retroLWidth, retroLY);
+        ctx.fillStyle = retroLGrad;
+        ctx.fill();
+
+        // Right top tip: SVG (160.2, 30.8)
+        var retroRX = 160.2 * jnx - halfW;
+        var retroRY = 30.8 * jny - halfH;
+        var retroRLen = s * retroScale * (0.4 + Math.random() * 0.25);
+        var retroRWidth = retroFlameOriginY * retroScale * (0.35 + Math.random() * 0.08);
+
+        var retroRGrad = ctx.createLinearGradient(retroRX, retroRY, retroRX, retroRY - retroRLen);
+        retroRGrad.addColorStop(0, '#88CCFF');
+        retroRGrad.addColorStop(1, '#FFFFFF');
+        ctx.beginPath();
+        ctx.moveTo(retroRX - retroRWidth, retroRY);
+        ctx.lineTo(retroRX, retroRY - retroRLen);
+        ctx.lineTo(retroRX + retroRWidth, retroRY);
+        ctx.fillStyle = retroRGrad;
         ctx.fill();
     }
 
