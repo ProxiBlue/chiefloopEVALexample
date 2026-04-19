@@ -730,8 +730,10 @@ function update(dt) {
         ship.thrusting = wantsMainThrust;
         ship.retroThrusting = wantsRetroThrust;
 
-        if (ship.thrusting || ship.retroThrusting) {
-            startThrustSound();
+        if (ship.thrusting) {
+            startThrustSound('main');
+        } else if (ship.retroThrusting) {
+            startThrustSound('retro');
         } else {
             stopThrustSound();
         }
@@ -1339,12 +1341,13 @@ function update(dt) {
             missileWaveCurrent >= missileWaveTotal &&
             missileWaveSpawnQueue.length === 0 &&
             missileIncoming.length === 0;
-        if (!anyBuildingAlive && !anyBatteryAlive) {
-            crashShipInMissile('All defenses destroyed');
-            clearMissileState();
-        } else if (allWavesDrained && !anyBuildingAlive) {
-            crashShipInMissile('City lost — no buildings survived');
-            clearMissileState();
+        if ((!anyBuildingAlive && !anyBatteryAlive) || (allWavesDrained && !anyBuildingAlive)) {
+            // Lost — skip crash, go straight to complete with partial score
+            missileBuildingSurvivors = 0;
+            missileAmmoBonusPoints = 0;
+            missileEndBonus = 0;
+            missileCompleteTimer = 0;
+            gameState = STATES.MISSILE_COMPLETE;
         } else if (allWavesDrained && anyBuildingAlive) {
             // Award end-of-round bonus (surviving buildings + unused ammo) once,
             // then transition to MISSILE_COMPLETE for the brief results screen.

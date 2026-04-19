@@ -10,6 +10,47 @@ var thrustCrackleSource = null;
 var thrustCrackleGain = null;
 var thrustFlutterLfo = null;
 var isThrustSoundPlaying = false;
+var thrustCurrentMode = null;
+
+// Gain/pitch targets per thrust mode. Retro is softer + higher-pitched so it
+// is audibly distinct from the main thruster (PRD US-003 AC#8).
+var THRUST_MODE_PROFILES = {
+    main: { rumble: 0.22, crackle: 0.06, hiss: 0.04, osc: 0.10, oscFreq: 42 },
+    retro: { rumble: 0.10, crackle: 0.03, hiss: 0.02, osc: 0.05, oscFreq: 120 }
+};
+
+function applyThrustMode(mode) {
+    var profile = THRUST_MODE_PROFILES[mode] || THRUST_MODE_PROFILES.main;
+    if (!audioCtx) return;
+    var t = audioCtx.currentTime;
+    var ramp = 0.05;
+    if (thrustRumbleGain) {
+        thrustRumbleGain.gain.cancelScheduledValues(t);
+        thrustRumbleGain.gain.setValueAtTime(thrustRumbleGain.gain.value, t);
+        thrustRumbleGain.gain.linearRampToValueAtTime(profile.rumble, t + ramp);
+    }
+    if (thrustCrackleGain) {
+        thrustCrackleGain.gain.cancelScheduledValues(t);
+        thrustCrackleGain.gain.setValueAtTime(thrustCrackleGain.gain.value, t);
+        thrustCrackleGain.gain.linearRampToValueAtTime(profile.crackle, t + ramp);
+    }
+    if (thrustNoiseGain) {
+        thrustNoiseGain.gain.cancelScheduledValues(t);
+        thrustNoiseGain.gain.setValueAtTime(thrustNoiseGain.gain.value, t);
+        thrustNoiseGain.gain.linearRampToValueAtTime(profile.hiss, t + ramp);
+    }
+    if (thrustGain) {
+        thrustGain.gain.cancelScheduledValues(t);
+        thrustGain.gain.setValueAtTime(thrustGain.gain.value, t);
+        thrustGain.gain.linearRampToValueAtTime(profile.osc, t + ramp);
+    }
+    if (thrustOsc) {
+        thrustOsc.frequency.cancelScheduledValues(t);
+        thrustOsc.frequency.setValueAtTime(thrustOsc.frequency.value, t);
+        thrustOsc.frequency.linearRampToValueAtTime(profile.oscFreq, t + ramp);
+    }
+    thrustCurrentMode = mode;
+}
 
 function ensureAudioCtx() {
     if (!audioCtx) {
@@ -46,11 +87,17 @@ function createBrownNoiseBuffer(ctx, duration) {
     return buffer;
 }
 
-function startThrustSound() {
-    if (isThrustSoundPlaying) return;
+function startThrustSound(mode) {
+    mode = mode || 'main';
+    if (isThrustSoundPlaying) {
+        if (mode !== thrustCurrentMode) applyThrustMode(mode);
+        return;
+    }
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;
     isThrustSoundPlaying = true;
+    var profile = THRUST_MODE_PROFILES[mode] || THRUST_MODE_PROFILES.main;
+    thrustCurrentMode = mode;
 
     // Layer 1: Brown noise rumble (deep rocket exhaust body)
     var brownBuffer = createBrownNoiseBuffer(ctx, 2);
@@ -62,7 +109,7 @@ function startThrustSound() {
     rumbleLp.frequency.setValueAtTime(250, t);
     thrustRumbleGain = ctx.createGain();
     thrustRumbleGain.gain.setValueAtTime(0, t);
-    thrustRumbleGain.gain.linearRampToValueAtTime(0.22, t + 0.08);
+    thrustRumbleGain.gain.linearRampToValueAtTime(profile.rumble, t + 0.08);
     thrustRumbleSource.connect(rumbleLp);
     rumbleLp.connect(thrustRumbleGain);
     thrustRumbleGain.connect(ctx.destination);
@@ -79,7 +126,7 @@ function startThrustSound() {
     crackBp.Q.setValueAtTime(0.8, t);
     thrustCrackleGain = ctx.createGain();
     thrustCrackleGain.gain.setValueAtTime(0, t);
-    thrustCrackleGain.gain.linearRampToValueAtTime(0.06, t + 0.08);
+    thrustCrackleGain.gain.linearRampToValueAtTime(profile.crackle, t + 0.08);
     thrustCrackleSource.connect(crackBp);
     crackBp.connect(thrustCrackleGain);
     thrustCrackleGain.connect(ctx.destination);
@@ -95,7 +142,7 @@ function startThrustSound() {
     hipass.frequency.setValueAtTime(2000, t);
     thrustNoiseGain = ctx.createGain();
     thrustNoiseGain.gain.setValueAtTime(0, t);
-    thrustNoiseGain.gain.linearRampToValueAtTime(0.04, t + 0.08);
+    thrustNoiseGain.gain.linearRampToValueAtTime(profile.hiss, t + 0.08);
     thrustNoiseSource.connect(hipass);
     hipass.connect(thrustNoiseGain);
     thrustNoiseGain.connect(ctx.destination);
@@ -104,10 +151,10 @@ function startThrustSound() {
     // Layer 4: Sub-bass oscillator (engine core tone)
     thrustOsc = ctx.createOscillator();
     thrustOsc.type = 'sine';
-    thrustOsc.frequency.setValueAtTime(42, t);
+    thrustOsc.frequency.setValueAtTime(profile.oscFreq, t);
     thrustGain = ctx.createGain();
     thrustGain.gain.setValueAtTime(0, t);
-    thrustGain.gain.linearRampToValueAtTime(0.10, t + 0.08);
+    thrustGain.gain.linearRampToValueAtTime(profile.osc, t + 0.08);
     thrustOsc.connect(thrustGain);
     thrustGain.connect(ctx.destination);
     thrustOsc.start();
@@ -126,6 +173,7 @@ function startThrustSound() {
 function stopThrustSound() {
     if (!isThrustSoundPlaying) return;
     isThrustSoundPlaying = false;
+    thrustCurrentMode = null;
     var ctx = audioCtx;
     if (!ctx) return;
     var t = ctx.currentTime;
