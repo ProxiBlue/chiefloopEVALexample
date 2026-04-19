@@ -281,6 +281,30 @@ function playShootSound() {
 // pleasant, deliberately in a higher/"blue-ish" frequency band so it reads as
 // distinct from the landing chime (which sits at C5/E5). Two stacked sine
 // voices (880 → 1320 Hz and a harmonic octave above) create a bright lift.
+// US-008 (Code Breaker): power-up caught — short ascending two-note chime.
+// Pleasant mid-register pair (660Hz → 990Hz) so it reads as "good" without
+// clashing with the Breakout bounce blips (added in US-013).
+function playBreakoutPowerupSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    [
+        { freq: 660, start: 0.0,  dur: 0.08, gain: 0.14 },
+        { freq: 990, start: 0.07, dur: 0.10, gain: 0.14 }
+    ].forEach(function (note) {
+        var osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(note.freq, t + note.start);
+        var gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t + note.start);
+        gain.gain.linearRampToValueAtTime(note.gain, t + note.start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + note.start + note.dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + note.start);
+        osc.stop(t + note.start + note.dur + 0.02);
+    });
+}
+
 function playProxiblueCollectSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

@@ -352,6 +352,7 @@ function setupBreakoutWorld() {
     breakoutBricks = [];
     breakoutPowerups = [];
     breakoutParticles = [];
+    breakoutBalls = [];
     breakoutScore = 0;
     breakoutBricksDestroyed = 0;
     breakoutBricksTotal = 0;
@@ -360,6 +361,9 @@ function setupBreakoutWorld() {
     breakoutBallVX = 0;
     breakoutBallVY = 0;
     breakoutBallStuck = true;
+    breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
+    breakoutActivePowerup = null;
+    breakoutPowerupTimer = 0;
 
     // Paddle sits BREAKOUT_PADDLE_Y_OFFSET px above canvas bottom, centered.
     var paddleCenterX = canvas.width / 2;
@@ -422,6 +426,65 @@ function spawnBreakoutBrickParticles(x, y, color) {
             size: 1.5 + Math.random() * 2,
             color: color
         });
+    }
+}
+
+// Apply a caught Code Breaker power-up's effect (US-008). Extra Ball and
+// Multi-Ball are instant; Wide Paddle and Fireball run timed effects that
+// replace any active timed power-up. Plays a short ascending chime.
+function activateBreakoutPowerup(type) {
+    if (typeof playBreakoutPowerupSound === 'function') {
+        playBreakoutPowerupSound();
+    }
+    if (type === 'extra') {
+        breakoutExtraBalls += 1;
+        return;
+    }
+    if (type === 'multi') {
+        // Spawn 2 extra balls at ±BREAKOUT_MULTIBALL_ANGLE_OFFSET from the
+        // primary ball's current direction. If the primary ball is stuck
+        // (zero velocity) default to straight up.
+        var mbSpeed = Math.sqrt(
+            breakoutBallVX * breakoutBallVX + breakoutBallVY * breakoutBallVY
+        );
+        if (mbSpeed === 0) {
+            mbSpeed = Math.min(
+                BREAKOUT_BALL_SPEED_MAX,
+                BREAKOUT_BALL_SPEED_BASE + currentLevel * BREAKOUT_BALL_SPEED_PER_LEVEL
+            );
+        }
+        var mbBase = (breakoutBallVX === 0 && breakoutBallVY === 0)
+            ? -Math.PI / 2
+            : Math.atan2(breakoutBallVY, breakoutBallVX);
+        for (var side = -1; side <= 1; side += 2) {
+            var mbAngle = mbBase + side * BREAKOUT_MULTIBALL_ANGLE_OFFSET;
+            breakoutBalls.push({
+                x: breakoutBallX,
+                y: breakoutBallY,
+                vx: Math.cos(mbAngle) * mbSpeed,
+                vy: Math.sin(mbAngle) * mbSpeed
+            });
+        }
+        return;
+    }
+    // Timed power-ups (Wide / Fire) — replace any existing timer. Revert the
+    // paddle if the previous timed effect was Wide and the new one is not.
+    if (breakoutActivePowerup === 'wide' && type !== 'wide') {
+        breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
+        if (breakoutPaddleX + breakoutPaddleWidth > canvas.width) {
+            breakoutPaddleX = canvas.width - breakoutPaddleWidth;
+        }
+    }
+    if (type === 'wide') {
+        breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH * BREAKOUT_POWERUP_WIDE_MULTIPLIER;
+        if (breakoutPaddleX + breakoutPaddleWidth > canvas.width) {
+            breakoutPaddleX = canvas.width - breakoutPaddleWidth;
+        }
+        breakoutPowerupTimer = BREAKOUT_POWERUP_WIDE_DURATION;
+        breakoutActivePowerup = 'wide';
+    } else if (type === 'fire') {
+        breakoutPowerupTimer = BREAKOUT_POWERUP_FIRE_DURATION;
+        breakoutActivePowerup = 'fire';
     }
 }
 
@@ -1791,7 +1854,7 @@ function update(dt) {
         ship.y = startY + eased * (targetY - startY);
 
         // Paddle hitbox (consumed by later stories) stays centered under the M.
-        breakoutPaddleX = ship.x - BREAKOUT_PADDLE_WIDTH / 2;
+        breakoutPaddleX = ship.x - breakoutPaddleWidth / 2;
         // Ball sits stationary on top of the paddle and rides along during flip.
         breakoutBallX = ship.x;
         breakoutBallY = ship.y - SHIP_SIZE / 2 - BREAKOUT_BALL_RADIUS;
@@ -1821,12 +1884,12 @@ function update(dt) {
         if (breakoutPaddleX < 0) {
             breakoutPaddleX = 0;
         }
-        if (breakoutPaddleX + BREAKOUT_PADDLE_WIDTH > canvas.width) {
-            breakoutPaddleX = canvas.width - BREAKOUT_PADDLE_WIDTH;
+        if (breakoutPaddleX + breakoutPaddleWidth > canvas.width) {
+            breakoutPaddleX = canvas.width - breakoutPaddleWidth;
         }
 
         // Keep the flipped M sprite aligned with the paddle hitbox.
-        ship.x = breakoutPaddleX + BREAKOUT_PADDLE_WIDTH / 2;
+        ship.x = breakoutPaddleX + breakoutPaddleWidth / 2;
         ship.y = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2;
         ship.angle = Math.PI;
 
@@ -1851,6 +1914,45 @@ function update(dt) {
                 breakoutBallStuck = false;
             }
         } else {
+            // US-008: power-up update runs FIRST so pills spawned by this
+            // frame's brick destruction stay at their brick-centre spawn point
+            // for one tick (matches existing tests and feels right visually).
+            var paddleTopPu = canvas.height - BREAKOUT_PADDLE_Y_OFFSET;
+            var paddleBottomPu = paddleTopPu + BREAKOUT_PADDLE_HEIGHT;
+            for (var puIdx = breakoutPowerups.length - 1; puIdx >= 0; puIdx--) {
+                var pu = breakoutPowerups[puIdx];
+                pu.y += pu.vy * dt;
+                var puLeft = pu.x - pu.size / 2;
+                var puRight = pu.x + pu.size / 2;
+                var puTop = pu.y - pu.size / 2;
+                var puBottom = pu.y + pu.size / 2;
+                if (puTop > canvas.height) {
+                    breakoutPowerups.splice(puIdx, 1);
+                    continue;
+                }
+                if (puBottom >= paddleTopPu && puTop <= paddleBottomPu &&
+                    puRight >= breakoutPaddleX &&
+                    puLeft <= breakoutPaddleX + breakoutPaddleWidth) {
+                    activateBreakoutPowerup(pu.type);
+                    breakoutPowerups.splice(puIdx, 1);
+                }
+            }
+
+            // US-008: tick down the active timed power-up; revert when zero.
+            if (breakoutActivePowerup !== null && breakoutPowerupTimer > 0) {
+                breakoutPowerupTimer -= dt;
+                if (breakoutPowerupTimer <= 0) {
+                    breakoutPowerupTimer = 0;
+                    if (breakoutActivePowerup === 'wide') {
+                        breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
+                        if (breakoutPaddleX + breakoutPaddleWidth > canvas.width) {
+                            breakoutPaddleX = canvas.width - breakoutPaddleWidth;
+                        }
+                    }
+                    breakoutActivePowerup = null;
+                }
+            }
+
             // Integrate ball motion.
             breakoutBallX += breakoutBallVX * dt;
             breakoutBallY += breakoutBallVY * dt;
@@ -1878,12 +1980,12 @@ function update(dt) {
                 breakoutBallY + BREAKOUT_BALL_RADIUS >= paddleTop &&
                 breakoutBallY - BREAKOUT_BALL_RADIUS <= paddleBottom &&
                 breakoutBallX >= breakoutPaddleX &&
-                breakoutBallX <= breakoutPaddleX + BREAKOUT_PADDLE_WIDTH) {
+                breakoutBallX <= breakoutPaddleX + breakoutPaddleWidth) {
                 var ballSpeed = Math.sqrt(
                     breakoutBallVX * breakoutBallVX + breakoutBallVY * breakoutBallVY
                 );
-                var paddleCenterX = breakoutPaddleX + BREAKOUT_PADDLE_WIDTH / 2;
-                var hitPosNorm = (breakoutBallX - paddleCenterX) / (BREAKOUT_PADDLE_WIDTH / 2);
+                var paddleCenterX = breakoutPaddleX + breakoutPaddleWidth / 2;
+                var hitPosNorm = (breakoutBallX - paddleCenterX) / (breakoutPaddleWidth / 2);
                 if (hitPosNorm > 1) hitPosNorm = 1;
                 if (hitPosNorm < -1) hitPosNorm = -1;
                 var maxAngleComponent = ballSpeed * Math.sin(BREAKOUT_PADDLE_MAX_BOUNCE_ANGLE);
@@ -1898,6 +2000,10 @@ function update(dt) {
             // Face resolved by smaller axis overlap; direction gate prevents a
             // second flip on the next tick if the ball is already travelling
             // away (mirrors the paddle-collision pattern from US-006).
+            // US-008: when Fireball is active the ball passes through — no
+            // reflection, bricks die in one hit, loop keeps scanning so a
+            // single frame can destroy multiple adjacent bricks.
+            var fireActive = (breakoutActivePowerup === 'fire');
             var ballLeft = breakoutBallX - BREAKOUT_BALL_RADIUS;
             var ballRight = breakoutBallX + BREAKOUT_BALL_RADIUS;
             var ballTop = breakoutBallY - BREAKOUT_BALL_RADIUS;
@@ -1912,29 +2018,34 @@ function update(dt) {
                 if (ballRight < bLeft || ballLeft > bRight ||
                     ballBottom < bTop || ballTop > bBottom) continue;
 
-                var overlapX = Math.min(ballRight, bRight) - Math.max(ballLeft, bLeft);
-                var overlapY = Math.min(ballBottom, bBottom) - Math.max(ballTop, bTop);
-                if (overlapX < overlapY) {
-                    // Hit a left/right face — reflect VX.
-                    if (breakoutBallX < (bLeft + bRight) / 2) {
-                        if (breakoutBallVX > 0) breakoutBallVX = -breakoutBallVX;
-                        breakoutBallX = bLeft - BREAKOUT_BALL_RADIUS;
+                if (!fireActive) {
+                    var overlapX = Math.min(ballRight, bRight) - Math.max(ballLeft, bLeft);
+                    var overlapY = Math.min(ballBottom, bBottom) - Math.max(ballTop, bTop);
+                    if (overlapX < overlapY) {
+                        // Hit a left/right face — reflect VX.
+                        if (breakoutBallX < (bLeft + bRight) / 2) {
+                            if (breakoutBallVX > 0) breakoutBallVX = -breakoutBallVX;
+                            breakoutBallX = bLeft - BREAKOUT_BALL_RADIUS;
+                        } else {
+                            if (breakoutBallVX < 0) breakoutBallVX = -breakoutBallVX;
+                            breakoutBallX = bRight + BREAKOUT_BALL_RADIUS;
+                        }
                     } else {
-                        if (breakoutBallVX < 0) breakoutBallVX = -breakoutBallVX;
-                        breakoutBallX = bRight + BREAKOUT_BALL_RADIUS;
+                        // Hit a top/bottom face — reflect VY.
+                        if (breakoutBallY < (bTop + bBottom) / 2) {
+                            if (breakoutBallVY > 0) breakoutBallVY = -breakoutBallVY;
+                            breakoutBallY = bTop - BREAKOUT_BALL_RADIUS;
+                        } else {
+                            if (breakoutBallVY < 0) breakoutBallVY = -breakoutBallVY;
+                            breakoutBallY = bBottom + BREAKOUT_BALL_RADIUS;
+                        }
                     }
+                    brick.hp -= 1;
                 } else {
-                    // Hit a top/bottom face — reflect VY.
-                    if (breakoutBallY < (bTop + bBottom) / 2) {
-                        if (breakoutBallVY > 0) breakoutBallVY = -breakoutBallVY;
-                        breakoutBallY = bTop - BREAKOUT_BALL_RADIUS;
-                    } else {
-                        if (breakoutBallVY < 0) breakoutBallVY = -breakoutBallVY;
-                        breakoutBallY = bBottom + BREAKOUT_BALL_RADIUS;
-                    }
+                    // Fireball: instant kill regardless of HP; no reflection.
+                    brick.hp = 0;
                 }
 
-                brick.hp -= 1;
                 if (brick.hp <= 0) {
                     var awarded = BREAKOUT_POINTS_PER_BRICK +
                                   BREAKOUT_POINTS_BONUS_HP * brick.maxHp;
@@ -1947,15 +2058,22 @@ function update(dt) {
                         brick.color
                     );
                     if (Math.random() < BREAKOUT_POWERUP_CHANCE) {
+                        var puDef = BREAKOUT_POWERUP_TYPES[
+                            Math.floor(Math.random() * BREAKOUT_POWERUP_TYPES.length)
+                        ];
                         breakoutPowerups.push({
                             x: brick.x + brick.w / 2,
                             y: brick.y + brick.h / 2,
                             vy: BREAKOUT_POWERUP_FALL_SPEED,
                             size: BREAKOUT_POWERUP_SIZE,
-                            type: 'random'
+                            type: puDef.type,
+                            letter: puDef.letter,
+                            label: puDef.label,
+                            color: puDef.color
                         });
                     }
                     breakoutBricks.splice(bi, 1);
+                    bi--; // array shifted left; re-check this index
 
                     // Ball speed ramps per brick destroyed (capped).
                     var curSpeed = Math.sqrt(
@@ -1978,8 +2096,9 @@ function update(dt) {
                     brick.flashTimer = 0.12;
                 }
 
-                // Only one brick per collision event (AC).
-                break;
+                // Only one brick per collision event for normal play.
+                // Fireball passes through — keep scanning adjacent bricks.
+                if (!fireActive) break;
             }
 
             // Decay brick flash timers (set on damaged hits above).
@@ -1999,6 +2118,135 @@ function update(dt) {
                 bp.y += bp.vy * dt;
                 bp.life -= dt;
                 if (bp.life <= 0) breakoutParticles.splice(bpIdx, 1);
+            }
+
+            // US-008: physics for additional balls spawned by Multi-Ball. Each
+            // extra ball behaves identically to the primary one — walls,
+            // paddle, bricks — but lives in `breakoutBalls` so lifecycle
+            // (spawn / lose) is independent of the primary.
+            var paddleTopXb = canvas.height - BREAKOUT_PADDLE_Y_OFFSET;
+            var paddleBottomXb = paddleTopXb + BREAKOUT_PADDLE_HEIGHT;
+            for (var ebIdx = breakoutBalls.length - 1; ebIdx >= 0; ebIdx--) {
+                var eb = breakoutBalls[ebIdx];
+                eb.x += eb.vx * dt;
+                eb.y += eb.vy * dt;
+                if (eb.x - BREAKOUT_BALL_RADIUS < 0) {
+                    eb.x = BREAKOUT_BALL_RADIUS;
+                    eb.vx = -eb.vx;
+                } else if (eb.x + BREAKOUT_BALL_RADIUS > canvas.width) {
+                    eb.x = canvas.width - BREAKOUT_BALL_RADIUS;
+                    eb.vx = -eb.vx;
+                }
+                if (eb.y - BREAKOUT_BALL_RADIUS < 0) {
+                    eb.y = BREAKOUT_BALL_RADIUS;
+                    eb.vy = -eb.vy;
+                }
+                // Paddle bounce — same formula as primary ball.
+                if (eb.vy > 0 &&
+                    eb.y + BREAKOUT_BALL_RADIUS >= paddleTopXb &&
+                    eb.y - BREAKOUT_BALL_RADIUS <= paddleBottomXb &&
+                    eb.x >= breakoutPaddleX &&
+                    eb.x <= breakoutPaddleX + breakoutPaddleWidth) {
+                    var ebSpeed = Math.sqrt(eb.vx * eb.vx + eb.vy * eb.vy);
+                    var ebPaddleCenter = breakoutPaddleX + breakoutPaddleWidth / 2;
+                    var ebHitNorm = (eb.x - ebPaddleCenter) / (breakoutPaddleWidth / 2);
+                    if (ebHitNorm > 1) ebHitNorm = 1;
+                    if (ebHitNorm < -1) ebHitNorm = -1;
+                    var ebMaxComp = ebSpeed * Math.sin(BREAKOUT_PADDLE_MAX_BOUNCE_ANGLE);
+                    eb.vx = ebHitNorm * ebMaxComp;
+                    eb.vy = -Math.sqrt(Math.max(0, ebSpeed * ebSpeed - eb.vx * eb.vx));
+                    eb.y = paddleTopXb - BREAKOUT_BALL_RADIUS;
+                }
+                // Brick collision — same face-detection + destroy pipeline as
+                // the primary ball, honoring the active Fireball power-up.
+                var ebFire = (breakoutActivePowerup === 'fire');
+                var ebL = eb.x - BREAKOUT_BALL_RADIUS;
+                var ebR = eb.x + BREAKOUT_BALL_RADIUS;
+                var ebT = eb.y - BREAKOUT_BALL_RADIUS;
+                var ebB = eb.y + BREAKOUT_BALL_RADIUS;
+                for (var ebbi = 0; ebbi < breakoutBricks.length; ebbi++) {
+                    var ebBrick = breakoutBricks[ebbi];
+                    if (ebBrick.revealAt > breakoutTransitionTimer) continue;
+                    var ebbL = ebBrick.x;
+                    var ebbR = ebBrick.x + ebBrick.w;
+                    var ebbT = ebBrick.y;
+                    var ebbB = ebBrick.y + ebBrick.h;
+                    if (ebR < ebbL || ebL > ebbR || ebB < ebbT || ebT > ebbB) continue;
+                    if (!ebFire) {
+                        var ebOX = Math.min(ebR, ebbR) - Math.max(ebL, ebbL);
+                        var ebOY = Math.min(ebB, ebbB) - Math.max(ebT, ebbT);
+                        if (ebOX < ebOY) {
+                            if (eb.x < (ebbL + ebbR) / 2) {
+                                if (eb.vx > 0) eb.vx = -eb.vx;
+                                eb.x = ebbL - BREAKOUT_BALL_RADIUS;
+                            } else {
+                                if (eb.vx < 0) eb.vx = -eb.vx;
+                                eb.x = ebbR + BREAKOUT_BALL_RADIUS;
+                            }
+                        } else {
+                            if (eb.y < (ebbT + ebbB) / 2) {
+                                if (eb.vy > 0) eb.vy = -eb.vy;
+                                eb.y = ebbT - BREAKOUT_BALL_RADIUS;
+                            } else {
+                                if (eb.vy < 0) eb.vy = -eb.vy;
+                                eb.y = ebbB + BREAKOUT_BALL_RADIUS;
+                            }
+                        }
+                        ebBrick.hp -= 1;
+                    } else {
+                        ebBrick.hp = 0;
+                    }
+                    if (ebBrick.hp <= 0) {
+                        var ebAwarded = BREAKOUT_POINTS_PER_BRICK +
+                                        BREAKOUT_POINTS_BONUS_HP * ebBrick.maxHp;
+                        breakoutScore += ebAwarded;
+                        score += ebAwarded;
+                        breakoutBricksDestroyed += 1;
+                        spawnBreakoutBrickParticles(
+                            ebBrick.x + ebBrick.w / 2,
+                            ebBrick.y + ebBrick.h / 2,
+                            ebBrick.color
+                        );
+                        if (Math.random() < BREAKOUT_POWERUP_CHANCE) {
+                            var ebPuDef = BREAKOUT_POWERUP_TYPES[
+                                Math.floor(Math.random() * BREAKOUT_POWERUP_TYPES.length)
+                            ];
+                            breakoutPowerups.push({
+                                x: ebBrick.x + ebBrick.w / 2,
+                                y: ebBrick.y + ebBrick.h / 2,
+                                vy: BREAKOUT_POWERUP_FALL_SPEED,
+                                size: BREAKOUT_POWERUP_SIZE,
+                                type: ebPuDef.type,
+                                letter: ebPuDef.letter,
+                                label: ebPuDef.label,
+                                color: ebPuDef.color
+                            });
+                        }
+                        breakoutBricks.splice(ebbi, 1);
+                        ebbi--;
+                        var ebCurSpeed = Math.sqrt(eb.vx * eb.vx + eb.vy * eb.vy);
+                        if (ebCurSpeed > 0) {
+                            var ebNewSpeed = Math.min(
+                                BREAKOUT_BALL_SPEED_MAX,
+                                ebCurSpeed + BREAKOUT_BALL_SPEED_INCREMENT
+                            );
+                            var ebScale = ebNewSpeed / ebCurSpeed;
+                            eb.vx *= ebScale;
+                            eb.vy *= ebScale;
+                        }
+                    } else {
+                        ebBrick.color = ebBrick.hp === 3 ? BREAKOUT_BRICK_COLOR_HP3
+                                      : ebBrick.hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
+                                      : BREAKOUT_BRICK_COLOR_HP1;
+                        ebBrick.flashTimer = 0.12;
+                    }
+                    if (!ebFire) break;
+                }
+                // Bottom-out: drop this extra ball from the array. Primary-ball
+                // loss + lives handling belongs to US-009.
+                if (eb.y - BREAKOUT_BALL_RADIUS > canvas.height) {
+                    breakoutBalls.splice(ebIdx, 1);
+                }
             }
 
             // Bottom-out: ball is lost. Full life/ball decrement lives in US-009;

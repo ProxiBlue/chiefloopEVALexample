@@ -532,6 +532,21 @@ var BREAKOUT_POWERUP_CHANCE = 0.15;       // 15% of bricks drop a power-up
 var BREAKOUT_POWERUP_FALL_SPEED = 100;    // power-up fall speed in px/s
 var BREAKOUT_POWERUP_SIZE = 16;           // power-up sprite size in px
 
+// Power-up timed effect durations and Wide paddle multiplier (US-008).
+var BREAKOUT_POWERUP_WIDE_DURATION = 10;  // seconds — Wide Paddle active time
+var BREAKOUT_POWERUP_FIRE_DURATION = 5;   // seconds — Fireball active time
+var BREAKOUT_POWERUP_WIDE_MULTIPLIER = 1.5; // paddle width +50% while Wide is active
+var BREAKOUT_MULTIBALL_ANGLE_OFFSET = Math.PI / 9; // ~20° — Multi-Ball spawn spread
+
+// Power-up type table (PRD section 9). Used to randomly pick a type on drop and
+// render the letter/label/colour on the falling pill.
+var BREAKOUT_POWERUP_TYPES = [
+    { type: 'wide',  letter: 'W', label: 'refactor()', color: '#4CAF50' },
+    { type: 'multi', letter: 'M', label: 'fork()',     color: '#FF9800' },
+    { type: 'fire',  letter: 'F', label: '--force',    color: '#F44336' },
+    { type: 'extra', letter: '+', label: 'git stash',  color: '#00BCD4' }
+];
+
 // --- Code Breaker Scoring ---
 var BREAKOUT_POINTS_PER_BRICK = 10;       // base points per brick destroyed
 var BREAKOUT_POINTS_BONUS_HP = 5;         // extra points per HP the brick originally had
@@ -546,6 +561,10 @@ var breakoutBallVY = 0;                   // active ball Y velocity (px/s)
 var breakoutPaddleX = 0;                  // paddle left-edge X position
 var breakoutBallStuck = true;             // ball rides on paddle until Up/W/Space launches it
 var breakoutExtraBalls = 0;               // bonus balls accumulated from power-ups
+var breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH; // live paddle width (scaled by Wide power-up)
+var breakoutActivePowerup = null;         // 'wide' | 'fire' | null — only timed effects live here
+var breakoutPowerupTimer = 0;             // seconds remaining on active timed power-up
+var breakoutBalls = [];                   // additional balls from Multi-Ball (each: {x,y,vx,vy})
 
 // --- Code Breaker State Arrays ---
 var breakoutBricks = [];                  // active bricks on the field

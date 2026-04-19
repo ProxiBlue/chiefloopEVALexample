@@ -1861,18 +1861,62 @@ function drawBreakoutWorld() {
     }
 
     // Paddle = M ship drawn at its current (animated) angle + position. Size
-    // is derived from BREAKOUT_PADDLE_WIDTH so the rendered M exactly matches
-    // the paddle hitbox (drawShip draws at 2:1 aspect ratio via LOGO_DRAW_RATIO).
-    var paddleDrawSize = BREAKOUT_PADDLE_WIDTH / LOGO_DRAW_RATIO;
+    // tracks the live `breakoutPaddleWidth` (may be scaled by the Wide
+    // power-up in US-008) so the sprite matches the hitbox exactly.
+    var paddleDrawSize = breakoutPaddleWidth / LOGO_DRAW_RATIO;
     drawShip(ship.x, ship.y, ship.angle, paddleDrawSize, false, null, false);
 
-    // Ball — stationary, resting on top of the paddle (set by update handler).
+    // Primary ball — stationary on the paddle at launch, bouncing otherwise.
+    // When Fireball is active, swap to a red core so the buff is visible.
+    var ballFill = (breakoutActivePowerup === 'fire') ? '#F44336' : '#ECEFF1';
     ctx.save();
-    ctx.fillStyle = '#ECEFF1';
+    ctx.fillStyle = ballFill;
     ctx.beginPath();
     ctx.arc(breakoutBallX, breakoutBallY, BREAKOUT_BALL_RADIUS, 0, Math.PI * 2);
     ctx.fill();
+    // Additional balls spawned by Multi-Ball (US-008).
+    for (var ebi = 0; ebi < breakoutBalls.length; ebi++) {
+        var eBall = breakoutBalls[ebi];
+        ctx.beginPath();
+        ctx.arc(eBall.x, eBall.y, BREAKOUT_BALL_RADIUS, 0, Math.PI * 2);
+        ctx.fill();
+    }
     ctx.restore();
+
+    // Falling power-up pills (US-008). Rounded rect with letter on top and
+    // label below; colour-coded by type.
+    if (breakoutPowerups.length > 0) {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (var pui = 0; pui < breakoutPowerups.length; pui++) {
+            var pup = breakoutPowerups[pui];
+            var pupW = pup.size * 2.5;
+            var pupH = pup.size;
+            var pupX = pup.x - pupW / 2;
+            var pupY = pup.y - pupH / 2;
+            var pupR = Math.min(pupH / 2, 8);
+            ctx.fillStyle = pup.color;
+            ctx.beginPath();
+            ctx.moveTo(pupX + pupR, pupY);
+            ctx.lineTo(pupX + pupW - pupR, pupY);
+            ctx.quadraticCurveTo(pupX + pupW, pupY, pupX + pupW, pupY + pupR);
+            ctx.lineTo(pupX + pupW, pupY + pupH - pupR);
+            ctx.quadraticCurveTo(pupX + pupW, pupY + pupH, pupX + pupW - pupR, pupY + pupH);
+            ctx.lineTo(pupX + pupR, pupY + pupH);
+            ctx.quadraticCurveTo(pupX, pupY + pupH, pupX, pupY + pupH - pupR);
+            ctx.lineTo(pupX, pupY + pupR);
+            ctx.quadraticCurveTo(pupX, pupY, pupX + pupR, pupY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = 'rgba(0,0,0,0.85)';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText(pup.letter, pup.x - pupW / 2 + pupH / 2, pup.y);
+            ctx.font = '9px monospace';
+            ctx.fillText(pup.label, pup.x + pupH / 2, pup.y);
+        }
+        ctx.restore();
+    }
 }
 
 function renderBreakoutTransition() {
