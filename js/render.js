@@ -826,7 +826,7 @@ function renderInvaderPlaying() {
     drawTerrain();
 
     // Draw ship at its current position (rotated sideways)
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, ship.retroThrusting);
 
     // Draw all bullets as short laser-line segments
     ctx.strokeStyle = BULLET_COLOR;
