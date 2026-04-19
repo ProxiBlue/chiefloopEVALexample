@@ -48,6 +48,7 @@ var sandbox = {
     setupMissileWorld: function () {},
     setupTechdebtWorld: function () {},
     setupBreakoutWorld: function () {},
+    setupDriveWorld: function () {},
     resetShip: function () {}, resetWind: function () {},
     generateTerrain: function () {},
     getLevelConfig: function () { return { gravity: 0.05 }; },

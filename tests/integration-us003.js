@@ -50,6 +50,7 @@ var sandbox = {
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
     setupTechdebtWorld: function () {},
+    setupDriveWorld: function () {},
     resetShip: function () {},
     resetWind: function () {},
     generateTerrain: function () {},

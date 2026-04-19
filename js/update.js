@@ -783,6 +783,110 @@ function setupMissileWorld() {
     }
 }
 
+// Initialize Feature Drive world on entry to DRIVE_TRANSITION. Resets
+// per-round state + arrays, generates the side-scrolling road (segments + a
+// destination pad at the end), and scatters rocks + pickups along the road.
+// Road length scales with currentLevel per the PRD formula. Full terrain
+// variation (gaps, slow zones, speed boosts) is deferred to US-005; this
+// setup lays down a gently-rolling ground strip so the camera has something
+// to render during the transition window.
+function setupDriveWorld() {
+    driveScrollX = 0;
+    driveSpeed = 0;
+    driveBuggyVY = 0;
+    driveGrounded = true;
+    driveWheelRotation = 0;
+    driveScore = 0;
+    drivePickupsCollected = 0;
+    driveDistance = 0;
+    driveCompleteTimer = 0;
+    driveRoadSegments = [];
+    driveObstacles = [];
+    drivePickups = [];
+    driveParticles = [];
+
+    driveRoadLength = Math.min(
+        DRIVE_ROAD_MAX_LENGTH,
+        DRIVE_ROAD_BASE_LENGTH + currentLevel * DRIVE_ROAD_PER_LEVEL
+    );
+
+    var segmentWidth = 20;
+    var segmentCount = Math.ceil(driveRoadLength / segmentWidth);
+    var groundYCenter = canvas.height * 0.75;
+    var groundYMin = canvas.height * 0.60;
+    var groundYMax = canvas.height * 0.85;
+    var currentY = groundYCenter;
+    for (var si = 0; si < segmentCount; si++) {
+        var drift = (Math.random() - 0.5) * 6;
+        currentY += drift;
+        if (currentY < groundYMin) currentY = groundYMin;
+        if (currentY > groundYMax) currentY = groundYMax;
+        driveRoadSegments.push({
+            x: si * segmentWidth,
+            y: currentY,
+            type: 'ground'
+        });
+    }
+
+    driveBuggyY = driveRoadSegments.length > 0
+        ? driveRoadSegments[0].y
+        : groundYCenter;
+
+    var safeStart = 200;
+    var safeEnd = driveRoadLength - 200;
+    var minSpacing = 80;
+
+    var obstacleDensity = Math.min(
+        DRIVE_OBSTACLE_DENSITY_MAX,
+        DRIVE_OBSTACLE_DENSITY_BASE + currentLevel * DRIVE_OBSTACLE_DENSITY_PER_LEVEL
+    );
+    var obstacleTarget = Math.floor(driveRoadLength * obstacleDensity);
+    var rockLabels = ['tech debt', 'edge case', 'null check', '// TODO', 'flaky test'];
+    var lastObstacleX = -Infinity;
+    var obstaclesPlaced = 0;
+    var obstacleAttempts = 0;
+    var obstacleAttemptCap = Math.max(1, obstacleTarget) * 8;
+    while (obstaclesPlaced < obstacleTarget && obstacleAttempts < obstacleAttemptCap) {
+        obstacleAttempts++;
+        var owx = safeStart + Math.random() * (safeEnd - safeStart);
+        if (owx - lastObstacleX < minSpacing) continue;
+        var oSegIdx = Math.floor(owx / segmentWidth);
+        if (oSegIdx < 0 || oSegIdx >= driveRoadSegments.length) continue;
+        driveObstacles.push({
+            type: 'rock',
+            x: owx,
+            y: driveRoadSegments[oSegIdx].y,
+            size: DRIVE_ROCK_SIZE,
+            label: rockLabels[Math.floor(Math.random() * rockLabels.length)]
+        });
+        lastObstacleX = owx;
+        obstaclesPlaced++;
+    }
+
+    var pickupTarget = Math.floor(driveRoadLength * DRIVE_PICKUP_DENSITY);
+    var pickupLabels = ['LGTM', '+1', 'approved', 'ship it!', 'CI passed'];
+    var lastPickupX = -Infinity;
+    var pickupsPlaced = 0;
+    var pickupAttempts = 0;
+    var pickupAttemptCap = Math.max(1, pickupTarget) * 8;
+    while (pickupsPlaced < pickupTarget && pickupAttempts < pickupAttemptCap) {
+        pickupAttempts++;
+        var pwx = safeStart + Math.random() * (safeEnd - safeStart);
+        if (pwx - lastPickupX < minSpacing) continue;
+        var pSegIdx = Math.floor(pwx / segmentWidth);
+        if (pSegIdx < 0 || pSegIdx >= driveRoadSegments.length) continue;
+        drivePickups.push({
+            x: pwx,
+            y: driveRoadSegments[pSegIdx].y - (30 + Math.random() * 20),
+            size: DRIVE_PICKUP_SIZE,
+            label: pickupLabels[Math.floor(Math.random() * pickupLabels.length)],
+            collected: false
+        });
+        lastPickupX = pwx;
+        pickupsPlaced++;
+    }
+}
+
 // Red/orange debris burst for a destroyed building or battery (AC#2). Emits a
 // fan of particles with downward gravity so they settle like rubble.
 function spawnMissileDestructionBurst(x, y) {
@@ -1135,6 +1239,7 @@ function update(dt) {
                 stopThrustSound();
                 ship.fuel = FUEL_MAX;
                 driveTransitionTimer = 0;
+                setupDriveWorld();
                 gameState = STATES.DRIVE_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position

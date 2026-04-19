@@ -2046,6 +2046,186 @@ function drawBreakoutWorld() {
     }
 }
 
+// Draw the side-scrolling drive world: terrain strip (filled polygon + surface
+// line), rocks, pickups, and the destination pad at world-X = driveRoadLength.
+// Translates world coordinates to screen via `- driveScrollX`. Shared by the
+// transition and (future) playing renderers so the world reads identically
+// across those states.
+function drawDriveWorld() {
+    if (driveRoadSegments.length === 0) {
+        return;
+    }
+    var scrollX = driveScrollX;
+    var segW = 20;
+    var firstIdx = Math.max(0, Math.floor(scrollX / segW) - 1);
+    var lastIdx = Math.min(
+        driveRoadSegments.length - 1,
+        Math.ceil((scrollX + canvas.width) / segW) + 1
+    );
+
+    ctx.save();
+    ctx.fillStyle = '#444';
+    ctx.beginPath();
+    var sFirst = driveRoadSegments[firstIdx];
+    ctx.moveTo(sFirst.x - scrollX, canvas.height);
+    ctx.lineTo(sFirst.x - scrollX, sFirst.y);
+    for (var fi = firstIdx; fi <= lastIdx; fi++) {
+        var fs = driveRoadSegments[fi];
+        ctx.lineTo(fs.x - scrollX, fs.y);
+        ctx.lineTo(fs.x - scrollX + segW, fs.y);
+    }
+    var sLast = driveRoadSegments[lastIdx];
+    ctx.lineTo(sLast.x - scrollX + segW, canvas.height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#777';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    var surfFirst = driveRoadSegments[firstIdx];
+    ctx.moveTo(surfFirst.x - scrollX, surfFirst.y);
+    for (var gi = firstIdx; gi <= lastIdx; gi++) {
+        var gs = driveRoadSegments[gi];
+        ctx.lineTo(gs.x - scrollX, gs.y);
+        ctx.lineTo(gs.x - scrollX + segW, gs.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // Rocks
+    for (var ri = 0; ri < driveObstacles.length; ri++) {
+        var rock = driveObstacles[ri];
+        var rx = rock.x - scrollX;
+        if (rx < -60 || rx > canvas.width + 60) continue;
+        ctx.save();
+        ctx.fillStyle = '#996633';
+        ctx.beginPath();
+        ctx.moveTo(rx - rock.size / 2, rock.y);
+        ctx.lineTo(rx + rock.size / 2, rock.y);
+        ctx.lineTo(rx, rock.y - rock.size);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Pickups — simple rotating diamonds
+    var spin = (typeof driveTransitionTimer === 'number' ? driveTransitionTimer : 0) * 2;
+    for (var pi = 0; pi < drivePickups.length; pi++) {
+        var pu = drivePickups[pi];
+        if (pu.collected) continue;
+        var px = pu.x - scrollX;
+        if (px < -40 || px > canvas.width + 40) continue;
+        ctx.save();
+        ctx.translate(px, pu.y);
+        ctx.rotate(spin);
+        ctx.fillStyle = '#4CAF50';
+        ctx.shadowColor = '#4CAF50';
+        ctx.shadowBlur = 6;
+        ctx.fillRect(-pu.size / 2, -pu.size / 2, pu.size, pu.size);
+        ctx.restore();
+    }
+
+    // Destination pad at end of road
+    var destX = driveRoadLength - scrollX;
+    if (destX >= -120 && destX <= canvas.width + 120) {
+        var destSegIdx = driveRoadSegments.length - 1;
+        var destY = driveRoadSegments[destSegIdx].y;
+        var padWidth = 80;
+        var padColor = PR_TYPE_COLORS.feature;
+
+        ctx.save();
+        ctx.shadowColor = padColor;
+        ctx.shadowBlur = 16;
+        ctx.strokeStyle = padColor;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(destX, destY);
+        ctx.lineTo(destX + padWidth, destY);
+        ctx.stroke();
+        ctx.restore();
+
+        var bannerText;
+        if (typeof landedPRTitle === 'string' && landedPRTitle.length > 0) {
+            bannerText = landedPRTitle.length > 40
+                ? landedPRTitle.slice(0, 37) + '...'
+                : landedPRTitle;
+        } else {
+            bannerText = 'FEATURE COMPLETE';
+        }
+        ctx.save();
+        ctx.fillStyle = '#FFEB3B';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(bannerText, destX + padWidth / 2, destY - 18);
+        ctx.restore();
+    }
+}
+
+// DRIVE_TRANSITION — intro beat between landing and driving. Camera sits at
+// scroll=0 so the buggy renders at canvas.width * 0.25 (giving forward
+// visibility per AC). Two wheels scale from 0 to DRIVE_WHEEL_RADIUS with a
+// cubic ease-out over the first 0.5s, then stay at full size. A flashing
+// "DEPLOY FEATURE!" banner runs throughout the transition window.
+function renderDriveTransition() {
+    drawDriveWorld();
+
+    var buggyScreenX = canvas.width * 0.25;
+    var buggyScreenY = driveBuggyY;
+
+    drawShip(buggyScreenX, buggyScreenY, 0, SHIP_SIZE, false, null, false);
+
+    var wheelT = Math.min(driveTransitionTimer / 0.5, 1);
+    var eased = 1 - Math.pow(1 - wheelT, 3);
+    var wheelRadius = DRIVE_WHEEL_RADIUS * eased;
+    if (wheelRadius > 0.5) {
+        var wheelLX = buggyScreenX - DRIVE_WHEEL_OFFSET_X;
+        var wheelRX = buggyScreenX + DRIVE_WHEEL_OFFSET_X;
+        var wheelY = buggyScreenY + DRIVE_WHEEL_OFFSET_Y;
+
+        ctx.save();
+        ctx.fillStyle = '#888';
+        ctx.beginPath();
+        ctx.arc(wheelLX, wheelY, wheelRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(wheelRX, wheelY, wheelRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        var spokeAng = driveWheelRotation;
+        var cx = Math.cos(spokeAng) * wheelRadius;
+        var sy = Math.sin(spokeAng) * wheelRadius;
+        ctx.beginPath();
+        ctx.moveTo(wheelLX - cx, wheelY - sy);
+        ctx.lineTo(wheelLX + cx, wheelY + sy);
+        ctx.moveTo(wheelRX - cx, wheelY - sy);
+        ctx.lineTo(wheelRX + cx, wheelY + sy);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    var flashOn = Math.floor(driveTransitionTimer * 6) % 2 === 0;
+    if (flashOn) {
+        ctx.save();
+        ctx.fillStyle = '#F37121';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('DEPLOY FEATURE!', canvas.width / 2, 40);
+        ctx.restore();
+    }
+}
+
 function renderBreakoutTransition() {
     drawBreakoutWorld();
     drawBreakoutHUD();
@@ -2332,6 +2512,9 @@ function render() {
             break;
         case STATES.BREAKOUT_RETURN:
             renderBreakoutReturn();
+            break;
+        case STATES.DRIVE_TRANSITION:
+            renderDriveTransition();
             break;
         case STATES.CRASHED:
             renderCrashed();
