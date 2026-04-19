@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mage Lander — Game Guide</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a0a;
+    color: #ccc;
+    font-family: 'Courier New', monospace;
+    padding: 40px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+h1 {
+    color: #f26322;
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+h1 span { color: #888; font-size: 16px; font-weight: normal; }
+h2 {
+    color: #4FC3F7;
+    font-size: 20px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+}
+h3 {
+    color: #FFD700;
+    font-size: 16px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+p { margin-bottom: 12px; }
+a { color: #4FC3F7; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 20px;
+    font-size: 13px;
+}
+th {
+    background: #1a1a1a;
+    color: #f26322;
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 2px solid #333;
+}
+td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #222;
+}
+.pad-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+ul { margin: 8px 0 16px 20px; }
+li { margin-bottom: 4px; }
+.mini-game {
+    background: #111;
+    border-left: 3px solid #333;
+    padding: 12px 16px;
+    margin: 12px 0;
+}
+.mini-game h3 { margin-top: 0; }
+.mini-game .tagline { color: #aaa; font-style: italic; font-size: 13px; }
+code {
+    background: #1a1a1a;
+    color: #4CAF50;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+pre {
+    background: #111;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 8px 0 16px;
+    font-size: 13px;
+    color: #4CAF50;
+}
+.controls-table td:first-child {
+    color: #f26322;
+    font-weight: bold;
+    white-space: nowrap;
+}
+.back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #f26322;
+    font-size: 14px;
+}
+.credits { color: #666; font-size: 12px; margin-top: 40px; border-top: 1px solid #222; padding-top: 16px; }
+.credits a { color: #888; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-link">&larr; Back to Game</a>
+
+<h1>MAGE LANDER <span>Game Guide</span></h1>
+<p class="subtitle">A fan-made arcade game compilation by <a href="https://github.com/ProxiBlue">ProxiBlue</a>, built around real GitHub repository data from <a href="https://github.com/mage-os">Mage-OS</a>.</p>
+
+<h2>How Repository Data Drives Gameplay</h2>
+<p>The game fetches real pull request and commit data from a GitHub repository. This data shapes every aspect of the gameplay experience.</p>
+
+<h3>Landing Pads = Pull Requests</h3>
+<p>Each landing pad on the terrain represents a real merged pull request. The PR's classification determines the pad's colour, width, point value, and which mini-game triggers on landing.</p>
+
+<table>
+<tr><th>PR Type</th><th>Pad</th><th>Points</th><th>Width</th><th>Mini-Game</th></tr>
+<tr><td><span class="pad-color" style="background:#DC143C"></span>Security</td><td>Red</td><td>200 (3x)</td><td>Narrow</td><td>Missile Command / Invaders</td></tr>
+<tr><td><span class="pad-color" style="background:#FFB300"></span>Bug Fix</td><td>Yellow</td><td>100 (2x)</td><td>Medium</td><td>Bug Bombing Run</td></tr>
+<tr><td><span class="pad-color" style="background:#00BCD4"></span>Feature</td><td>Cyan</td><td>50 (1x)</td><td>Wide</td><td>Feature Drive</td></tr>
+<tr><td><span class="pad-color" style="background:#AB47BC"></span>Chore</td><td>Purple</td><td>75 (1x)</td><td>Medium</td><td>Code Breaker</td></tr>
+<tr><td><span class="pad-color" style="background:#9E9E9E"></span>Other</td><td>Grey</td><td>100 (1x)</td><td>Medium</td><td>Tech Debt Blaster</td></tr>
+</table>
+
+<ul>
+<li><strong>Harder pads (narrower) = more points</strong> &mdash; security fixes are the riskiest changes</li>
+<li><strong>5 PRs per level</strong> &mdash; each level pulls the next 5 merged PRs chronologically</li>
+<li><strong>PR metadata on pads</strong> &mdash; each pad shows PR number, author, title, and merge date</li>
+</ul>
+
+<h3>PR Classification</h3>
+<p>PRs are classified by scanning labels, titles, and descriptions:</p>
+<ul>
+<li><strong>Security:</strong> CVE, vulnerability, RCE, attacker, merge conflict</li>
+<li><strong>Bug Fix:</strong> fix, hotfix, bug, patch</li>
+<li><strong>Feature:</strong> feat, add, migrate, integrate, implement, support</li>
+<li><strong>Chore:</strong> chore, cleanup, readme, bump, upgrade</li>
+<li><strong>Other:</strong> refactor, rebase, upstream, release</li>
+</ul>
+
+<h3>Terrain &amp; Difficulty</h3>
+<ul>
+<li>Commit frequency determines terrain complexity</li>
+<li>Date ranges in the HUD show which period of the repo you're flying over</li>
+<li>Level progression moves chronologically through the repo's merge history</li>
+<li><strong>Gravity:</strong> 1.6 m/s&sup2; at start, +0.2/level, caps at 5.0</li>
+<li><strong>Wind:</strong> 0 at start, +0.1/level, caps at 2.0 m/s&sup2;</li>
+</ul>
+
+<h2>Mini-Games</h2>
+
+<div class="mini-game" style="border-color:#DC143C">
+<h3 style="color:#DC143C">Missile Command (Security Pads)</h3>
+<p class="tagline">"Incoming threats detected &mdash; defend the codebase"</p>
+<p>Incoming missiles labeled with conflict markers rain down toward buildings labeled with filenames from the PR. Fire interceptor missiles from defense batteries to protect your codebase.</p>
+</div>
+
+<div class="mini-game" style="border-color:#DC143C">
+<h3 style="color:#DC143C">Space Invaders (Security Pads, alternating)</h3>
+<p class="tagline">"Defend against security threats"</p>
+<p>Alien waves scroll in from the right. Shoot them for bonus points. Ship uses thruster-based physics with retro thrusters for braking. Alien contact ends the mini-game.</p>
+</div>
+
+<div class="mini-game" style="border-color:#FFB300">
+<h3 style="color:#FFB300">Bug Bombing Run (Bug Fix Pads)</h3>
+<p class="tagline">"Squash the bugs &mdash; every fix counts"</p>
+<p>Fly over terrain and drop bombs on scuttling bugs. Normal lander physics apply. Kill bugs to earn points and restore fuel with extension tank overflow.</p>
+</div>
+
+<div class="mini-game" style="border-color:#00BCD4">
+<h3 style="color:#00BCD4">Feature Drive (Feature Pads)</h3>
+<p class="tagline">"Ship the feature &mdash; deploy to production"</p>
+<p>The M ship sprouts wheels and drives across side-scrolling terrain to a destination pad. Jump over gaps, dodge rocks, collect review approvals.</p>
+</div>
+
+<div class="mini-game" style="border-color:#9E9E9E">
+<h3 style="color:#9E9E9E">Tech Debt Blaster (Other Pads)</h3>
+<p class="tagline">"Refactor: systematically clear the debris"</p>
+<p>Classic Asteroids gameplay. Large asteroids labeled with tech debt split into smaller, faster pieces. Some contain hidden aliens that escape and shoot at you. ProxiBlue power-up asteroids grant a shield.</p>
+</div>
+
+<div class="mini-game" style="border-color:#AB47BC">
+<h3 style="color:#AB47BC">Code Breaker (Chore Pads)</h3>
+<p class="tagline">"Chore: methodically clear the backlog"</p>
+<p>Breakout/Arkanoid gameplay. The M ship is the paddle, bouncing a ball into bricks labeled with code smells. Power-ups: wide paddle, multi-ball, fireball, shooting, extra ball.</p>
+</div>
+
+<h2>Controls</h2>
+<table class="controls-table">
+<tr><td>Up / W</td><td>Thrust</td></tr>
+<tr><td>Left / A</td><td>Rotate left</td></tr>
+<tr><td>Right / D</td><td>Rotate right</td></tr>
+<tr><td>Down / S</td><td>Retro thrust (mini-games)</td></tr>
+<tr><td>Space</td><td>Start / Continue / Shoot / Launch</td></tr>
+<tr><td>R</td><td>Restart level</td></tr>
+</table>
+
+<h2>Scoring</h2>
+<ul>
+<li><strong>Landing precision</strong> &mdash; slower approach + more fuel = higher score</li>
+<li><strong>Pad multiplier</strong> &mdash; security (3x), bugfix (2x), feature/chore/other (1x)</li>
+<li><strong>Mini-game bonuses</strong> &mdash; points earned during mini-games add to total</li>
+<li><strong>Fuel bonus</strong> &mdash; remaining fuel percentage adds to landing score</li>
+</ul>
+
+<h2>Setup Your Own Repo</h2>
+<pre>
+# Fetch PR and commit data from any GitHub repository
+node fetch-github-data.js owner/repo
+
+# Classify PRs by type
+node classify-prs.js data/&lt;repo&gt;.json
+</pre>
+<p>Open <code>index.html</code> in a browser. Select a repository if multiple data files exist, then press Space to start.</p>
+
+<div class="credits">
+<p><strong>Game compilation:</strong> <a href="https://github.com/ProxiBlue">ProxiBlue</a></p>
+<p><strong>Built with:</strong> <a href="https://github.com/MiniCodeMonkey/chief">Chief</a> &mdash; autonomous PRD agent with adversarial evaluation</p>
+<p><strong>Ship logo:</strong> <a href="https://mage-os.org">Mage-OS</a> M logomark (fan use, not affiliated)</p>
+<p><strong>Inspired by:</strong> Lunar Lander, Asteroids, Missile Command, Space Invaders, Breakout, Moon Buggy (Atari)</p>
+</div>
+
+</body>
+</html>

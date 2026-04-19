@@ -105,10 +105,15 @@ function renderMenu() {
     ctx.fillText('Right / D  =  Rotate Right', cx, controlsY + 48);
     ctx.fillText('R  =  Restart', cx, controlsY + 72);
 
+    // Game guide link
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = '12px monospace';
+    ctx.fillText('Game Guide: guide.html', cx, controlsY + 94);
+
     // ProxiBlue branding — subtle, unobtrusive
     ctx.fillStyle = '#667';
     ctx.font = '12px monospace';
-    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, controlsY + 94);
+    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, controlsY + 112);
 
     // Fallback notice (when data has no commits or no PRs)
     if (repoFallbackNotice) {
@@ -737,11 +742,14 @@ function renderInvaderTransition() {
     // Draw ship at its current position (rotated sideways from liftoff)
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
 
-    // Status text
-    ctx.fillStyle = '#4FC3F7';
-    ctx.font = 'bold 24px sans-serif';
+    // Title card
+    ctx.fillStyle = '#DC143C';
+    ctx.font = 'bold 28px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('PREPARING BATTLEFIELD', canvas.width / 2, 60);
+    ctx.fillText('SECURITY ALERT', canvas.width / 2, 50);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '14px monospace';
+    ctx.fillText('Defend against security threats', canvas.width / 2, 75);
 }
 
 // --- Alien Sprite Drawing ---
@@ -1096,9 +1104,12 @@ function renderBugfixTransition() {
     drawBugfixHUD();
 
     ctx.fillStyle = '#FFB300';
-    ctx.font = 'bold 24px sans-serif';
+    ctx.font = 'bold 28px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('BUGS DETECTED — ELIMINATE THEM', canvas.width / 2, 40);
+    ctx.fillText('BUG BOMBING RUN', canvas.width / 2, 50);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '14px monospace';
+    ctx.fillText('Squash the bugs \u2014 every fix counts', canvas.width / 2, 75);
 }
 
 function renderBugfixPlaying() {
@@ -1382,13 +1393,16 @@ function renderMissileTransition() {
     drawMissileWorld();
     // Ship is intentionally hidden — player will control batteries, not the ship.
 
-    // Flashing "INCOMING MERGE CONFLICTS!" banner (~3 Hz flash)
+    // Title card
     var flashOn = Math.floor(missileTransitionTimer * 6) % 2 === 0;
     if (flashOn) {
-        ctx.fillStyle = '#F44336';
+        ctx.fillStyle = '#DC143C';
         ctx.font = 'bold 28px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('INCOMING MERGE CONFLICTS!', canvas.width / 2, 60);
+        ctx.fillText('MERGE CONFLICT DEFENSE', canvas.width / 2, 50);
+        ctx.fillStyle = '#aaa';
+        ctx.font = '14px monospace';
+        ctx.fillText('Incoming threats detected \u2014 defend the codebase', canvas.width / 2, 75);
     }
 }
 
@@ -1606,10 +1620,13 @@ function renderTechdebtTransition() {
     // ~3 Hz flash matches renderMissileTransition's cadence for consistency.
     var flashOn = Math.floor(techdebtTransitionTimer * 6) % 2 === 0;
     if (flashOn) {
-        ctx.fillStyle = '#F37121';
+        ctx.fillStyle = '#9E9E9E';
         ctx.font = 'bold 28px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('TECH DEBT INCOMING...', canvas.width / 2, 60);
+        ctx.fillText('TECH DEBT BLASTER', canvas.width / 2, 50);
+        ctx.fillStyle = '#aaa';
+        ctx.font = '14px monospace';
+        ctx.fillText('Refactor: systematically clear the debris', canvas.width / 2, 75);
     }
 }
 
@@ -2504,11 +2521,14 @@ function renderDriveTransition() {
     var flashOn = Math.floor(driveTransitionTimer * 6) % 2 === 0;
     if (flashOn) {
         ctx.save();
-        ctx.fillStyle = '#F37121';
+        ctx.fillStyle = '#00BCD4';
         ctx.font = 'bold 28px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText('DEPLOY FEATURE!', canvas.width / 2, 40);
+        ctx.fillText('FEATURE DRIVE', canvas.width / 2, 15);
+        ctx.fillStyle = '#aaa';
+        ctx.font = '14px monospace';
+        ctx.fillText('Ship the feature \u2014 deploy to production', canvas.width / 2, 48);
         ctx.restore();
     }
 
@@ -2708,11 +2728,14 @@ function renderBreakoutTransition() {
     var flashOn = Math.floor(breakoutTransitionTimer * 6) % 2 === 0;
     if (flashOn) {
         ctx.save();
-        ctx.fillStyle = '#F37121';
+        ctx.fillStyle = '#AB47BC';
         ctx.font = 'bold 28px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText('CLEAR THE TECH DEBT!', canvas.width / 2, 20);
+        ctx.fillText('CODE BREAKER', canvas.width / 2, 15);
+        ctx.fillStyle = '#aaa';
+        ctx.font = '14px monospace';
+        ctx.fillText('Chore: methodically clear the backlog', canvas.width / 2, 48);
         ctx.restore();
     }
 }
