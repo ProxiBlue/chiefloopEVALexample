@@ -1559,6 +1559,28 @@ function renderTechdebtPlaying() {
     for (var i = 0; i < techdebtAsteroids.length; i++) {
         drawTechdebtAsteroid(techdebtAsteroids[i]);
     }
+
+    // Draw bullets as short bright orange line segments oriented along
+    // their travel direction. Matches the invader bullet colour (#F37121).
+    if (techdebtBullets.length > 0) {
+        ctx.save();
+        ctx.strokeStyle = BULLET_COLOR;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = BULLET_COLOR;
+        ctx.shadowBlur = 6;
+        for (var bi = 0; bi < techdebtBullets.length; bi++) {
+            var b = techdebtBullets[bi];
+            var mag = Math.sqrt(b.vx * b.vx + b.vy * b.vy) || 1;
+            var dx = (b.vx / mag) * BULLET_SIZE;
+            var dy = (b.vy / mag) * BULLET_SIZE;
+            ctx.beginPath();
+            ctx.moveTo(b.x - dx, b.y - dy);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
 }
 

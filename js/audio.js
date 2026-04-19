@@ -277,6 +277,25 @@ function playShootSound() {
     osc.stop(t + 0.1);
 }
 
+function playTechdebtShootSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+
+    // Short blip/pew — simple square oscillator, high frequency, fast decay.
+    // Distinct from the lander thrust rumble so bullets read as a separate event.
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1600, t);
+    osc.frequency.exponentialRampToValueAtTime(400, t + 0.06);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.10, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.09);
+}
+
 function playAlienDestroySound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

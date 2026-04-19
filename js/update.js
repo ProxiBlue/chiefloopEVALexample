@@ -222,6 +222,7 @@ function setupTechdebtWorld() {
     techdebtScore = 0;
     asteroidsDestroyed = 0;
     techdebtCompleteTimer = 0;
+    techdebtBulletCooldownTimer = 0;
     proxiblueShieldActive = false;
     proxiblueShieldTimer = 0;
 
@@ -1607,6 +1608,43 @@ function update(dt) {
         else if (ship.x >= canvas.width) ship.x -= canvas.width;
         if (ship.y < 0) ship.y += canvas.height;
         else if (ship.y >= canvas.height) ship.y -= canvas.height;
+
+        // --- Bullet firing (Space key) ---
+        // Cooldown gates rapid fire. Nose offset mirrors drawShip's nose
+        // geometry: at angle=0 the nose points up (-Y), so shift by
+        // (sin(angle), -cos(angle)) * SHIP_SIZE * 0.6.
+        techdebtBulletCooldownTimer -= dt;
+        if (techdebtBulletCooldownTimer < 0) techdebtBulletCooldownTimer = 0;
+        var wantsFire = !!(keys[' '] || keys['Space']);
+        if (wantsFire && techdebtBulletCooldownTimer <= 0) {
+            var noseDx = Math.sin(ship.angle);
+            var noseDy = -Math.cos(ship.angle);
+            techdebtBullets.push({
+                x: ship.x + noseDx * SHIP_SIZE * 0.6,
+                y: ship.y + noseDy * SHIP_SIZE * 0.6,
+                vx: noseDx * TECHDEBT_BULLET_SPEED,
+                vy: noseDy * TECHDEBT_BULLET_SPEED,
+                age: 0
+            });
+            techdebtBulletCooldownTimer = TECHDEBT_BULLET_COOLDOWN;
+            playTechdebtShootSound();
+        }
+
+        // --- Update bullets: advance, expire, wrap ---
+        for (var bi = techdebtBullets.length - 1; bi >= 0; bi--) {
+            var b = techdebtBullets[bi];
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+            b.age += dt;
+            if (b.age >= TECHDEBT_BULLET_LIFETIME) {
+                techdebtBullets.splice(bi, 1);
+                continue;
+            }
+            if (b.x < 0) b.x += canvas.width;
+            else if (b.x >= canvas.width) b.x -= canvas.width;
+            if (b.y < 0) b.y += canvas.height;
+            else if (b.y >= canvas.height) b.y -= canvas.height;
+        }
     }
 
     if (gameState === STATES.PLAYING) {

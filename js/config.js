@@ -432,6 +432,7 @@ var asteroidsDestroyed = 0;               // count of asteroids destroyed this r
 var asteroidsTotal = 0;                   // total asteroids to destroy this round
 var techdebtCompleteTimer = 0;            // elapsed time in TECHDEBT_COMPLETE state
 var techdebtTransitionTimer = 0;          // elapsed time in TECHDEBT_TRANSITION state
+var techdebtBulletCooldownTimer = 0;      // seconds remaining before the ship can fire its next bullet
 
 // --- ProxiBlue Shield State ---
 var proxiblueShieldActive = false;        // true while shield power-up is protecting ship
