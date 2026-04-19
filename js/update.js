@@ -706,6 +706,10 @@ function update(dt) {
             // Spawn alien wave before entering playing state
             spawnAlienWave();
             stopThrustSound();
+            ship.invaderVX = 0;
+            ship.invaderVY = 0;
+            ship.thrusting = false;
+            ship.retroThrusting = false;
             gameState = STATES.INVADER_PLAYING;
         }
     }
@@ -827,6 +831,9 @@ function update(dt) {
                 ship.y + shipHalfSize > ay - halfSize && ship.y - shipHalfSize < ay + halfSize) {
                 spawnExplosion(ship.x, ship.y);
                 playExplosionSound();
+                ship.thrusting = false;
+                ship.retroThrusting = false;
+                stopThrustSound();
                 invaderCompleteTimer = 0;
                 gameState = STATES.INVADER_COMPLETE;
                 break;
@@ -839,6 +846,9 @@ function update(dt) {
         // --- End condition: all aliens gone (destroyed or scrolled off) ---
         if (gameState === STATES.INVADER_PLAYING && aliensSpawned && aliens.length === 0) {
             // Wave complete — transition to results screen
+            ship.thrusting = false;
+            ship.retroThrusting = false;
+            stopThrustSound();
             invaderCompleteTimer = 0;
             gameState = STATES.INVADER_COMPLETE;
         }
