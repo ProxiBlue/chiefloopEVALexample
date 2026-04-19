@@ -496,7 +496,7 @@ function update(dt) {
                 }
             }
             // Atomically set scroll state as a frozen object (ship.x preserved for smooth transition)
-            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, missilePadScroll, techdebtPadScroll, ship.x);
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, missilePadScroll, ship.x);
             gameState = STATES.SCENE_SCROLL;
         }
     }
@@ -543,7 +543,10 @@ function update(dt) {
             var wasInvaderScroll = sceneScrollState.isInvaderScroll;
             var wasBugfixScroll = sceneScrollState.isBugfixScroll;
             var wasMissileScroll = sceneScrollState.isMissileScroll;
-            var wasTechdebtScroll = sceneScrollState.isTechdebtScroll;
+            // Detect `other` pad directly from the just-landed pad's prType (set in
+            // collision.js from landedPad.prType when the ship touched down) rather
+            // than a pre-computed routing flag — acceptance criterion for US-003.
+            var isOtherPad = (landedPRType === 'other');
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
                 terrain.push({ x: newT[i].x, y: newT[i].y });
@@ -601,7 +604,7 @@ function update(dt) {
                 missileTransitionTimer = 0;
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
-            } else if (wasTechdebtScroll) {
+            } else if (isOtherPad) {
                 // `other` pad: enter tech debt blaster transition
                 ship.x = canvas.width / 2;
                 ship.y = canvas.height / 2;
@@ -641,7 +644,6 @@ function update(dt) {
                 isInvaderScroll: sceneScrollState.isInvaderScroll,
                 isBugfixScroll: sceneScrollState.isBugfixScroll,
                 isMissileScroll: sceneScrollState.isMissileScroll,
-                isTechdebtScroll: sceneScrollState.isTechdebtScroll,
                 shipStartX: sceneScrollState.shipStartX
             });
         }
