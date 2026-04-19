@@ -10,6 +10,8 @@ I'm enhancing Chief with an **adversarial evaluation system** in my [fork](https
 
 This game is the proving ground — a complex, multi-system project designed to stress-test the adversarial evaluation loop and surface implementation bugs. Every mini-game, every feature, every PR-data integration was built by the Chief agent loop and validated by adversarial reviewers. The [chiefloopEVALexample](https://github.com/ProxiBlue/chiefloopEVALexample) repository contains side-by-side output comparing standard (no eval) vs adversarial (with eval) builds of the same game.
 
+The mini-games — Lunar Lander, Asteroids, Missile Command, Space Invaders, Breakout, Moon Buggy — are all classics from the Atari 2600, my first ever game console. That console is part of what got me interested in coding in the first place. Building these games with AI felt like coming full circle.
+
 ## How Repository Data Drives Gameplay
 
 The game uses real pull request and commit data from a GitHub repository, pre-fetched and cached to a local JSON data file (not fetched in real-time). This data shapes every aspect of the gameplay experience:
