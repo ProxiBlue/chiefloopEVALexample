@@ -420,6 +420,7 @@ function update(dt) {
 
     // Update explosion particles during crash
     if (gameState === STATES.CRASHED) {
+        stopThrustSound();
         updateExplosion(dt);
     }
 
