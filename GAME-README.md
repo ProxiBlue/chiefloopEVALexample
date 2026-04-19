@@ -2,9 +2,17 @@
 
 A fan-made arcade game compilation by [ProxiBlue](https://github.com/ProxiBlue), built around real GitHub repository data from [Mage-OS](https://github.com/mage-os).
 
+## Why This Game Exists
+
+This game was built as a real-world test case for [Chief](https://github.com/MiniCodeMonkey/chief) — an autonomous PRD agent that runs Claude Code in a loop to build software from product requirements.
+
+I'm enhancing Chief with an **adversarial evaluation system**. In the standard Chief loop, a single agent builds code and checks its own work. My fork adds independent adversarial evaluator agents and a dedicated security evaluator (OWASP Top 10) that review every completed story before it's allowed to pass. If the evaluators find missing features, broken acceptance criteria, or security issues, the story is failed and retried automatically.
+
+This game is the proving ground — a complex, multi-system project designed to stress-test the adversarial evaluation loop and surface implementation bugs. Every mini-game, every feature, every PR-data integration was built by the Chief agent loop and validated by adversarial reviewers. The [chiefloopEVALexample](https://github.com/ProxiBlue/chiefloopEVALexample) repository contains side-by-side output comparing standard (no eval) vs adversarial (with eval) builds of the same game.
+
 ## How Repository Data Drives Gameplay
 
-The game fetches real pull request and commit data from a GitHub repository. This data shapes every aspect of the gameplay experience:
+The game uses real pull request and commit data from a GitHub repository, pre-fetched and cached to a local JSON data file (not fetched in real-time). This data shapes every aspect of the gameplay experience:
 
 ### Landing Pads = Pull Requests
 
