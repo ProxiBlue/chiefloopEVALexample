@@ -2325,6 +2325,11 @@ function update(dt) {
         driveTransitionTimer += dt;
         if (driveTransitionTimer >= DRIVE_TRANSITION_DURATION) {
             gameState = STATES.DRIVE_PLAYING;
+            // US-014 AC#1: kick the continuous engine hum the moment driving
+            // starts. updateDriveEngineSound ramps pitch with speed each tick.
+            if (typeof startDriveEngineSound === 'function') {
+                startDriveEngineSound();
+            }
         }
     }
 
@@ -2433,6 +2438,10 @@ function update(dt) {
             driveGrounded = false;
             ship.fuel -= DRIVE_JUMP_FUEL_COST;
             if (ship.fuel < 0) ship.fuel = 0;
+            // US-014 AC#2: jump whoosh.
+            if (typeof playDriveJumpSound === 'function') {
+                playDriveJumpSound();
+            }
         }
         drivePrevJumpKey = jumpKey;
 
@@ -2457,6 +2466,12 @@ function update(dt) {
         if (overGap && !driveFalling && driveBuggyY >= groundY) {
             driveFalling = true;
             driveGrounded = false;
+            // US-014 AC#7: descending tone as the buggy commits to the fall.
+            // Fired once at commit (not per frame) — the oscillator sweep
+            // spans the typical canvas-exit window.
+            if (typeof playDriveGapFallSound === 'function') {
+                playDriveGapFallSound();
+            }
         }
 
         if (driveFalling) {
@@ -2472,6 +2487,10 @@ function update(dt) {
                 driveBuggyY = groundY;
                 driveBuggyVY = 0;
                 driveGrounded = true;
+                // US-014 AC#3: soft thud on landing after a jump.
+                if (typeof playDriveLandingSound === 'function') {
+                    playDriveLandingSound();
+                }
             }
         }
 
@@ -2524,6 +2543,11 @@ function update(dt) {
         // Starfield parallax offset — accumulates at 10% of the scroll rate so
         // stars drift leftward much slower than terrain, selling depth.
         driveStarParallaxOffset += driveSpeed * 0.1 * dt;
+
+        // US-014 AC#1: engine hum pitch scales with speed each tick.
+        if (typeof updateDriveEngineSound === 'function') {
+            updateDriveEngineSound(driveSpeed);
+        }
 
         // US-008: Rock collision. Only checks when grounded — airborne buggy
         // clears rocks. On hit: spawn spark burst + screen shake + play clang,
@@ -2614,6 +2638,11 @@ function update(dt) {
             spawnExplosion(buggyScreenX, canvas.height - 10);
             startScreenShake();
             stopThrustSound();
+            // US-014 AC#1: kill the continuous engine hum on crash so it
+            // doesn't bleed into the CRASHED/GAMEOVER screens.
+            if (typeof stopDriveEngineSound === 'function') {
+                stopDriveEngineSound();
+            }
             playExplosionSound();
             landingResult = 'Fell into a gap';
             gameState = STATES.CRASHED;
@@ -2639,6 +2668,11 @@ function update(dt) {
             driveCompleteTotalBonus = driveTotalBonus;
             driveCompleteTimer = 0;
             stopThrustSound();
+            // US-014 AC#1: stop the engine hum on arrival — the buggy is
+            // coasting to rest on the destination pad.
+            if (typeof stopDriveEngineSound === 'function') {
+                stopDriveEngineSound();
+            }
             spawnCelebration(buggyScreenX, driveBuggyY - SHIP_SIZE * 0.3);
             if (typeof playDriveCompleteSound === 'function') {
                 playDriveCompleteSound();

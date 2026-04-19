@@ -766,28 +766,25 @@ function playDrivePickupSound() {
     });
 }
 
-// Feature Drive US-010: Speed-boost whoosh — short noise burst pushed
-// through a low-pass filter sweeping from high to low. Subtle (lower gain
-// than rock-hit / pickup) so repeated triggers don't dominate the mix.
+// Feature Drive US-010 + US-014 AC#6: Speed-boost whoosh — rising sine
+// oscillator frequency sweep 300 → 600 Hz over 0.2s per the US-014 AC
+// wording. Subtle gain (0.12) so repeated triggers don't dominate the mix.
 function playDriveBoostSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;
-    var dur = 0.25;
-    var noise = ctx.createBufferSource();
-    noise.buffer = createNoiseBuffer(ctx, dur);
-    var lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.setValueAtTime(1200, t);
-    lp.frequency.exponentialRampToValueAtTime(300, t + dur);
+    var dur = 0.2;
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, t);
+    osc.frequency.exponentialRampToValueAtTime(600, t + dur);
     var gain = ctx.createGain();
     gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(0.12, t + 0.04);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    noise.connect(lp);
-    lp.connect(gain);
+    osc.connect(gain);
     gain.connect(ctx.destination);
-    noise.start(t);
-    noise.stop(t + dur);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
 }
 
 // Feature Drive US-011: Destination-arrival victory jingle. Variation on the
@@ -810,6 +807,175 @@ function playDriveCompleteSound() {
         osc.start(t + i * 0.12);
         osc.stop(t + i * 0.12 + 0.6);
     });
+}
+
+// --- Feature Drive US-014 engine hum ---
+// Continuous low rumble played throughout DRIVE_PLAYING. Reuses the
+// layered-thrust approach (brown-noise body + sub-bass oscillator) but at
+// lower volume and higher pitch than startThrustSound so the engine reads
+// as "buggy wheels/motor" rather than rocket thrust. Pitch varies with
+// driveSpeed via updateDriveEngineSound().
+var driveEngineRumbleSource = null;
+var driveEngineRumbleGain = null;
+var driveEngineOsc = null;
+var driveEngineOscGain = null;
+var isDriveEngineSoundPlaying = false;
+
+function startDriveEngineSound() {
+    if (isDriveEngineSoundPlaying) return;
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    isDriveEngineSoundPlaying = true;
+
+    // Rumble body — brown noise through a low-pass so it sits under the mix.
+    var brownBuffer = createBrownNoiseBuffer(ctx, 2);
+    driveEngineRumbleSource = ctx.createBufferSource();
+    driveEngineRumbleSource.buffer = brownBuffer;
+    driveEngineRumbleSource.loop = true;
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(320, t);
+    driveEngineRumbleGain = ctx.createGain();
+    driveEngineRumbleGain.gain.setValueAtTime(0, t);
+    driveEngineRumbleGain.gain.linearRampToValueAtTime(0.08, t + 0.1);
+    driveEngineRumbleSource.connect(lp);
+    lp.connect(driveEngineRumbleGain);
+    driveEngineRumbleGain.connect(ctx.destination);
+    driveEngineRumbleSource.start();
+
+    // Motor tone — sub-bass sine oscillator. Higher base pitch (80Hz) than
+    // startThrustSound's main mode (42Hz) per the AC "higher pitch".
+    driveEngineOsc = ctx.createOscillator();
+    driveEngineOsc.type = 'sine';
+    driveEngineOsc.frequency.setValueAtTime(80, t);
+    driveEngineOscGain = ctx.createGain();
+    driveEngineOscGain.gain.setValueAtTime(0, t);
+    driveEngineOscGain.gain.linearRampToValueAtTime(0.04, t + 0.1);
+    driveEngineOsc.connect(driveEngineOscGain);
+    driveEngineOscGain.connect(ctx.destination);
+    driveEngineOsc.start();
+}
+
+function stopDriveEngineSound() {
+    if (!isDriveEngineSoundPlaying) return;
+    isDriveEngineSoundPlaying = false;
+    var ctx = audioCtx;
+    if (!ctx) return;
+    var t = ctx.currentTime;
+    var fadeOut = 0.08;
+    if (driveEngineRumbleGain) {
+        driveEngineRumbleGain.gain.cancelScheduledValues(t);
+        driveEngineRumbleGain.gain.setValueAtTime(driveEngineRumbleGain.gain.value, t);
+        driveEngineRumbleGain.gain.linearRampToValueAtTime(0, t + fadeOut);
+    }
+    if (driveEngineOscGain) {
+        driveEngineOscGain.gain.cancelScheduledValues(t);
+        driveEngineOscGain.gain.setValueAtTime(driveEngineOscGain.gain.value, t);
+        driveEngineOscGain.gain.linearRampToValueAtTime(0, t + fadeOut);
+    }
+    setTimeout(function () {
+        var sources = [driveEngineRumbleSource, driveEngineOsc];
+        for (var i = 0; i < sources.length; i++) {
+            if (sources[i]) { try { sources[i].stop(); } catch (e) {} }
+        }
+        driveEngineRumbleSource = null;
+        driveEngineRumbleGain = null;
+        driveEngineOsc = null;
+        driveEngineOscGain = null;
+    }, 120);
+}
+
+// Pitch scales with speed: at floor 40 px/s → ~72Hz, at max 250 px/s →
+// ~135Hz, at boosted 375 px/s → ~168Hz. Ramped smoothly so the pitch
+// change reads as a motor revving rather than a stepped shift.
+function updateDriveEngineSound(speed) {
+    if (!isDriveEngineSoundPlaying || !audioCtx) return;
+    var t = audioCtx.currentTime;
+    var targetFreq = 60 + speed * 0.3;
+    if (driveEngineOsc) {
+        driveEngineOsc.frequency.cancelScheduledValues(t);
+        driveEngineOsc.frequency.setValueAtTime(driveEngineOsc.frequency.value, t);
+        driveEngineOsc.frequency.linearRampToValueAtTime(targetFreq, t + 0.08);
+    }
+}
+
+// Feature Drive US-014 AC#2: Jump — short upward whoosh. Rising sine
+// oscillator 300 → 800 Hz over 0.15s. Fresh nodes per call so rapid jumps
+// (e.g. repeated presses near the ground) don't share state.
+function playDriveJumpSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var dur = 0.15;
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, t);
+    osc.frequency.exponentialRampToValueAtTime(800, t + dur);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+}
+
+// Feature Drive US-014 AC#3: Landing — soft thud when the buggy re-grounds
+// after a jump. Low-passed noise burst (0.1s) plus a short sub-bass sine
+// pop so the thud has body without reading as an explosion.
+function playDriveLandingSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var dur = 0.1;
+
+    var noise = ctx.createBufferSource();
+    noise.buffer = createNoiseBuffer(ctx, dur);
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(350, t);
+    lp.frequency.exponentialRampToValueAtTime(120, t + dur);
+    var noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.18, t);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    noise.connect(lp);
+    lp.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + dur + 0.02);
+
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + dur);
+    var oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(0.12, t);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+}
+
+// Feature Drive US-014 AC#7: Gap fall — descending tone as the buggy
+// plummets into a gap. Sine oscillator frequency sweep 600 → 60 Hz
+// (downward per AC) over 0.8s so the pitch drop spans the typical fall
+// window before the crash explosion lands.
+function playDriveGapFallSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var dur = 0.8;
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + dur);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.18, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
 }
 
 function playClickSound() {
