@@ -1821,6 +1821,63 @@ function renderTechdebtComplete() {
     ctx.fillText('Returning to mission...', cx, cy + 80);
 }
 
+// Shared Code Breaker world draw: bricks (gated by per-row revealAt so the
+// cascade naturally plays during BREAKOUT_TRANSITION and all rows are visible
+// during BREAKOUT_PLAYING), the flipped M paddle, and the stationary ball.
+// Terrain is intentionally not drawn — background is pure starfield (already
+// drawn by render() before this fn runs).
+function drawBreakoutWorld() {
+    // Bricks
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (var i = 0; i < breakoutBricks.length; i++) {
+        var b = breakoutBricks[i];
+        if (b.revealAt > breakoutTransitionTimer) continue;
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.font = '10px monospace';
+        ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h / 2);
+    }
+    ctx.restore();
+
+    // Paddle = M ship drawn at its current (animated) angle + position.
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+
+    // Ball — stationary, resting on top of the paddle (set by update handler).
+    ctx.save();
+    ctx.fillStyle = '#ECEFF1';
+    ctx.beginPath();
+    ctx.arc(breakoutBallX, breakoutBallY, BREAKOUT_BALL_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+function renderBreakoutTransition() {
+    drawBreakoutWorld();
+
+    // Flashing "CLEAR THE TECH DEBT!" banner (~3 Hz) — matches the cadence of
+    // renderTechdebtTransition / renderMissileTransition for consistency.
+    var flashOn = Math.floor(breakoutTransitionTimer * 6) % 2 === 0;
+    if (flashOn) {
+        ctx.save();
+        ctx.fillStyle = '#F37121';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('CLEAR THE TECH DEBT!', canvas.width / 2, 20);
+        ctx.restore();
+    }
+}
+
+function renderBreakoutPlaying() {
+    // Gameplay-specific visuals (power-ups, HUD, particles) are added by
+    // later stories; for now the shared world draw shows the static layout
+    // so the state has a valid visual presence after BREAKOUT_TRANSITION.
+    drawBreakoutWorld();
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -2005,6 +2062,12 @@ function render() {
             break;
         case STATES.TECHDEBT_COMPLETE:
             renderTechdebtComplete();
+            break;
+        case STATES.BREAKOUT_TRANSITION:
+            renderBreakoutTransition();
+            break;
+        case STATES.BREAKOUT_PLAYING:
+            renderBreakoutPlaying();
             break;
         case STATES.CRASHED:
             renderCrashed();

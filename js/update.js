@@ -344,6 +344,64 @@ function setupTechdebtWorld() {
     }
 }
 
+// Initialize Code Breaker world on entry to BREAKOUT_TRANSITION. Resets
+// per-round state (score, counters, arrays) and builds the brick grid sized
+// to `currentLevel`. Each brick carries its cascade-reveal timestamp so the
+// renderer can stagger row appearance without extra timers (US-004 AC).
+function setupBreakoutWorld() {
+    breakoutBricks = [];
+    breakoutPowerups = [];
+    breakoutParticles = [];
+    breakoutScore = 0;
+    breakoutBricksDestroyed = 0;
+    breakoutBricksTotal = 0;
+    breakoutCompleteTimer = 0;
+    breakoutExtraBalls = 0;
+    breakoutBallVX = 0;
+    breakoutBallVY = 0;
+
+    // Paddle sits BREAKOUT_PADDLE_Y_OFFSET px above canvas bottom, centered.
+    var paddleCenterX = canvas.width / 2;
+    breakoutPaddleX = paddleCenterX - BREAKOUT_PADDLE_WIDTH / 2;
+    breakoutBallX = paddleCenterX;
+    breakoutBallY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - BREAKOUT_PADDLE_HEIGHT - BREAKOUT_BALL_RADIUS;
+
+    var rows = Math.min(
+        BREAKOUT_ROWS_MAX,
+        Math.floor(BREAKOUT_ROWS_BASE + Math.floor(currentLevel / 2) * BREAKOUT_ROWS_PER_LEVEL)
+    );
+    var brickW = getBreakoutBrickWidth();
+    var gap = BREAKOUT_BRICK_GAP;
+    var hp1Edge = BREAKOUT_BRICK_HP_1_CHANCE;
+    var hp2Edge = BREAKOUT_BRICK_HP_1_CHANCE + BREAKOUT_BRICK_HP_2_CHANCE;
+
+    for (var row = 0; row < rows; row++) {
+        for (var col = 0; col < BREAKOUT_COLS; col++) {
+            var r = Math.random();
+            var hp = (r < hp1Edge) ? 1 : (r < hp2Edge) ? 2 : 3;
+            var color = hp === 3 ? BREAKOUT_BRICK_COLOR_HP3
+                      : hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
+                      : BREAKOUT_BRICK_COLOR_HP1;
+            var label = BREAKOUT_BRICK_LABEL_POOL[
+                Math.floor(Math.random() * BREAKOUT_BRICK_LABEL_POOL.length)
+            ];
+            breakoutBricks.push({
+                x: col * (brickW + gap) + gap / 2,
+                y: BREAKOUT_BRICK_TOP_OFFSET + row * (BREAKOUT_BRICK_HEIGHT + gap),
+                w: brickW,
+                h: BREAKOUT_BRICK_HEIGHT,
+                hp: hp,
+                maxHp: hp,
+                label: label,
+                color: color,
+                row: row,
+                revealAt: row * BREAKOUT_BRICK_CASCADE_DELAY
+            });
+        }
+    }
+    breakoutBricksTotal = breakoutBricks.length;
+}
+
 // Spawn a brief 4-8 particle burst at (x,y) using the given colour. Particles
 // drift outward in random directions and fade over ~0.25-0.6s. Used for the
 // hit feedback when bullets destroy or split tech-debt asteroids (US-008 AC#4).
@@ -830,6 +888,7 @@ function update(dt) {
                     gameState = STATES.TECHDEBT_TRANSITION;
                 } else {
                     breakoutTransitionTimer = 0;
+                    setupBreakoutWorld();
                     gameState = STATES.BREAKOUT_TRANSITION;
                 }
             } else {
@@ -1683,13 +1742,39 @@ function update(dt) {
         }
     }
 
-    // Code Breaker transition: brief intro window between landing and breakout
-    // gameplay. Counterpart to TECHDEBT_TRANSITION above. Full breakout world
-    // setup (bricks/ball/paddle) lives in later stories; this handler only
-    // ticks the timer and advances to BREAKOUT_PLAYING so the state machine
-    // progresses off BREAKOUT_TRANSITION.
+    // Code Breaker transition (US-004): M ship flips 180° over
+    // BREAKOUT_PADDLE_FLIP_DURATION with ease-in-out and slides down to
+    // BREAKOUT_PADDLE_Y_OFFSET from the canvas bottom (centered horizontally).
+    // Bricks cascade in row-by-row (handled by renderer via per-brick revealAt).
+    // The ball rides on top of the paddle, stationary, throughout the flip.
+    // When the timer reaches BREAKOUT_TRANSITION_DURATION we hand off to
+    // BREAKOUT_PLAYING. setupBreakoutWorld() ran at entry so arrays/counters
+    // are already reset.
     if (gameState === STATES.BREAKOUT_TRANSITION) {
         breakoutTransitionTimer += dt;
+
+        var flipT = Math.min(1, breakoutTransitionTimer / BREAKOUT_PADDLE_FLIP_DURATION);
+        // easeInOutCubic — smooth start and end of the flip
+        var eased = flipT < 0.5
+            ? 4 * flipT * flipT * flipT
+            : 1 - Math.pow(-2 * flipT + 2, 3) / 2;
+        ship.angle = eased * Math.PI;
+
+        // paddle top = canvas.height - Y_OFFSET; ship.y is the center of the
+        // M, so lift by halfH so the flipped M's top edge lands at Y_OFFSET.
+        var startY = canvas.height / 2;
+        var targetY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2;
+        ship.x = canvas.width / 2;
+        ship.y = startY + eased * (targetY - startY);
+
+        // Paddle hitbox (consumed by later stories) stays centered under the M.
+        breakoutPaddleX = ship.x - BREAKOUT_PADDLE_WIDTH / 2;
+        // Ball sits stationary on top of the paddle and rides along during flip.
+        breakoutBallX = ship.x;
+        breakoutBallY = ship.y - SHIP_SIZE / 2 - BREAKOUT_BALL_RADIUS;
+        breakoutBallVX = 0;
+        breakoutBallVY = 0;
+
         if (breakoutTransitionTimer >= BREAKOUT_TRANSITION_DURATION) {
             gameState = STATES.BREAKOUT_PLAYING;
         }

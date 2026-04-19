@@ -451,6 +451,8 @@ var proxiblueShieldFlashTimer = 0;        // seconds remaining on the blue shiel
 // --- Code Breaker Mini-Game Transition ---
 var BREAKOUT_TRANSITION_DURATION = 1.5;   // seconds — transition into mini-game
 var BREAKOUT_COMPLETE_DELAY = 2.0;        // seconds to show results before returning
+var BREAKOUT_PADDLE_FLIP_DURATION = 0.5;  // seconds — M ship flips 180° with ease-in-out (US-004)
+var BREAKOUT_BRICK_CASCADE_DELAY = 0.1;   // seconds between brick rows appearing top-to-bottom (US-004)
 
 // --- Code Breaker Brick Configuration ---
 var BREAKOUT_COLS = 10;                   // columns of bricks
@@ -469,6 +471,47 @@ function getBreakoutBrickWidth() {
 var BREAKOUT_BRICK_HP_1_CHANCE = 0.6;     // 60% of bricks are 1-hit
 var BREAKOUT_BRICK_HP_2_CHANCE = 0.3;     // 30% of bricks are 2-hit
 var BREAKOUT_BRICK_HP_3_CHANCE = 0.1;     // 10% of bricks are 3-hit; higher levels shift toward more multi-hit
+
+// --- Code Breaker Brick Colours (by current HP) ---
+var BREAKOUT_BRICK_COLOR_HP1 = '#4CAF50'; // green — 1 hit remaining
+var BREAKOUT_BRICK_COLOR_HP2 = '#FFB300'; // amber — 2 hits remaining
+var BREAKOUT_BRICK_COLOR_HP3 = '#DC143C'; // crimson — 3 hits remaining
+
+// --- Code Breaker Brick Label Pool (PRD section 8) ---
+// Randomly assigned per brick for flavour. Cosmetic only.
+var BREAKOUT_BRICK_LABEL_POOL = [
+    '// TODO',
+    '@deprecated',
+    'eval()',
+    '!important',
+    'var x = x || {}',
+    'any',
+    'console.log',
+    '.innerHTML',
+    'document.write',
+    'SELECT *',
+    'sleep(1000)',
+    'goto',
+    'magic number',
+    'god class',
+    'singleton',
+    'callback hell',
+    'monkey patch',
+    'stringly-typed',
+    'new Date()',
+    'parseInt(x)',
+    'regex',
+    '== null',
+    'catch (e) {}',
+    'throw "error"',
+    '__proto__',
+    'with (obj)',
+    'arguments',
+    'void 0',
+    'NaN === NaN',
+    'typeof null',
+    '0.1 + 0.2'
+];
 
 // --- Code Breaker Ball Configuration ---
 var BREAKOUT_BALL_RADIUS = 5;             // ball radius in px
