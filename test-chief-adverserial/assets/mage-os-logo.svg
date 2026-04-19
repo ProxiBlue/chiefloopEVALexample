@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 164 81" width="164" height="81" preserveAspectRatio="xMidYMid meet">
+  <!-- Official Mage-OS logomark (icon only, no wordmark) -->
+  <!-- Source: mage-os.org/about/media-kit press kit, logomark SVG asset -->
+  <!-- Two-tone orange: #F37121 (primary) and #FF9234 (lighter shading for 3D depth) -->
+  <!-- viewBox tight to content bounds (160x77) with 2px padding; drawn at natural 2:1 aspect -->
+  <path
+    d="M53.3902 61.6511L53.3979 30.8256L26.6953 46.2383V77.0639L53.3902 61.6511Z"
+    fill="#FF9234"
+  />
+  <path
+    d="M106.78 61.6511L106.788 30.8256L80.0928 46.2383V77.0639L106.78 61.6511Z"
+    fill="#FF9234"
+  />
+  <path
+    fill-rule="evenodd"
+    clip-rule="evenodd"
+    d="M0 30.8255L53.3976 0L80.0848 15.4128L106.787 0L160.177 30.8255L133.482 46.2383L106.787 30.8255L106.787 30.8257L133.482 46.2383V77.0639L106.779 61.6511L106.787 30.8258L80.0925 46.2383L53.3976 30.8255L53.3974 30.8256L80.0923 46.2383V77.0639L53.3896 61.6511L53.3974 30.8257L26.6949 46.2383L26.6949 77.0639L0 61.6511V30.8255Z"
+    fill="#F37121"
+  />
+  <path
+    d="M160.177 30.8256V61.6511L133.482 77.0639V46.2383L160.177 30.8256Z"
+    fill="#FF9234"
+  />
+</svg>

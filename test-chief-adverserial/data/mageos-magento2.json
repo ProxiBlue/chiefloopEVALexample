@@ -1,0 +1,2108 @@
+{
+  "repository": "mage-os/mageos-magento2",
+  "fetchedAt": "2026-04-15T07:55:07.085Z",
+  "commits": [
+    {
+      "hash": "2e733648455ff9970ac10d24420345c26a6af73f",
+      "date": "2026-03-18T02:09:39Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #211 from mage-os/rhoerr-fix-graphql\n\nFix GraphQL API by pinning webonyx/graphql-php version to <15.31.0",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "c26b4eebad53828344f4111d428b4543b3545c2a",
+      "date": "2026-03-18T02:07:34Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #210 from marcelmtz/feature/block-rce-payload\n\nACP2E-4138: Attacker could use POST request using REST API and can send RCE payload",
+      "linesAdded": 997,
+      "linesDeleted": 39
+    },
+    {
+      "hash": "f9d4b6d274282a1111a07ab0daa26bc1201b5087",
+      "date": "2026-03-17T23:54:57Z",
+      "author": "Ryan Hoerr",
+      "message": "Fix GraphQL API by pinning webonyx/graphql-php version to <15.31.0",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "4cd839e363d6953c4ddfcf4dcb676eb4a2361957",
+      "date": "2025-08-22T17:37:38Z",
+      "author": "soumah",
+      "message": "ACP2E-4138: Attacker could use POST request using REST API and can send RCE payload",
+      "linesAdded": 997,
+      "linesDeleted": 39
+    },
+    {
+      "hash": "fd5017a1d6465034287cb16096625aeff4509235",
+      "date": "2026-03-10T23:55:51Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #206 from rhoerr/update/magento-2.4.8-p4\n\nSecurity changes from upstream 2.4.8-p4",
+      "linesAdded": 7039,
+      "linesDeleted": 319
+    },
+    {
+      "hash": "17df7bf7726bc9689af09d0386c1cc4010da611f",
+      "date": "2026-03-10T23:07:23Z",
+      "author": "Ryan Hoerr",
+      "message": "Security changes from upstream 2.4.8-p4",
+      "linesAdded": 7039,
+      "linesDeleted": 319
+    },
+    {
+      "hash": "c40f7c88634d18d0e59b191c258ef2a5d51776c0",
+      "date": "2026-03-10T18:18:14Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #205 from furan917/fix/xml-doubles-unsigned-fix\n\nfix: Real column type introspection skips unsigned/nullable processors",
+      "linesAdded": 46,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "6cdd11628aa6352de5181d163b96a912bd24a6db",
+      "date": "2026-03-10T18:12:55Z",
+      "author": "Francis",
+      "message": "fix: Real column type introspection skips unsigned/nullable processors",
+      "linesAdded": 46,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "ab1e08e4f608e9b416a474597ab7a2643af7d4f6",
+      "date": "2026-01-16T22:14:44Z",
+      "author": "Francis",
+      "message": "Feature: Add command to detect new queues (#188)\n\n* feat: Add Commands for queue config status\n\n* chore: remove secondary unneeded command\n\n* chore: small linting updates\n\n* feat: Refactor commnd & add amqp\n\nMoved command from MysqlMq to MessageQueue and allowed for DI ChangeDetector files so MysqlMq and Amqp can add their own individual functions without creating dependency issues\nAdded amqp change detector that does not get affected by cache like original implementation. This ensures your RabbitMQ/AmazonMQ/etc can be checked for inconsistences (Say due to config loss/migration)\n\n* chore: small linting updates\n\n* chore: can't cheat empty catch clause with a comment\n\n* chore: fix 1 line length formatting check\n\n* fix: bubble exceptions to queue command and exit properly",
+      "linesAdded": 973,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "7bbee1b6d44de1127eb7cf8f511a90f5f262308a",
+      "date": "2026-01-11T22:09:39Z",
+      "author": "Ryan Hoerr",
+      "message": "Cherry-pick: fixing setup:di:compile area order in plugin generation so frontend area cache picks up compiled files instead of regenerating on the first request by @jakwinkler (#194)\n\nCo-authored-by: Jakub Winkler <jwinkler@qoliber.com>",
+      "linesAdded": 16,
+      "linesDeleted": 10
+    },
+    {
+      "hash": "d247efa32de28458c253b14413af9f6cf047d4b2",
+      "date": "2026-01-11T02:31:42Z",
+      "author": "Ryan Hoerr",
+      "message": "Expand allowed versions of MySQL/MariaDB (#189)\n\n* Expand allowed versions of MySQL/MariaDB\n\n* Update MySQL version compatibility range to include 8.x up to 8.4",
+      "linesAdded": 4,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "813496ee749e411dfa88acf3f06eea706923b254",
+      "date": "2025-12-14T13:45:17Z",
+      "author": "Francis",
+      "message": "Feature: Add command to detect unregistered themes (#186)\n\n* feat: Add theme:registration:status command to detect unregistered themes\n\n* chore: small linting updates",
+      "linesAdded": 344,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "d4f4f5ec6a6b8730a573497cc0bebce6e4c2c4bf",
+      "date": "2025-12-08T23:59:58Z",
+      "author": "Ryan Hoerr",
+      "message": "chore: Remove outdated `replace` and `extra` definitions from composer files (#181)",
+      "linesAdded": 4,
+      "linesDeleted": 124
+    },
+    {
+      "hash": "7ddc0515261162972bc57341b93d2f9ccc09e226",
+      "date": "2025-12-08T23:57:34Z",
+      "author": "Ryan Hoerr",
+      "message": "Fix SRI hash failures with JS bundling and minifying (#177)\n\n* Applied Adobe Commerce patch: Revert-AC-15165-2-4-8-p3",
+      "linesAdded": 20,
+      "linesDeleted": 726
+    },
+    {
+      "hash": "31479f183dc89f5147bbb5ee465e59cb85c99385",
+      "date": "2025-12-04T13:44:36Z",
+      "author": "Ryan Hoerr",
+      "message": "Add X-Dist response header with the distribution name (#179)",
+      "linesAdded": 23,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "df11d1281a3fc886f28baad0b625d80e1e4611f2",
+      "date": "2025-12-03T15:06:37Z",
+      "author": "Ryan Hoerr",
+      "message": "Updated Mage-OS readme files (#183)",
+      "linesAdded": 168,
+      "linesDeleted": 8029
+    },
+    {
+      "hash": "81d158244d35ad2fcd27c50314ae690bb5f6946d",
+      "date": "2025-11-23T00:07:55Z",
+      "author": "Ryan Hoerr",
+      "message": "AC-14999: FPC not work when login by @rogerdz (#176)",
+      "linesAdded": 132,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "8afe79751dc58fb30df8b3bbbea4d6156bc088d6",
+      "date": "2025-11-08T01:07:34Z",
+      "author": "Sam James",
+      "message": "fix: file validation bypass by targeting non file input types during customer file upload (#174)\n\n* fix: prevent customer uploads for non file based metadata types\n\n---------\n\nCo-authored-by: Ryan Hoerr <rhoerr@users.noreply.github.com>",
+      "linesAdded": 52,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "0c9c8b5c6240ae92b410acb576343b68f8b47ada",
+      "date": "2025-10-28T14:40:24Z",
+      "author": "mage-os-ci",
+      "message": "Add Sansec eComscan workflow",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "3073325d015b1a8ce53b5b94c32a03bbacedc5af",
+      "date": "2025-10-24T00:53:19Z",
+      "author": "Andreas von Studnitz",
+      "message": "Fix customer group extension attributes (#53)\n\nThis plugin always created a new extension object, regardless of if one already exists. So it overwrote other extension attributes. This change checks if an extension object already exists first.",
+      "linesAdded": 4,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "86cca87dcca84533851c5642b3fc2b14eedd8289",
+      "date": "2025-10-15T14:30:30Z",
+      "author": "Ryan Hoerr",
+      "message": "Add missing composer file for Magento_Stomp (#173)",
+      "linesAdded": 27,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "068b3de3357cb44648816cd7f7b9dd99d220e892",
+      "date": "2025-10-15T01:43:22Z",
+      "author": "Ryan Hoerr",
+      "message": "Added missing composer file for Magento/Framework/Stomp (#172)",
+      "linesAdded": 25,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "b8ab937b19787b828d2fef0c81a090d043591cc5",
+      "date": "2025-10-15T00:04:13Z",
+      "author": "Ryan Hoerr",
+      "message": "AC-15210: Migrate USPS integration from Web Tools APIs to REST APIs (#170)\n\n* AC-15210: Migrate USPS integration from Web Tools APIs to REST APIs\n\n* Fix production USPS API endpoint",
+      "linesAdded": 2547,
+      "linesDeleted": 141
+    },
+    {
+      "hash": "e3a1709890f688e169015c48f137e8ae86d9f3f0",
+      "date": "2025-10-15T00:03:28Z",
+      "author": "Ryan Hoerr",
+      "message": "Security changes from upstream 2.4.8-p3 (#171)\n\n* Security changes from upstream 2.4.8-p3\n\n* Remove tiny_mce_6 files (replaced by hugerte)",
+      "linesAdded": 128766,
+      "linesDeleted": 1861
+    },
+    {
+      "hash": "00300f89374091f08ad674532218300b62341708",
+      "date": "2025-10-13T07:32:17Z",
+      "author": "mage-os-ci",
+      "message": "Managed by Terraform",
+      "linesAdded": 0,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "c1114323cfe48b862761ad210a97743009083ea4",
+      "date": "2025-10-13T07:31:26Z",
+      "author": "mage-os-ci",
+      "message": "Add Sansec eComscan workflow",
+      "linesAdded": 0,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "e650aeb38fdb212ccbdee1852c8e9c09177a61c0",
+      "date": "2025-10-13T07:30:45Z",
+      "author": "mage-os-ci",
+      "message": "Managed by Terraform",
+      "linesAdded": 0,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "5b666fdd63503126617dd07e339c490628ed4521",
+      "date": "2025-10-12T00:44:31Z",
+      "author": "Lucas van Staden",
+      "message": "Check if array element exists in config load (#167)",
+      "linesAdded": 7,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "57b525ad1cc8da0dd681f80fbbd5071a18549d22",
+      "date": "2025-10-12T00:39:01Z",
+      "author": "Ryan Hoerr",
+      "message": "fix product export of configurable_variations for configurable products with multiple super attributes (#142) (#169)",
+      "linesAdded": 16,
+      "linesDeleted": 9
+    },
+    {
+      "hash": "51a9c61e086afc9639de348da8d2a97a714f1b2d",
+      "date": "2025-09-19T02:30:55Z",
+      "author": "Ryan Hoerr",
+      "message": "fix admin dashboard JS error on login (#164)",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "bafc10d18514db8a2844031677d73bddbe5e9b34",
+      "date": "2025-09-16T07:07:28Z",
+      "author": "Fabrizio Balliano",
+      "message": "Fix PHP 8.4 Deprecation: Explicitly Mark Nullable Parameter (#157) (#158)\n\nCo-authored-by: Abdellatif EL MIZEB <aelmizeb@gmail.com>",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "69a60878acad40a630aceaa9651a48bbebbcf7f1",
+      "date": "2025-09-09T13:39:37Z",
+      "author": "Ryan Hoerr",
+      "message": "Patch for CVE-2025-54236 - WebAPI-improvement (#160)",
+      "linesAdded": 7,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "3fec6cabf0e7b5a6de25db253a8d86cf40a140bb",
+      "date": "2025-08-13T15:53:02Z",
+      "author": "Ryan Hoerr",
+      "message": "Changes from upstream release 2.4.8-p2 (#153)",
+      "linesAdded": 2406,
+      "linesDeleted": 1029
+    },
+    {
+      "hash": "38bbc5b37279c41f187ca1eb8db5dfa6d1d3ccb1",
+      "date": "2025-08-13T14:17:32Z",
+      "author": "Fabrizio Balliano",
+      "message": "Merge pull request #156 from fballiano/cp_cherry_pr_39859\n\nFixed city name validation to allow digits, &, ., () characters (magento/magento2#39859)",
+      "linesAdded": 42,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "93d86bbf46fb5e4431e1d154f5953fd11b6641d3",
+      "date": "2025-08-13T14:16:50Z",
+      "author": "Fabrizio Balliano",
+      "message": "Merge pull request #155 from fballiano/cp_cherry_pr_39871\n\nFixed missing screen-l styles added using .media-width mixin (magento/magento2#39871)",
+      "linesAdded": 7,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "8f4c85c2b819ffa40bc9790c4966825a7de39502",
+      "date": "2025-07-15T07:28:04Z",
+      "author": "Banvari Lal",
+      "message": "Merge remote-tracking branch 'city/39854-fix-city-name-validation' into AC-14495",
+      "linesAdded": 42,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "a89f3dece6e8623d391c37975d25974448023748",
+      "date": "2025-07-15T12:04:58Z",
+      "author": "Abhishek Pathak",
+      "message": "Merge remote-tracking branch 'vovayatsyuk/fix-missing-screen__l-styles' into AC-14463",
+      "linesAdded": 7,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "04f6d1d1b2bc8e0b04666905ae682aba137fdd96",
+      "date": "2025-08-13T13:52:38Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #151 from fballiano/cp_pr_134\n\nFix integration tests for Magento_Backend and Magento_Bundle (Cherry-picked PR #134 into `release/1.x`)",
+      "linesAdded": 244,
+      "linesDeleted": 195
+    },
+    {
+      "hash": "5ffb10e06e6c1feaad9f98259925f6274a7dc070",
+      "date": "2025-07-22T09:11:08Z",
+      "author": "simsComputing",
+      "message": "cherry-pick PR 134",
+      "linesAdded": 244,
+      "linesDeleted": 195
+    },
+    {
+      "hash": "4f16b29e32e4fef484b1c7acbcebf37861e95793",
+      "date": "2025-07-21T14:29:31Z",
+      "author": "Lucas van Staden",
+      "message": "AC-14597: JavaScript error encountered when selecting \"All Resources\" in API resource access during integration activation (#150)\n\nAdded the check to avoid console error before applying \"removeChild\" method\n\nCo-authored-by: Sumesh P <sumesh.p@globallogic.com>",
+      "linesAdded": 9,
+      "linesDeleted": 5
+    },
+    {
+      "hash": "1027727d98036749777c2471f7126807db9b29c4",
+      "date": "2025-06-13T01:28:43Z",
+      "author": "Ryan Hoerr",
+      "message": "Changes from upstream release Magento 2.4.8-p1 (#147)",
+      "linesAdded": 373,
+      "linesDeleted": 2137
+    },
+    {
+      "hash": "20f4fafce4d1921a030c36116d2d2bcf17821396",
+      "date": "2025-04-15T15:29:05Z",
+      "author": "Ryan Hoerr",
+      "message": "fix 'analyticsPopupConfig' not defined/404 errors when analytics is disabled",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "97a9f54e758ccf9ff82b8c219d9c7188a77f3a2b",
+      "date": "2025-04-15T14:12:21Z",
+      "author": "Damien Retzinger",
+      "message": "feat!: prevent disclosure of customer groups by default (#136)",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "f6466eb314a36f90013923a84deaeaa57cc4b65a",
+      "date": "2025-04-14T20:35:36Z",
+      "author": "Damien Retzinger",
+      "message": "feat!: prevent catalog and sales rules from being disclosed publicly by default",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "96207ddf9faf104fcbeb5cc8880fc4329a72023d",
+      "date": "2025-04-10T03:04:02Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #133 from mage-os/2.4-develop\n\nLatest upstream changes from 2.4.8",
+      "linesAdded": 3561,
+      "linesDeleted": 627
+    },
+    {
+      "hash": "a6ccab5a50d345536a996fa7d9b3d6b5d00e7427",
+      "date": "2025-04-10T02:51:40Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 3561,
+      "linesDeleted": 627
+    },
+    {
+      "hash": "544dc5bb752aa7a687c20caefe14d71237d0bd0d",
+      "date": "2025-04-10T02:09:25Z",
+      "author": "Ryan Hoerr",
+      "message": "Corrected supported-services.json",
+      "linesAdded": 4,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "bf6a6bac2bfa1c9297238725b89ce9a5d8b75bba",
+      "date": "2025-04-10T01:58:14Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge remote-tracking branch 'mage-os/2.4-develop' into release/1.x",
+      "linesAdded": 4,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "73d7bd4b310ab8cb6118f0915e8c0cdb695cd976",
+      "date": "2025-04-09T12:20:40Z",
+      "author": "Rajesh Kumar",
+      "message": "Merge pull request #9714 from magento-gl/Sync-248develop-with-24develop\n\nSync 248develop with 24develop",
+      "linesAdded": 3561,
+      "linesDeleted": 627
+    },
+    {
+      "hash": "a717fd3a3512a046f47ad588abd9d7e4d6d1f489",
+      "date": "2025-04-09T05:38:05Z",
+      "author": "Rajesh Kumar",
+      "message": "Merge remote-tracking branch 'origin/2.4.8-develop' into Sync-248develop-with-24develop",
+      "linesAdded": 3561,
+      "linesDeleted": 627
+    },
+    {
+      "hash": "caadc570441e8554e5abf062e9111004420aae4a",
+      "date": "2025-04-08T17:42:04Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #130 from rhoerr/chore/supported-services-2.4.8\n\nUpdate supported-services.json for Magento 2.4.8",
+      "linesAdded": 7,
+      "linesDeleted": 7
+    },
+    {
+      "hash": "143f08915dc2d8dd380af170edf5afcee02c8e03",
+      "date": "2025-04-08T17:40:30Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #131 from mage-os/2.4-develop\n\nMerge 2.4-develop into release/1.x",
+      "linesAdded": 1409,
+      "linesDeleted": 424
+    },
+    {
+      "hash": "f1ce5d5eae2731ab4d33553bc85e0f745071539a",
+      "date": "2025-04-08T16:48:10Z",
+      "author": "Ryan Hoerr",
+      "message": "Change redis version to 7.4",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "38de85669c188ea29080cf67b0d140d4cb70702d",
+      "date": "2025-04-08T16:36:49Z",
+      "author": "Ryan Hoerr",
+      "message": "fix rabbitmq version to 4.0",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "0dfa50954836e4a63ffc7266de9eadd9cc9cf1bd",
+      "date": "2025-04-08T16:32:50Z",
+      "author": "Ryan Hoerr",
+      "message": "Try build with Valkey",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "09da17402da6e538044c329ebb0a7f0b54d5a3ed",
+      "date": "2025-04-08T16:30:29Z",
+      "author": "Ryan Hoerr",
+      "message": "Update supported-services.json for Warden available packages",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "587b7d286984f93c7fde708fe372286f8a9e054b",
+      "date": "2025-04-08T16:23:09Z",
+      "author": "Ryan Hoerr",
+      "message": "Any composer 2 version",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "612ee25eb7865b1b6ef630f068882a5e6a20bbc0",
+      "date": "2025-04-08T16:17:38Z",
+      "author": "Ryan Hoerr",
+      "message": "Update supported-services.json",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "9bcf9033f45f46e4f6572fe5fe3ab42c5d7c85b9",
+      "date": "2025-04-08T14:39:49Z",
+      "author": "Ryan Hoerr",
+      "message": "Update supported-services.json for Magento 2.4.8",
+      "linesAdded": 7,
+      "linesDeleted": 7
+    },
+    {
+      "hash": "7f7fc5823c9e3bb368824a2bcec6d13ddc2b64b3",
+      "date": "2025-04-08T14:38:28Z",
+      "author": "Ryan Hoerr",
+      "message": "Update supported-services.json for Magento 2.4.8",
+      "linesAdded": 4,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "39977a20940b48ec474996cf330d600efa1ac92b",
+      "date": "2025-04-08T10:32:37Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 37,
+      "linesDeleted": 20
+    },
+    {
+      "hash": "7bb4ca90206f166e85624e6c66edf823767749e9",
+      "date": "2025-04-07T13:42:42Z",
+      "author": "internal-magento-queue-manager[bot]",
+      "message": "Merge pull request #9703 from magento-gl/ACQE-Version4-functional-mainline-deployment\n\nBengals ACQE functional deployment",
+      "linesAdded": 37,
+      "linesDeleted": 20
+    },
+    {
+      "hash": "f334b8d1e53ba1edfb0bf282d67d893b16025bd9",
+      "date": "2025-04-07T04:58:58Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch '2.4-develop' into ACQE-Version4-functional-mainline-deployment",
+      "linesAdded": 1603,
+      "linesDeleted": 545
+    },
+    {
+      "hash": "850a202aaa3142fb03546ac9bd7c5c45789a2044",
+      "date": "2025-04-07T04:53:20Z",
+      "author": "chandrakalahanchinal",
+      "message": "[ACQE-7786] fixed copyright issue",
+      "linesAdded": 4,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "2d9949e54e1058a778d2f7f7bd34b452ffe8450d",
+      "date": "2025-04-06T23:56:36Z",
+      "author": "Ryan Hoerr",
+      "message": "Update supported-services.json for Magento 2.4.8",
+      "linesAdded": 5,
+      "linesDeleted": 5
+    },
+    {
+      "hash": "fddcd8421c0c7b2506c085a07fa24e876a2b0045",
+      "date": "2025-04-06T23:10:56Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge pull request #129 from fballiano/2.4-develop-tmp\n\n Merge 2.4-develop into release/1.x",
+      "linesAdded": 134323,
+      "linesDeleted": 78694
+    },
+    {
+      "hash": "9f675277b1170f7952a578042011debc50820bed",
+      "date": "2025-04-05T02:12:38Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge remote-tracking branch 'fballiano/2.4-develop-tmp' into 2.4-develop-merge-tmp",
+      "linesAdded": 3907,
+      "linesDeleted": 2327
+    },
+    {
+      "hash": "a02849f569f719d910afa41a325ebd85e28e340e",
+      "date": "2025-04-05T02:09:51Z",
+      "author": "Ryan Hoerr",
+      "message": "Merge branch '2.4-develop' into 2.4-develop-tmp",
+      "linesAdded": 130418,
+      "linesDeleted": 76369
+    },
+    {
+      "hash": "59121cb311e4e3fca49f8e2709f450dda9784650",
+      "date": "2025-04-04T10:31:22Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 1372,
+      "linesDeleted": 404
+    },
+    {
+      "hash": "9608ca21dcf8b55680376b718f5acc0da00b5864",
+      "date": "2025-04-04T03:06:50Z",
+      "author": "internal-magento-queue-manager[bot]",
+      "message": "Merge pull request #9562 from adobe-commerce-tier-4/pr_january_doleksandr\n\n[Support Tier-4 odubovyk] 01-30-2025 Regular delivery of bugfixes and improvements",
+      "linesAdded": 1370,
+      "linesDeleted": 404
+    },
+    {
+      "hash": "ce5068fab0b69bc5d60c7fc0a6bf41561c68300e",
+      "date": "2025-04-03T10:31:34Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 231,
+      "linesDeleted": 141
+    },
+    {
+      "hash": "ac1e538a1f035b44e58ebaa76924aa0a8a8c321e",
+      "date": "2025-04-03T10:21:25Z",
+      "author": "magento-devops-queue-mgr-svc",
+      "message": "Merge branch '2.4-develop' into pr_january_doleksandr",
+      "linesAdded": 2,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "f3099780c619d16e40f01e4400da0a729bcb8fd0",
+      "date": "2025-04-03T10:20:28Z",
+      "author": "internal-magento-queue-manager[bot]",
+      "message": "Merge pull request #9694 from magento-gl/ACQE-Version3-functional-mainline-deployment\n\nBenagls ACQE functional deployment",
+      "linesAdded": 2,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "2f47230c349b06d99309507e3162ad9d3a8e7619",
+      "date": "2025-04-03T09:58:52Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7743' into ACQE-Version4-functional-mainline-deployment",
+      "linesAdded": 3,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "dbf67393684a9d987903ddea95ae68a311faf07e",
+      "date": "2025-04-03T06:11:33Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch '2.4-develop' into ACQE-Version3-functional-mainline-deployment",
+      "linesAdded": 231,
+      "linesDeleted": 141
+    },
+    {
+      "hash": "8f32a6e71c56142831bd76373b0fb767092fc963",
+      "date": "2025-04-03T04:09:10Z",
+      "author": "Oleksandr",
+      "message": "Merge branch '2.4-develop' into pr_january_doleksandr",
+      "linesAdded": 231,
+      "linesDeleted": 141
+    },
+    {
+      "hash": "73ca886154dd3619985dfca3666a316444b84d67",
+      "date": "2025-04-02T23:47:03Z",
+      "author": "internal-magento-queue-manager[bot]",
+      "message": "Merge pull request #9618 from magento-gl/febcomprs\n\n[Bluetooth] Community Pull Requests delivery",
+      "linesAdded": 231,
+      "linesDeleted": 141
+    },
+    {
+      "hash": "f4c7c560dd198d0e5f2cddc244eb16034949cc8a",
+      "date": "2025-04-02T13:11:02Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-6792' into ACQE-Version4-functional-mainline-deployment",
+      "linesAdded": 12,
+      "linesDeleted": 10
+    },
+    {
+      "hash": "09f84ab88fe6818ceadfecc5552c1fe418098764",
+      "date": "2025-04-02T13:10:12Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7590' into ACQE-Version4-functional-mainline-deployment",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "34fb6756f9151809033dfe08e77bb4334b7521ef",
+      "date": "2025-04-02T01:58:22Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 3677,
+      "linesDeleted": 2187
+    },
+    {
+      "hash": "bcd032ff98f2cd25eb806bc383b665c41eb0c747",
+      "date": "2025-04-01T13:29:50Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch '2.4-develop' into ACQE-Version3-functional-mainline-deployment",
+      "linesAdded": 3615,
+      "linesDeleted": 2162
+    },
+    {
+      "hash": "ddbddcf0d6c0538e8306bf4d9c1f632c4eb0885e",
+      "date": "2025-04-01T13:23:35Z",
+      "author": "chandrakalahanchinal",
+      "message": "[ACQE-7786] removed StorefrontVerifyShoppingCartPersistenceTest from pt to work code review comments",
+      "linesAdded": 0,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "b2fed8a1ddb677333eb31d37c8419361ef39d018",
+      "date": "2025-04-01T11:55:19Z",
+      "author": "chandrakalahanchinal",
+      "message": "[ACQE-7786] added commet for adding pr_exclude",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "5367964fb43fb17861e47f065eda60777b5ce336",
+      "date": "2025-04-01T11:33:57Z",
+      "author": "chandrakalahanchinal",
+      "message": "[ACQE-7786] removed files from pr because of code review comments need to fix by developer",
+      "linesAdded": 2,
+      "linesDeleted": 448
+    },
+    {
+      "hash": "6359de412ba90e094151452cad2616c9b5a813a8",
+      "date": "2025-03-27T05:46:30Z",
+      "author": "Mohit Sharma",
+      "message": "ACQE-7692: Fix static checks error due to copyright content outdated",
+      "linesAdded": 5,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "a8db23fd1fa9109faff726908e87da849672f758",
+      "date": "2025-03-24T14:17:42Z",
+      "author": "Mohit Sharma",
+      "message": "ACQE-7692: Change xml to rest for UPS shipping method",
+      "linesAdded": 15,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "eb36e57abd776217aaff7dc8cde759c053f33cd6",
+      "date": "2025-03-31T18:02:44Z",
+      "author": "magento-devops-queue-mgr-svc",
+      "message": "Merge branch '2.4-develop' into pr_january_doleksandr",
+      "linesAdded": 3615,
+      "linesDeleted": 2162
+    },
+    {
+      "hash": "c040806e362857922886832a781ba4d5fbe4dc13",
+      "date": "2025-03-28T10:22:57Z",
+      "author": "Indrani",
+      "message": "Merge branch '2.4-develop' into febcomprs",
+      "linesAdded": 3615,
+      "linesDeleted": 2162
+    },
+    {
+      "hash": "e337d72f7bc2054bf6a714d431a2e56d1665b624",
+      "date": "2025-03-28T10:15:29Z",
+      "author": "engcom-Charlie",
+      "message": "Merge remote-tracking branch '32815/ui/admin/roles-tree' into febcomprs",
+      "linesAdded": 56,
+      "linesDeleted": 5
+    },
+    {
+      "hash": "df92debe0e2e913963efb7b4487b5fe62f41765f",
+      "date": "2025-03-28T00:32:13Z",
+      "author": "Dmytro Horytskyi",
+      "message": "Merge pull request #9679 from adobe-commerce-tier-4/PR-03-17-2025\n\n[Support Tier-4 chittima] 03-17-2025 Regular delivery of bugfixes and improvements",
+      "linesAdded": 3615,
+      "linesDeleted": 2162
+    },
+    {
+      "hash": "8c68d0ad6182008c75b42a3214bd2f3907b33107",
+      "date": "2025-03-27T15:22:36Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3658' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 129,
+      "linesDeleted": 85
+    },
+    {
+      "hash": "bc0b617b469ce62cf3b530dff9e2648885974c57",
+      "date": "2025-03-27T14:39:17Z",
+      "author": "chandrakalahanchinal",
+      "message": "[ACQE-7786] added pr_exclude for AC-3833 test",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "e56f96125659892a65bd9a19ae82f1d8a6f57420",
+      "date": "2025-03-27T10:26:11Z",
+      "author": "manjusha729",
+      "message": "ACQE-7590 | [MFTF TESTS] AdminCreateSeparateTemporaryUpdateForBundleProductToChangeChildProductsAssignmentTest",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "602efa7eb682c29c7ad6c45ad88c5769b21f618e",
+      "date": "2025-03-26T16:14:25Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3737' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 3,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "1f8a8e0200db6fe3faffaedeaa958e47defc5267",
+      "date": "2025-03-26T13:18:52Z",
+      "author": "chandrakalahanchinal",
+      "message": "ACQE-7786 fixed static check issue on ce",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "2fc30ca17c0ee224c21dba3a923eafd83c356fc6",
+      "date": "2025-03-26T11:27:39Z",
+      "author": "chandrakalahanchinal",
+      "message": "added files and changes from ACQE-7206 ticket",
+      "linesAdded": 17,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "78701717ac13727c14b0b87958243ccc552a453b",
+      "date": "2025-03-26T11:26:03Z",
+      "author": "chandrakalahanchinal",
+      "message": "added files and changes from ACQE-7206 ticket",
+      "linesAdded": 429,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "3ae3c438314389b2dee700cde78b73e13851b28a",
+      "date": "2025-03-26T09:40:14Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7743' of github.com:magento-gl/magento2ce into ACQE-7743",
+      "linesAdded": 3,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "f7a9e529ef7fd79001674c3ad545a928133b2f65",
+      "date": "2025-03-26T06:22:04Z",
+      "author": "engcom-Charlie",
+      "message": "Merge remote-tracking branch '39398/header-link-issue' into febcomprs",
+      "linesAdded": 18,
+      "linesDeleted": 10
+    },
+    {
+      "hash": "7226b924cb43f240f8259134942cd1e8c28aff40",
+      "date": "2025-03-26T05:56:40Z",
+      "author": "engcom-Charlie",
+      "message": "Merge remote-tracking branch '39307/ckd/minor-copyedit' into febcomprs",
+      "linesAdded": 8,
+      "linesDeleted": 8
+    },
+    {
+      "hash": "292769ae2873ef6e34f7f35fbb259d4de53ae4e7",
+      "date": "2025-03-26T05:50:39Z",
+      "author": "engcom-Charlie",
+      "message": "Merge remote-tracking branch '39372/fix-for-issue-39369' into febcomprs",
+      "linesAdded": 121,
+      "linesDeleted": 8
+    },
+    {
+      "hash": "6614e0aa30ff98f800ad4e8381af44d1d18f1901",
+      "date": "2025-03-26T05:43:22Z",
+      "author": "engcom-Charlie",
+      "message": "Merge remote-tracking branch '39153/bad-phpdoc-ManagerInterface' into febcomprs",
+      "linesAdded": 28,
+      "linesDeleted": 110
+    },
+    {
+      "hash": "76f806e27b6b5a3852b0041e0259d07022aa9241",
+      "date": "2025-03-25T17:07:51Z",
+      "author": "Oleksandr Dubovyk",
+      "message": "Merge remote-tracking branch 'origin/2.4-develop' into pr_january_doleksandr",
+      "linesAdded": 678,
+      "linesDeleted": 80
+    },
+    {
+      "hash": "387a9c338209720cece9e3e8db8121c51280d40f",
+      "date": "2025-03-25T14:19:37Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "9f9d8881f4b15da20ad4ba2788d2e5e2e86b923b",
+      "date": "2025-03-25T14:17:57Z",
+      "author": "chittima",
+      "message": "Merge branch '2.4-develop' of https://github.com/magento-commerce/magento2ce into PR-03-17-2025",
+      "linesAdded": 77,
+      "linesDeleted": 27
+    },
+    {
+      "hash": "262476ebd214657842ff2d69a0626592e55c2cbe",
+      "date": "2025-03-25T12:30:46Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 2,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "3a970ea0afb1bd8bc8993ea98fceb9b91aeb119f",
+      "date": "2025-03-25T12:30:19Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "16181aef5705f8bea25e89e669159fe5b51c2de2",
+      "date": "2025-03-25T12:29:52Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "38c4b4adc165a428b408c487083681b3785dd9fb",
+      "date": "2025-03-25T12:21:19Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "7f4b501f0193f926ecbfe6cd7b935a9ff8a1fb64",
+      "date": "2025-03-25T10:30:19Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 4,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "bbe749544157362c8643b6050a5c29de1db5fc65",
+      "date": "2025-03-25T10:28:35Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "dfff0fb2bfe29f32265c3f44a5d9825c14413f41",
+      "date": "2025-03-25T10:22:30Z",
+      "author": "manjusha729",
+      "message": "ACQE-6792 | [MFTF TESTS] AdminReviewsByProductsReportTest",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "9e7230b0815f9978e3dd5e60d2521ae93a88f434",
+      "date": "2025-03-24T13:53:37Z",
+      "author": "internal-magento-queue-manager[bot]",
+      "message": "Merge pull request #9638 from magento-gl/ACQE-Version2-functional-mainline-deployment\n\nBengals ACQE Functional Deployment",
+      "linesAdded": 62,
+      "linesDeleted": 25
+    },
+    {
+      "hash": "ad9cd6ba56cf41dfc8d16ad16dd8485e8460544f",
+      "date": "2025-03-24T09:47:21Z",
+      "author": "Keerthana SL",
+      "message": "Merge branch 'ACQE-7750' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 4,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "ac5de2e1f9abad2cb9eb914d64893c87bfcb0a64",
+      "date": "2025-03-24T07:50:55Z",
+      "author": "Keerthana SL",
+      "message": "ACQE-7750: StorefrontVerifyShoppingCartPersistenceUnderLongTermCookieTest\n\nCopyright text changes",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "4978f4c0640942353c24399260ddabfd1333f565",
+      "date": "2025-03-24T07:47:31Z",
+      "author": "Keerthana SL",
+      "message": "ACQE-7750: StorefrontVerifyShoppingCartPersistenceUnderLongTermCookieTest\n\nMFTF Test fix",
+      "linesAdded": 2,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "57fab496742acaae41338ff230143a1f14514346",
+      "date": "2025-03-22T14:12:02Z",
+      "author": "manjusha729",
+      "message": "ACQE-7397 | [MFTF TESTS] TextVerifyTinyMCEToolbarOnPageBuilderStageTest",
+      "linesAdded": 2,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "e32accc3ae510d461e9bbad2320c0f0eb646b05d",
+      "date": "2025-03-21T12:41:38Z",
+      "author": "manjusha729",
+      "message": "ACQE-7743 | [MFTF PR TEST] StorefrontVerifyShoppingCartPersistenceTest",
+      "linesAdded": 3,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "d1b127690e1bd8c9300d5e81a1aa723c43a74868",
+      "date": "2025-03-21T12:09:22Z",
+      "author": "chandrakalahanchinal",
+      "message": "[ACQE-7714] added pr_exclude for repeated failure in mainlinepr to work on",
+      "linesAdded": 7,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "f2027861cd41b2bc550d64784b6fbde4064e9077",
+      "date": "2025-03-21T11:22:12Z",
+      "author": "manjusha729",
+      "message": "ACQE-7743 | [MFTF PR TEST] StorefrontVerifyShoppingCartPersistenceTest",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "c273f277a7aaba6a16c751131288553b2bb6c8b9",
+      "date": "2025-03-21T10:33:13Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 15,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "bed72bd4c5c89dd92c21b9bce8b5e01780e1f018",
+      "date": "2025-03-21T10:03:07Z",
+      "author": "pawan-adobe-security",
+      "message": "Merge pull request #9673 from magento-cia/cia-2.4.8-develop-bugfix-03122025\n\nAC-14161: Fix Copyrights Information",
+      "linesAdded": 5,
+      "linesDeleted": 56
+    },
+    {
+      "hash": "b90fc993ee6191e9923eed29140cefc48e456af4",
+      "date": "2025-03-21T05:01:31Z",
+      "author": "chandrakalahanchinal",
+      "message": "added pr_exclude to repeated failed test",
+      "linesAdded": 3,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "591c8571c47e126837116faad3f8f1351b4a9670",
+      "date": "2025-03-21T04:54:31Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch '2.4-develop' of github.com:magento-gl/magento2ce into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 15,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "9a7352b7dce3225b0313f0be150c2d4895256cec",
+      "date": "2025-03-21T03:01:12Z",
+      "author": "admanesachin",
+      "message": "Merge pull request #9681 from magento-cia/AC-14078-updated\n\nAC-14078: Improve async/bulk request performance.",
+      "linesAdded": 15,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "1e7b0ed1976275c376e8071c56defbdef4459471",
+      "date": "2025-03-20T21:59:40Z",
+      "author": "Dimitri BOUTEILLE",
+      "message": "Merge branch '2.4-develop' into bad-phpdoc-ManagerInterface",
+      "linesAdded": 15783,
+      "linesDeleted": 6291
+    },
+    {
+      "hash": "28628eb4b59780bbbc473f53077a4689892c9fa4",
+      "date": "2025-03-20T09:22:52Z",
+      "author": "Deepak Tiwari",
+      "message": "Merge branch '2.4.8-develop' into cia-2.4.8-develop-bugfix-03122025",
+      "linesAdded": 729,
+      "linesDeleted": 105
+    },
+    {
+      "hash": "fff88c46146c750b31ab40f5a74095a6e49ad837",
+      "date": "2025-03-20T07:04:34Z",
+      "author": "Rajesh Kumar",
+      "message": "Merge pull request #9675 from magento-gl/spartans_pr_13032025\n\n[Spartans] BugFixes Delivery",
+      "linesAdded": 12,
+      "linesDeleted": 17
+    },
+    {
+      "hash": "95524eabe49e265659c3f37624e7d1268b7bf281",
+      "date": "2025-03-20T06:55:41Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7705' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "86633a96f03be57bdcbec08bd8daee81e1e6bb43",
+      "date": "2025-03-20T06:54:51Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7706' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 723,
+      "linesDeleted": 63
+    },
+    {
+      "hash": "55f1a49fb8f69520a4cf2fd9a345f1f4e871ae0e",
+      "date": "2025-03-20T06:54:03Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7707' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 5,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "af6d17186f4dc7c7d77092c58568d149badcaf44",
+      "date": "2025-03-19T17:33:36Z",
+      "author": "Banvari Lal",
+      "message": "Merge branch '2.4.8-develop' into spartans_pr_13032025",
+      "linesAdded": 717,
+      "linesDeleted": 88
+    },
+    {
+      "hash": "59fb3f91b82c13b9da59f6b5db6612de3bfacb22",
+      "date": "2025-03-19T17:29:08Z",
+      "author": "Sergio Vera",
+      "message": "Merge pull request #9676 from magento-lynx/lynx-2.4.8",
+      "linesAdded": 717,
+      "linesDeleted": 88
+    },
+    {
+      "hash": "37e005d7a474224c45091ae4238d59eb8d2a51a4",
+      "date": "2025-03-19T10:48:14Z",
+      "author": "Keerthana SL",
+      "message": "ACQE-7707: AdminValidateSimpleProductWithCustomOptionsDragNDropPerPageTest\n\nAdding scroll to the parent section",
+      "linesAdded": 6,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "f2378e3eda6c5c21b16766427581d0163705243c",
+      "date": "2025-03-19T09:50:35Z",
+      "author": "Sergio Vera",
+      "message": "Merge branch '2.4.8-develop' into lynx-2.4.8",
+      "linesAdded": 33,
+      "linesDeleted": 12
+    },
+    {
+      "hash": "4e2abcba525bc9959b83be3d7cfadf83c3054867",
+      "date": "2025-03-19T08:15:03Z",
+      "author": "manjusha729",
+      "message": "ACQE-7706 | [MFTF Tests] AdminUserApplyToSeveralSimpleProductsMassActionUnAssignProductSourcesOnProductsGridToUnAssignAllAssignedSourcesTest",
+      "linesAdded": 2,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "2a424614b37c743aba6e0394ec73a9684fd3ad46",
+      "date": "2025-03-19T06:54:22Z",
+      "author": "Abhishek Pathak",
+      "message": "Merge remote-tracking branch 'origin/2.4.8-develop' into spartans_pr_13032025",
+      "linesAdded": 97,
+      "linesDeleted": 53
+    },
+    {
+      "hash": "9373a99c77f151c84b8157e8214a69879b23a396",
+      "date": "2025-03-19T04:34:19Z",
+      "author": "manjusha729",
+      "message": "ACQE-7706 | [MFTF Tests] AdminUserApplyToSeveralSimpleProductsMassActionUnAssignProductSourcesOnProductsGridToUnAssignAllAssignedSourcesTest",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "b5b67e1cdf1c96d871196edec6595f1e56bed9b4",
+      "date": "2025-03-19T02:47:10Z",
+      "author": "Deepak Tiwari",
+      "message": "Resolve Conflicts",
+      "linesAdded": 82,
+      "linesDeleted": 48
+    },
+    {
+      "hash": "b2b07d35f4e75456c7edf4b7ad5dbee03b58d647",
+      "date": "2025-03-18T18:53:59Z",
+      "author": "pawan-adobe-security",
+      "message": "Merge pull request #9682 from magento-gl/spartans_pr_18032025_webapi_test_fix\n\n[Spartans] BugFixes Delivery",
+      "linesAdded": 89,
+      "linesDeleted": 49
+    },
+    {
+      "hash": "18da9d5c018d351eb34106684bbd63da889a872d",
+      "date": "2025-03-18T16:10:04Z",
+      "author": "Banvari Lal",
+      "message": "Merge remote-tracking branch 'origin/AC-14253' into spartans_pr_18032025_webapi_test_fix",
+      "linesAdded": 3,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "2ef427d71435291cc44f4316edbc49689dd41093",
+      "date": "2025-03-18T16:06:15Z",
+      "author": "Banvari Lal",
+      "message": "Merge remote-tracking branch 'origin/AC-14095' into spartans_pr_18032025_webapi_test_fix",
+      "linesAdded": 86,
+      "linesDeleted": 46
+    },
+    {
+      "hash": "a3bfd01f97f08f9ff8fdfd4833fa4ccd47d9bede",
+      "date": "2025-03-18T15:11:01Z",
+      "author": "Deepak Tiwari",
+      "message": "Merge branch '2.4.8-develop' into cia-2.4.8-develop-bugfix-03122025",
+      "linesAdded": 8,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "c68056d9595b9f1ad2a31e6cd41165341ef545b9",
+      "date": "2025-03-18T14:49:22Z",
+      "author": "Sachin Admane",
+      "message": "AC-14078: Improve async/bulk request performance.",
+      "linesAdded": 15,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "698ff1c143ae12e02503b789d6a1cb521a53231e",
+      "date": "2025-03-18T14:00:50Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14095: Fix web api test",
+      "linesAdded": 56,
+      "linesDeleted": 37
+    },
+    {
+      "hash": "55a1de337530bd7a2a7d0e4376011c1705d038ce",
+      "date": "2025-03-18T12:54:26Z",
+      "author": "Sergio Vera",
+      "message": "Merge branch '2.4.8-develop' into lynx-2.4.8",
+      "linesAdded": 8,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "dfcb6dc12e3a13010adb5214ec4c5f62999cf0bd",
+      "date": "2025-03-18T12:47:02Z",
+      "author": "Keerthana SL",
+      "message": "ACQE-7707: AdminValidateSimpleProductWithCustomOptionsDragNDropPerPageTest\n\nTest fix to reduces flakiness",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "bede5374509f5c1608ded3659442f3d3f9dd668d",
+      "date": "2025-03-18T09:43:16Z",
+      "author": "Sumesh P",
+      "message": "AC-14253: Unable to place order for braintree payment method while doing checkout with multiple address\n\nType convert base shipping amount to float while setting model",
+      "linesAdded": 3,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "b0a73efc8e89a5e7da16273ebf57196e9fc41afc",
+      "date": "2025-03-18T12:27:52Z",
+      "author": "Deepak",
+      "message": "WebApi Test case updated",
+      "linesAdded": 66,
+      "linesDeleted": 42
+    },
+    {
+      "hash": "e2668a29de851dca0493c8b11ef205e5def14eca",
+      "date": "2025-03-18T11:25:42Z",
+      "author": "manjusha729",
+      "message": "ACQE-7706 | [MFTF Tests] AdminUserApplyToSeveralSimpleProductsMassActionUnAssignProductSourcesOnProductsGridToUnAssignAllAssignedSourcesTest",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "f70ff2a4ba118e5e4515988cf193c8e7eafa3389",
+      "date": "2025-03-18T10:11:22Z",
+      "author": "Rajesh Kumar",
+      "message": "Merge pull request #9677 from magento-gl/MCLOUD-13500_regression_issue_fix\n\nMCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance",
+      "linesAdded": 8,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "917d0ce2f5a2ed7cc1eb0ea828590829428820b4",
+      "date": "2025-03-18T08:10:25Z",
+      "author": "manjusha729",
+      "message": "ACQE-7705 | [MFTF Tests] StorefrontVerifySearchTermEntityRedirectTest\n\nTest Fix",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "f3abd4a998c701e978259023b7865a6a783c79a9",
+      "date": "2025-03-17T16:09:39Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3504' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 232,
+      "linesDeleted": 10
+    },
+    {
+      "hash": "087ccf3c2aaeff846796a74d29c873646ee811b4",
+      "date": "2025-03-17T16:08:24Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3734' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 42,
+      "linesDeleted": 17
+    },
+    {
+      "hash": "9baed8604d35cbc7c602fb6eb85c20e9a19ee3e1",
+      "date": "2025-03-17T16:08:01Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3657' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 168,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "3ef845f9fb3167204619a2aaa620b62ed33b303e",
+      "date": "2025-03-17T16:07:36Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3449' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 165,
+      "linesDeleted": 53
+    },
+    {
+      "hash": "505b541939db771f95a81b13536a88793eb25089",
+      "date": "2025-03-17T16:06:48Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3709' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 160,
+      "linesDeleted": 6
+    },
+    {
+      "hash": "52893d4e3b2f96ac422e8d53b78b98ccb1642c9d",
+      "date": "2025-03-17T16:06:08Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3660' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 2365,
+      "linesDeleted": 1900
+    },
+    {
+      "hash": "22ce951a4e02146901b035803445eeb36635df18",
+      "date": "2025-03-17T16:05:42Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3541' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 59,
+      "linesDeleted": 19
+    },
+    {
+      "hash": "9f1a7f7f2f8231858d0b4b27c6b6920d23e9ea60",
+      "date": "2025-03-17T16:05:14Z",
+      "author": "chittima",
+      "message": "Merge branch 'ACP2E-3669' of https://github.com/adobe-commerce-tier-4/magento2ce into PR-03-17-2025",
+      "linesAdded": 292,
+      "linesDeleted": 68
+    },
+    {
+      "hash": "ad8007938c515a4ef68cd3d514d6c69986a39205",
+      "date": "2025-03-17T06:30:47Z",
+      "author": "Deepak",
+      "message": "LYNX-319: WebApi Test case updated",
+      "linesAdded": 56,
+      "linesDeleted": 37
+    },
+    {
+      "hash": "ab48bee91bd23161dc72fc47e244b4ef50c8528c",
+      "date": "2025-03-16T19:27:02Z",
+      "author": "Sokly Meach",
+      "message": "ACP2E-3658: Admin displays incorrect currency symbol on when creating return",
+      "linesAdded": 100,
+      "linesDeleted": 117
+    },
+    {
+      "hash": "d09a68e49d6a4f7f20a7b8bed5f663e6ee571135",
+      "date": "2025-03-15T09:18:16Z",
+      "author": "Abhinav Pathak",
+      "message": "MCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance\n\nFix functional test failures",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "f4c795f8fedd290786415ecc1ab1f1bf8bdd8f0a",
+      "date": "2025-03-14T17:29:25Z",
+      "author": "Rajesh Kumar",
+      "message": "MCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance",
+      "linesAdded": 3,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "d076fa6cc12d80929d3a28fb45ca4f549d43dad3",
+      "date": "2025-03-14T17:23:42Z",
+      "author": "Rajesh Kumar",
+      "message": "Revert \"MCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance\"\n\nThis reverts commit 7a81758f00d9acbad8b42e0420f9da6ed7bf602d.",
+      "linesAdded": 13,
+      "linesDeleted": 19
+    },
+    {
+      "hash": "7a81758f00d9acbad8b42e0420f9da6ed7bf602d",
+      "date": "2025-03-14T16:19:17Z",
+      "author": "glo24157",
+      "message": "MCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance\n\nFix static test failures",
+      "linesAdded": 19,
+      "linesDeleted": 13
+    },
+    {
+      "hash": "cda1d4987712e909e28c57a23bf120d5232f4093",
+      "date": "2025-03-14T15:04:37Z",
+      "author": "glo24157",
+      "message": "MCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance\n\nFix unit test failures",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "5535218752c6cbd366065b383207603ec07071c8",
+      "date": "2025-03-14T14:01:09Z",
+      "author": "glo24157",
+      "message": "MCLOUD-13500 - Unable to open backend with 2.4.8-beta134 in cloud instance\n\nFix regression issue",
+      "linesAdded": 3,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "7fc65c0ade1792a8e86ae180a0fd7390d42b18c5",
+      "date": "2025-03-13T15:25:36Z",
+      "author": "Alexandra Zota",
+      "message": "ACP2E-3504: address CR comments",
+      "linesAdded": 4,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "99d429ce13def451807dc048b446c0c2a3d8d140",
+      "date": "2025-03-13T15:23:26Z",
+      "author": "Oleksandr Dubovyk",
+      "message": "ACP2E-3737: Unable to place orders when coupon code has a '/'",
+      "linesAdded": 3,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "eda47afb0360ac1e53ed2513742312d886ff6de1",
+      "date": "2025-03-13T12:14:23Z",
+      "author": "Deepak",
+      "message": "LYNX-781: Static Test case updated for plugin",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "cf642876bdda5551757bc1866e50eb4788c30845",
+      "date": "2025-03-13T09:35:51Z",
+      "author": "Deepak Soni",
+      "message": "LYNX-781:Return only free payment method when the order total is 0",
+      "linesAdded": 263,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "56b1f553c9114c1d7b6182166f02015e26cd3e22",
+      "date": "2025-03-13T09:32:31Z",
+      "author": "Deepak Soni",
+      "message": "USF-2066, LYNX-319: Updated GraphQL calls to return a 204 response code for the OPTIONS method and added support for 401 and 403 HTTP response codes",
+      "linesAdded": 388,
+      "linesDeleted": 45
+    },
+    {
+      "hash": "6cc56146f509ff6e324d5995a16163200d5c7b00",
+      "date": "2025-03-13T08:35:24Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14095: CNS WebApi Broken and Failed tests",
+      "linesAdded": 24,
+      "linesDeleted": 31
+    },
+    {
+      "hash": "a0fd612caaefd3c9e29654df6c7b466e5d3d93da",
+      "date": "2025-03-13T07:36:51Z",
+      "author": "Abhishek Pathak",
+      "message": "Merge branch '2.4.8-develop' into spartans_pr_13032025",
+      "linesAdded": 1,
+      "linesDeleted": 5
+    },
+    {
+      "hash": "2cb537eafa93e5f01c6533f16576c801024b32a4",
+      "date": "2025-03-13T07:25:10Z",
+      "author": "chandrakalahanchinal",
+      "message": "added pr_exclude for test failures",
+      "linesAdded": 6,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "1ad2ce5cb595258b96aada255458bb2ed2584d9f",
+      "date": "2025-03-13T06:22:22Z",
+      "author": "Deepak Tiwari",
+      "message": "Merge branch 'AC-14142' into cia-2.4.8-develop-bugfix-03122025",
+      "linesAdded": 2,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "901284f1548aaf238d897685dc4d0f89e292e497",
+      "date": "2025-03-13T06:21:40Z",
+      "author": "Deepak Tiwari",
+      "message": "AC-14142: Added new fixtures",
+      "linesAdded": 2,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "aedc189927b2d89dd9e3ac5f6b26fb5f82a05788",
+      "date": "2025-03-13T06:14:52Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-6560' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 6,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "4fabd4d450416d71901d54495701c1427cb281b0",
+      "date": "2025-03-13T06:14:14Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7602' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 3,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "48532052711b8842449722916e6e94bff1b73544",
+      "date": "2025-03-13T06:11:30Z",
+      "author": "chandrakalahanchinal",
+      "message": "Merge branch 'ACQE-7647' into ACQE-Version2-functional-mainline-deployment",
+      "linesAdded": 24,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "51379249e0b5e00d63e14e62ee8c9847dabe7602",
+      "date": "2025-03-13T05:02:50Z",
+      "author": "Deepak Tiwari",
+      "message": "Merge branch 'AC-14142' into cia-2.4.8-develop-bugfix-03122025",
+      "linesAdded": 15,
+      "linesDeleted": 8
+    },
+    {
+      "hash": "bc1b96faa585356fe714602b171f9d89791cfefc",
+      "date": "2025-03-13T05:02:10Z",
+      "author": "Deepak Tiwari",
+      "message": "AC-14142: Added new fixtures",
+      "linesAdded": 15,
+      "linesDeleted": 8
+    },
+    {
+      "hash": "401807e34111cce07c8192528dd5d535ce5b64c3",
+      "date": "2025-03-12T18:32:01Z",
+      "author": "Sokly Meach",
+      "message": "ACP2E-3658: Admin displays incorrect currency symbol on when creating return",
+      "linesAdded": 65,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "37f7aa32edf0c2bf8d5d75c2cdd56f4a7de3e0e6",
+      "date": "2025-03-12T13:26:09Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14095: CNS WebApi Broken and Failed tests",
+      "linesAdded": 14,
+      "linesDeleted": 3
+    },
+    {
+      "hash": "830aa65fa20a2bee02e4ec80b8952b3e6bd54953",
+      "date": "2025-03-12T13:09:33Z",
+      "author": "Alexandra Zota",
+      "message": "ACP2E-3504: fix static error",
+      "linesAdded": 2,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "83f562de0b71c55f10966b0f959f92f1536a8601",
+      "date": "2025-03-12T12:23:38Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14095: CNS WebApi Broken and Failed tests",
+      "linesAdded": 12,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "085ea49782e6f81956dd3a2eba3ab8fac1ebccb6",
+      "date": "2025-03-12T12:13:23Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14095: CNS WebApi Broken and Failed tests",
+      "linesAdded": 11,
+      "linesDeleted": 5
+    },
+    {
+      "hash": "36adef6cdacb6771a6ee78cb16427d421e90cfc6",
+      "date": "2025-03-12T10:33:30Z",
+      "author": "Mage-OS",
+      "message": "Merge branch '2.4-develop' of https://github.com/mage-os/mirror-magento2 into 2.4-develop",
+      "linesAdded": 4,
+      "linesDeleted": 7
+    },
+    {
+      "hash": "d5e8d62ab612d53973c69866090f40ae8ff4b5e7",
+      "date": "2025-03-12T05:32:01Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14178: Customer Grid indexer does not work properly",
+      "linesAdded": 0,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "d5e19f84bb49dc48750aa5ee47338ff7818801a0",
+      "date": "2025-03-11T18:20:30Z",
+      "author": "Alexandra Zota",
+      "message": "ACP2E-3504: fix static error",
+      "linesAdded": 1,
+      "linesDeleted": 0
+    },
+    {
+      "hash": "dfc93bf86d7de2bb1c7b26093a2c5bd75552a263",
+      "date": "2025-03-11T17:33:34Z",
+      "author": "Abhishek Pathak",
+      "message": "AC-14178: Customer Grid indexer does not work properly",
+      "linesAdded": 12,
+      "linesDeleted": 15
+    },
+    {
+      "hash": "3602e0177a63f5b5b5c9bdcd01925423fd51d8a2",
+      "date": "2025-03-11T16:13:48Z",
+      "author": "Alexandra Zota",
+      "message": "Merge branch '2.4-develop' of https://github.com/magento-commerce/magento2ce into ACP2E-3504",
+      "linesAdded": 4,
+      "linesDeleted": 7
+    },
+    {
+      "hash": "56ada6ee016f4b0aa8e5fa634dcfc32ba8b53a77",
+      "date": "2025-03-11T16:13:31Z",
+      "author": "Alexandra Zota",
+      "message": "ACP2E-3504: fix static error",
+      "linesAdded": 1,
+      "linesDeleted": 1
+    },
+    {
+      "hash": "2ec83cef0b8b84a90de1aa571f2a85d6bc5aec6c",
+      "date": "2025-03-11T13:57:40Z",
+      "author": "Oleksandr Dubovyk",
+      "message": "ACP2E-3669: [CLOUD] Product URL Rewrites Not Created for New Store: Go Live Blocker",
+      "linesAdded": 2,
+      "linesDeleted": 4
+    },
+    {
+      "hash": "19963fb9f4017ddb55ba0e0075d48e4d814beb9b",
+      "date": "2025-03-11T13:10:07Z",
+      "author": "Pawan.kumar",
+      "message": "AC-14161: Fix Copyrights Information",
+      "linesAdded": 5,
+      "linesDeleted": 56
+    },
+    {
+      "hash": "727294d82ecd43bb36588df38130e2c5ee08bc2f",
+      "date": "2025-03-11T13:04:09Z",
+      "author": "internal-magento-queue-manager[bot]",
+      "message": "Merge pull request #9669 from magento-commerce/revert-9658-AC-14090\n\nRevert \"AC-14090::Integration Failing with PHP8.4 and MYSQL 8.4\"",
+      "linesAdded": 4,
+      "linesDeleted": 7
+    },
+    {
+      "hash": "8ac2747104622e52f1900bbeddb6010ca87bc7dc",
+      "date": "2025-03-11T12:32:48Z",
+      "author": "Alexandra Zota",
+      "message": "ACP2E-3504: added test coverage",
+      "linesAdded": 119,
+      "linesDeleted": 2
+    },
+    {
+      "hash": "1cb1200011993134c6cfd9d6e2c43c542ca5e4d6",
+      "date": "2025-03-11T10:57:34Z",
+      "author": "Alexandra Zota",
+      "message": "Merge branch '2.4-develop' of https://github.com/magento-commerce/magento2ce into ACP2E-3504",
+      "linesAdded": 15282,
+      "linesDeleted": 6149
+    },
+    {
+      "hash": "dd5cf4a882464fba7eb8f8e18435c888fbd8b7f6",
+      "date": "2025-03-11T10:48:41Z",
+      "author": "Rajesh Kumar",
+      "message": "AC-14090:: Repeated functional failure",
+      "linesAdded": 4,
+      "linesDeleted": 3
+    }
+  ],
+  "pullRequests": [
+    {
+      "number": 216,
+      "title": "Rebase release/3.x",
+      "author": "rhoerr",
+      "description": "Resyncing 3.0 branch with latest Mage-OS 2 changes",
+      "labels": [],
+      "mergeCommitHash": "27ac898b26352770b2cef1104bf5d9d26e625073",
+      "mergedDate": "2026-04-02T13:28:01Z",
+      "type": "other"
+    },
+    {
+      "number": 211,
+      "title": "Fix GraphQL API by pinning webonyx/graphql-php version to <15.31.0",
+      "author": "rhoerr",
+      "description": "### Description (*)\r\n<!---\r\n    Please provide a description of the changes proposed in the pull request.\r\n    Letting us know what has changed and why it needed changing will help us validate this pull request.\r\n-->\r\n\r\nMagento's GraphQL API broke yesterday due to a breaking change in `webonyx/graphql-php` version 15.31. This works around the issue by pinning the version until such a time as the underlying code is made compatible with the library's intended behavior, or the library fixes the issue from their side.\r\n\r\n### Related\r\n<!-- related pull request placeholder -->\r\nhttps://github.com/webonyx/graphql-php/pull/1869\r\nhttps://github.com/webonyx/graphql-php/pull/1876\r\nhttps://github.com/webonyx/graphql-php/pull/1879\r\nhttps://github.com/webonyx/graphql-php/issues/1874\r\nhttps://github.com/magento/magento2/issues/40591\r\n\r\n### Manual testing scenarios (*)\r\n\r\n```bash\r\ncurl -s -X POST \"http://magento2.test:8000/graphql\" \\                                                                                                   \r\n    -H 'Content-Type: application/json' \\                                                                                                                 \r\n    -d '{\"query\":\"query($s:String){products(filter:{name:{match:$s}}){total_count}}\",\"variables\":{\"s\":\"test\"}}'  \r\n```\r\n\r\n### Questions or comments\r\n<!---\r\n\tIf relevant, here you can ask questions or provide comments on your pull request for the reviewer\r\n\tFor example if you need assistance with writing tests or would like some feedback on one of your development ideas\r\n-->\r\n\r\nThis allows any version 15.x below 15.31. If/when a fixed version comes out, we can add `|| ^15.32` or such.\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [x] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [x] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "2e733648455ff9970ac10d24420345c26a6af73f",
+      "mergedDate": "2026-03-18T02:09:39Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 210,
+      "title": "ACP2E-4138: Attacker could use POST request using REST API and can send RCE payload",
+      "author": "marcelmtz",
+      "description": "\r\n\r\n### Description (*)\r\nCherry picks https://github.com/magento/magento2/commit/796c4ce195cee0814ac92e5a19fc2ecfa79dae69\r\n- Attacker could use POST request using REST API and can send RCE payload\r\n\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [ ] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "c26b4eebad53828344f4111d428b4543b3545c2a",
+      "mergedDate": "2026-03-18T02:07:34Z",
+      "type": "security"
+    },
+    {
+      "number": 208,
+      "title": "Merge 2.x latest to 3.x",
+      "author": "rhoerr",
+      "description": "",
+      "labels": [],
+      "mergeCommitHash": "c2df23fdfb4a60ce279b3e46cc5a000adda6e088",
+      "mergedDate": "2026-03-17T00:19:22Z",
+      "type": "other"
+    },
+    {
+      "number": 206,
+      "title": "Security changes from upstream 2.4.8-p4",
+      "author": "rhoerr",
+      "description": "Obtained change list from a cloned Magento2 repository via\r\n\r\n```bash\r\ngit diff 2.4.8-p3 2.4.8-p4 -- . > 2.4.8-p3-to-p4.diff\r\n```\r\n\r\nAnd then applied that on Mage-OS `main` minus composer file changes. There were no conflicts this time.\r\n\r\nCompare changes to https://github.com/magento/magento2/compare/2.4.8-p3..2.4.8-p4\r\nNote you will get different results from https://github.com/magento/magento2/compare/2.4.8-p3...2.4.8-p4 (three dots instead of two), or by appending .diff or .patch.\r\n\r\nThere are 106 files changed in the upstream patch, 22 of which are composer files.\r\n106 - 22 = 84 files changed here.",
+      "labels": [],
+      "mergeCommitHash": "fd5017a1d6465034287cb16096625aeff4509235",
+      "mergedDate": "2026-03-10T23:55:51Z",
+      "type": "security"
+    },
+    {
+      "number": 205,
+      "title": "fix: Real column type introspection skips unsigned/nullable processors",
+      "author": "furan917",
+      "description": "Highlight:`double` colums missing `scale` & `precision` with `unsigned=true`, cause `setup:db:status` to keep returning a change despite the database having the correct values.\r\n\r\n### Description (*)\r\n`setup:db-schema:upgrade` and `setup:db:status` perpetually report pending modify_column changes for DOUBLE UNSIGNED columns that have no explicit precision/scale even when the database schema is already correct.\r\n\r\nThis affects any extension declaring <column xsi:type=\"double\" unsigned=\"true\"> without precision and scale attributes (e.g. Yotpo Core module's yotpo_product_sync and yotpo_orders_sync tables).\r\n\r\nRoot Cause:\r\n\r\nIn `Real::fromDefinition()`, the regex at line 88 requires (precision, scale) parentheses to match:\r\n\r\n`/^(float|decimal|double)\\s*\\((\\d+)\\s*,\\s*(\\d+)\\)/i`\r\n\r\nWhen MySQL returns a bare double unsigned as the COLUMN_TYPE, this regex doesn't match. The `Unsigned::fromDefinition()` and `Nullable::fromDefinition()` processors are only called inside that match block, so they're never reached. The column defaults to `unsigned=false`, creating a permanent diff against the XML declaration of `unsigned=\"true`\".\r\n\r\nThe Integer processor doesn't have this problem because its regex uses an optional group for the parentheses: `(?:\\((?<padding>\\d+)\\))?`\r\n\r\nFix:\r\nMoved the unsigned and nullable processor calls outside the precision/scale conditional so they run for all real type definitions regardless of whether precision/scale are present.\r\n\r\n\r\n### Manual testing scenarios (*)\r\n1. `composer require yotpo/module-yotpo-core` or create an XML DB Schema with a `double` column which needs to be missing precision, or scale definitions.\r\n2. Run `setup:db:status`\r\n3: Run `setup:db-schema:upgrade`\r\n4: Run `setup:db:status` # <- This should be clean, but it isn't due to the doubles in the yotpo module\r\n\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "c40f7c88634d18d0e59b191c258ef2a5d51776c0",
+      "mergedDate": "2026-03-10T18:18:14Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 196,
+      "title": "Generalize product metapackage detection for alternate  metapackages",
+      "author": "rhoerr",
+      "description": "The system package detection was previously hardcoded to only recognize packages matching `mage-os/product-*-edition`. This change generalizes the regex to match any `mage-os/product-*` package, enabling support for alternate product metapackages like `mage-os/product-minimal`.\r\n\r\n- Update isSystemPackage() regex to match any mage-os/product-* package\r\n- Update getRequiredPhpVersion() to use isSystemPackage() instead of hardcoded product-community-edition\r\n- Add unit tests for isSystemPackage() with various package patterns\r\n- Update ProductMetadataTest to use proper mage-os package names\r\n\r\n<!---\r\n    Thank you for contributing to Mage-OS.\r\n    To help us process this pull request we recommend that you add the following information:\r\n     - Summary of the pull request,\r\n     - Issue(s) related to the changes made,\r\n     - Manual testing scenarios\r\n    Fields marked with (*) are required. Please don't remove the template.\r\n-->\r\n\r\n<!--- Please provide a general summary of the Pull Request in the Title above -->\r\n\r\n### Description (*)\r\n<!---\r\n    Please provide a description of the changes proposed in the pull request.\r\n    Letting us know what has changed and why it needed changing will help us validate this pull request.\r\n-->\r\n\r\nImproves flexibility of product version loading for different product package names \r\n\r\n### Related Pull Requests\r\nhttps://github.com/mage-os/mageos-magento2/pull/115\r\n<!-- related pull request placeholder -->\r\n\r\n### Fixed Issues (if relevant)\r\n<!---\r\n    If relevant, please provide a list of fixed issues in the format mage-os/mageos-magento2#<issue_number>.\r\n    There could be 1 or more issues linked here and it will help us find some more information about the reasoning behind this change.\r\n-->\r\n1. Fixes mage-os/mageos-magento2#<issue_number>\r\n\r\n### Manual testing scenarios (*)\r\n<!---\r\n    Please provide a set of unambiguous steps to test the proposed code change.\r\n    Giving us manual testing scenarios will help with the processing and validation process.\r\n-->\r\n1. ...\r\n2. ...\r\n\r\n### Questions or comments\r\n<!---\r\n\tIf relevant, here you can ask questions or provide comments on your pull request for the reviewer\r\n\tFor example if you need assistance with writing tests or would like some feedback on one of your development ideas\r\n-->\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "62ae6fe6571908e02a0a8bd839942c0c90d20406",
+      "mergedDate": "2026-02-18T04:03:04Z",
+      "type": "feature"
+    },
+    {
+      "number": 200,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging composer.json\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/Model/ProductTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Catalog/Block/Product/ListProduct/SortingTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/CatalogInventory/Observer/SaveInventoryDataObserverTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Api/AddressRepositoryTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/EditTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/LoginTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/RegisterTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Model/ResourceModel/AddressRepositoryTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/CustomerImportExport/Model/Export/AddressTest.php\nCONFLICT (content): Merge conflict in dev/tests/integration/testsuite/Magento/CustomerImportExport/Model/Export/AddressTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Paypal/Model/Express/CheckoutTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Security/Model/ResourceModel/UserExpirationTest.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "029bfed3f43ea90d271123737ca8b9e0b12d192d",
+      "mergedDate": "2026-02-18T03:59:29Z",
+      "type": "security"
+    },
+    {
+      "number": 194,
+      "title": "Cherry-pick: fixing setup:di:compile area order in plugin generation …",
+      "author": "rhoerr",
+      "description": "…so frontend area cache picks up compiled files instead of regenerating on the first request by @jakwinkler\r\n\r\nThis applies Jakub Winkler's fix of https://github.com/magento/magento2/pull/40407 from https://github.com/magento/magento2/pull/40408",
+      "labels": [],
+      "mergeCommitHash": "7bbee1b6d44de1127eb7cf8f511a90f5f262308a",
+      "mergedDate": "2026-01-11T22:09:39Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 198,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/code/Magento/Version/Test/Unit/Controller/Index/IndexTest.php\nCONFLICT (content): Merge conflict in app/code/Magento/Version/Test/Unit/Controller/Index/IndexTest.php\nAuto-merging lib/internal/Magento/Framework/Composer/Test/Unit/ComposerInformationTest.php\nAuto-merging lib/internal/Magento/Framework/MessageQueue/Test/Unit/Consumer/Config/XsdTest.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "a8f4c8a36d42088a41305595b8a81dfe37a70f19",
+      "mergedDate": "2026-02-10T01:21:41Z",
+      "type": "security"
+    },
+    {
+      "number": 195,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/code/Magento/Customer/Helper/Address.php\nAuto-merging app/code/Magento/Webapi/Test/Unit/Model/Rest/Swagger/GeneratorTest.php\nAuto-merging composer.json\nAuto-merging dev/tests/integration/testsuite/Magento/Paypal/Model/Express/CheckoutTest.php\nAuto-merging lib/internal/Magento/Framework/Composer/ComposerInformation.php\nCONFLICT (content): Merge conflict in lib/internal/Magento/Framework/Composer/ComposerInformation.php\nAuto-merging lib/internal/Magento/Framework/Image/Adapter/ImageMagick.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "aa287101ccbfac42970166db6d153eeb83afdfeb",
+      "mergedDate": "2026-01-27T02:53:01Z",
+      "type": "security"
+    },
+    {
+      "number": 188,
+      "title": "Feature: Add command to detect new queues",
+      "author": "furan917",
+      "description": "### Description\r\nThe `setup:db:status` command does not pick up newly defined or missing queues, this means anyone trying to get close to true green/blue deployments has no quick way to check if a setup:upgrade is required if a new queue (mysql or amqp) has been added and no other changes are made. \r\n\r\nThis PR adds the console command `queue:config:status`, which checks for new queues. In line with other status commands; 0 = no new queues, exit code 2 = new unconfigured queues.\r\n\r\nImportant architecture info: The command resides in MessageQueue, and it uses DI to hydrate any ChangeDetectors - which there are 2 of, one in MysqlMq and one on Amqp, this avoids any additional module dependency. MysqlMq checks if the queue exists in the DB; Amqp, if you have rabbitmq/amazonmq/etc, checks if the queue exists in the broker.\r\n\r\n### Related Pull Requests\r\nFollows on from the similar PR https://github.com/mage-os/mageos-magento2/pull/186 as a concentrated effort to improve Blue/Green deployment efforts. \r\n\r\n### Manual testing scenarios\r\n1. \r\n```\r\ncat > app/code/Magento/ImportExport/etc/queue_topology.xml <<'EOF'\r\n<?xml version=\"1.0\"?>\r\n<config xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"urn:magento:framework-message-queue:etc/topology.xsd\">\r\n    <exchange name=\"magento\">\r\n        <binding id=\"exportBinding\" topic=\"import_export.export\" destination=\"export\"/>\r\n    </exchange>\r\n    <exchange name=\"magento\" connection=\"amqp\" type=\"topic\">\r\n        <binding id=\"exportAmqpBinding\" topic=\"import_export.export\" destination=\"test.amqp.queue\" destinationType=\"queue\"/>\r\n    </exchange>\r\n</config>\r\nEOF\r\n```\r\n2. `bin/magento queue:config:status` ## exit code 2  \r\n3. `bin/magento setup:upgrade`\r\n4. `bin/magento queue:config:status` ## exit code 0\r\n5. `git checkout -- app/code/Magento/ImportExport/etc/queue_topology.xml`\r\n\r\n\r\n### Questions or comments\r\n<!---\r\n\tIf relevant, here you can ask questions or provide comments on your pull request for the reviewer\r\n\tFor example if you need assistance with writing tests or would like some feedback on one of your development ideas\r\n-->\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [x] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n \r\n Prexisting unit & integration test failures stop me from checking all tests passing box - though the unit tests related to new code do all pass.\r\n",
+      "labels": [],
+      "mergeCommitHash": "ab1e08e4f608e9b416a474597ab7a2643af7d4f6",
+      "mergedDate": "2026-01-16T22:14:44Z",
+      "type": "feature"
+    },
+    {
+      "number": 189,
+      "title": "Expand allowed versions of MySQL/MariaDB",
+      "author": "rhoerr",
+      "description": "<!---\r\n    Thank you for contributing to Mage-OS.\r\n    To help us process this pull request we recommend that you add the following information:\r\n     - Summary of the pull request,\r\n     - Issue(s) related to the changes made,\r\n     - Manual testing scenarios\r\n    Fields marked with (*) are required. Please don't remove the template.\r\n-->\r\n\r\n<!--- Please provide a general summary of the Pull Request in the Title above -->\r\n\r\n### Description (*)\r\nThis integrates the idea and work of https://github.com/Sental/db-override into the Mage-OS core.\r\n\r\nCurrently if you try to install Mage-OS on, say, MariaDB 10.11, you'll get an error. It's perfectly compatible, but Magento errs on the side of caution and only allows installation with specific known supported versions/DB engines: MySQL 5.7, 8.0; MariaDB 10.4, 10.5, 10.6, 11.4.\r\n\r\nThis expands the supported versions to include MySQL 8.1, and all MariaDB 10.2-10.11 and 11.x.\r\n\r\nI added the new rules separately so that they shouldn't cause merge conflicts with changes to Magento's supported DB rules upstream.\r\n\r\n### Related Pull Requests\r\n\\-\r\n\r\n### Fixed Issues (if relevant)\r\n\\-\r\n\r\n### Manual testing scenarios (*)\r\n1. Install MariaDB 10.11.\r\n2. Run `setup:install`, without the patch. Get error.\r\n3. Run `setup:install`, with the patch. Install successfully.\r\n\r\n### Questions or comments\r\nThe unit test for the related class is unaffected, still runs cleanly.\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "d247efa32de28458c253b14413af9f6cf047d4b2",
+      "mergedDate": "2026-01-11T02:31:42Z",
+      "type": "feature"
+    },
+    {
+      "number": 153,
+      "title": "Changes from upstream release 2.4.8-p2",
+      "author": "rhoerr",
+      "description": "Obtained change list from a cloned Magento2 repository via\r\n\r\n```\r\ngit diff 2.4.8-p1 2.4.8-p2 -- . > 2.4.8-p1-to-p2.diff\r\n```\r\n\r\nAnd then applied that on Mage-OS `release/1.x` minus composer file changes. There were no conflicts that I had to manually resolve.\r\n\r\nCompare changes to https://github.com/magento/magento2/compare/2.4.8-p1..2.4.8-p2 -- should match other than generated composer.json files.",
+      "labels": [],
+      "mergeCommitHash": "3fec6cabf0e7b5a6de25db253a8d86cf40a140bb",
+      "mergedDate": "2025-08-13T15:53:03Z",
+      "type": "other"
+    },
+    {
+      "number": 149,
+      "title": "Chore: fix upstream merge conflict (#146)",
+      "author": "rhoerr",
+      "description": "This should resolve the merge conflict in https://github.com/mage-os/mageos-magento2/pull/146",
+      "labels": [],
+      "mergeCommitHash": "a41cf3cca6b3a80544729204c6aff189e09279cd",
+      "mergedDate": "2025-07-14T19:16:43Z",
+      "type": "security"
+    },
+    {
+      "number": 193,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging lib/internal/Magento/Framework/Console/Cli.php\nCONFLICT (content): Merge conflict in lib/internal/Magento/Framework/Console/Cli.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "fec76fc6bb42f3d629d4fbcddcce2a8437752b5f",
+      "mergedDate": "2026-01-11T22:12:40Z",
+      "type": "security"
+    },
+    {
+      "number": 186,
+      "title": "Feature: Add command to detect unregistered themes",
+      "author": "furan917",
+      "description": "### Description\r\nThe `setup:db:status` command does not pick up unregistered themes, this means anyone trying to get close to true green/blue deployments has no quick way to check if a setup:upgrade is required if a new theme is added and no other changes are made. \r\n\r\nThis PR adds the console command `theme:registration:status`, which checks for unregistered themes. In line with other status commands; 0 = no themes to register, exit code 2 = theme(s) unregistered.\r\n\r\n\r\n### Manual testing scenarios\r\nCreate or copy/composer in a new theme, for simplicity we will create a dummy theme. \r\n\r\n1. `mkdir -p app/design/frontend/Test/dummy`\r\n2. \r\n```\r\ncat > app/design/frontend/Test/dummy/registration.php << 'EOF'\r\n<?php\r\nuse Magento\\Framework\\Component\\ComponentRegistrar;\r\n\r\nComponentRegistrar::register(\r\n    ComponentRegistrar::THEME,\r\n    'frontend/Test/dummy',\r\n    __DIR__\r\n);\r\nEOF\r\n```\r\n3.\r\n ```\r\ncat > app/design/frontend/Test/dummy/theme.xml << 'EOF'\r\n<?xml version=\"1.0\"?>\r\n<theme xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n       xsi:noNamespaceSchemaLocation=\"urn:magento:framework:Config/etc/theme.xsd\">\r\n    <title>Test Dummy Theme</title>\r\n    <parent>Magento/blank</parent>\r\n</theme>\r\nEOF\r\n```\r\n4. `bin/magento theme:registration:status` ## exit code 2\r\n\r\n5. `bin/magento setup:upgrade`\r\n6. `bin/magento theme:registration:status` # exit code 0\r\n\r\n\r\n### Contribution checklist\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [x] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n \r\n Unit and Integration tests do not pass, but my tests do, it appear these failure are preexisting ?\r\n",
+      "labels": [],
+      "mergeCommitHash": "813496ee749e411dfa88acf3f06eea706923b254",
+      "mergedDate": "2025-12-14T13:45:17Z",
+      "type": "feature"
+    },
+    {
+      "number": 185,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/code/Magento/AdminAnalytics/Test/Unit/Condition/CanViewNotificationTest.php\nCONFLICT (content): Merge conflict in app/code/Magento/AdminAnalytics/Test/Unit/Condition/CanViewNotificationTest.php\nAuto-merging app/code/Magento/Customer/etc/di.xml\nAuto-merging app/code/Magento/Webapi/Test/Unit/Model/Rest/Swagger/GeneratorTest.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "aedcac91901ea2cc191545dd9ee10124edcf8b3e",
+      "mergedDate": "2025-12-13T03:50:10Z",
+      "type": "security"
+    },
+    {
+      "number": 181,
+      "title": "chore: Remove outdated `replace` and `extra` definitions from composer files",
+      "author": "rhoerr",
+      "description": "Based on the discussions in https://github.com/magento/magento2/pull/36543 and https://github.com/magento/magento2/issues/34562, this removes all composer `replace` and `extra` references to these packages:\r\n\r\n```json\r\n        \"blueimp/jquery-file-upload\": \"5.6.14\",\r\n        \"components/jquery\": \"1.11.0\",\r\n        \"components/jqueryui\": \"1.10.4\",\r\n        \"linkorb/jsmin-php\": \"1.1.2\",\r\n        \"trentrichardson/jquery-timepicker-addon\": \"1.4.3\",\r\n        \"twbs/bootstrap\": \"3.1.0\"\r\n```\r\n\r\nThese modules all are (or were at some time in the past) integrated into the Magento 2 core codebase. These rules were added to prevent the (mostly JS/frontend) components from being included separately, which would result in duplicate code in an installation.\r\n\r\nHowever:\r\n\r\n1. Any such code duplication is a customization issue, and not our responsibility to constrain.\r\n2. Being mostly frontend components, using composer to include them in the first place would be an unusual practice.\r\n3. The mere inclusion of these replace rules is enough to trigger `roave/security-advisories` alerts, which is now audited by default as of Composer 2.9. (See #178)\r\n\r\nRemoving all references in this way should fix the audit error for Composer 2.9, and clean up in the process.\r\n\r\nTangentially related PR: https://github.com/mage-os/mageos-magento2-page-builder/pull/9",
+      "labels": [],
+      "mergeCommitHash": "d4f4f5ec6a6b8730a573497cc0bebce6e4c2c4bf",
+      "mergedDate": "2025-12-08T23:59:59Z",
+      "type": "chore"
+    },
+    {
+      "number": 177,
+      "title": "Fix SRI hash failures with JS bundling and minifying",
+      "author": "rhoerr",
+      "description": "This applies the Adobe Commerce patch `Revert-AC-15165-2-4-8-p3-composer.zip` from https://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-27997.\r\n\r\n> Recent changes to the Content Security Policy (CSP) feature have caused the checkout functionality to fail when minification, bundling, and, in some cases, merging of JS assets are enabled. This issue can completely block order placement on the storefront.\r\n\r\nThis is connected to https://github.com/magento/magento2/issues/40236 and https://github.com/magento/magento2/issues/40247\r\n\r\nThere's a possible alternate patch in progress as AC-15867 https://github.com/magento/quality-patches/commit/b5333ad787f6946c2ac0452ede276a6f7a7c837d , but that has not been officially published yet, and the word is it does not fully resolve the issue as it is. The revert seems to be the way to go for now.",
+      "labels": [],
+      "mergeCommitHash": "7ddc0515261162972bc57341b93d2f9ccc09e226",
+      "mergedDate": "2025-12-08T23:57:34Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 179,
+      "title": "Add X-Dist response header with the distribution name",
+      "author": "rhoerr",
+      "description": "<!---\r\n    Thank you for contributing to Mage-OS.\r\n    To help us process this pull request we recommend that you add the following information:\r\n     - Summary of the pull request,\r\n     - Issue(s) related to the changes made,\r\n     - Manual testing scenarios\r\n    Fields marked with (*) are required. Please don't remove the template.\r\n-->\r\n\r\n<!--- Please provide a general summary of the Pull Request in the Title above -->\r\n\r\n### Description (*)\r\nThis adds a `X-Dist` header that outputs the distribution name (`Mage-OS`).\r\n\r\nThis is a reliable, non-invasive, and performant way of flagging installations for such purposes as https://github.com/HTTPArchive/wappalyzer.\r\n\r\nI chose `X-Dist` to avoid conflicts with `X-Powered-By` and `X-Built-With` as used by various other systems.\r\n\r\n### Related Pull Requests\r\n<!-- related pull request placeholder -->\r\n\\-\r\n\r\n### Fixed Issues (if relevant)\r\n<!---\r\n    If relevant, please provide a list of fixed issues in the format mage-os/mageos-magento2#<issue_number>.\r\n    There could be 1 or more issues linked here and it will help us find some more information about the reasoning behind this change.\r\n-->\r\n\\-\r\n\r\n### Manual testing scenarios (*)\r\n<!---\r\n    Please provide a set of unambiguous steps to test the proposed code change.\r\n    Giving us manual testing scenarios will help with the processing and validation process.\r\n-->\r\n1. Load homepage\r\n2. Look at headers and see `X-Dist: Mage-OS`\r\n\r\n<img width=\"959\" height=\"320\" alt=\"Screenshot from 2025-11-26 22-48-03\" src=\"https://github.com/user-attachments/assets/c3c8a19e-d1d9-492b-a763-6cc1cc09c92b\" />\r\n\r\n\r\n### Questions or comments\r\n<!---\r\n\tIf relevant, here you can ask questions or provide comments on your pull request for the reviewer\r\n\tFor example if you need assistance with writing tests or would like some feedback on one of your development ideas\r\n-->\r\n\\-\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [ ] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "31479f183dc89f5147bbb5ee465e59cb85c99385",
+      "mergedDate": "2025-12-04T13:44:36Z",
+      "type": "feature"
+    },
+    {
+      "number": 183,
+      "title": "Updated Mage-OS readme files",
+      "author": "rhoerr",
+      "description": "This updates the readme, security, changelog, and copying files for Mage-OS.",
+      "labels": [],
+      "mergeCommitHash": "df11d1281a3fc886f28baad0b625d80e1e4611f2",
+      "mergedDate": "2025-12-03T15:06:38Z",
+      "type": "chore"
+    },
+    {
+      "number": 184,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/design/adminhtml/Magento/backend/Magento_AdminNotification/web/css/source/_module.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/_footer.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/_menu.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/main/_page-nav.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/pages/_cache-management.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/pages/_login.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Ui/web/css/source/module/data-grid/data-grid-header/_data-grid-filters.less\nAuto-merging app/design/adminhtml/Magento/backend/web/app/setup/styles/less/lib/_variables.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/_actions.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/_structure.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/_tabs.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/actions/_actions-dropdown.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/actions/_actions-multiselect.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/actions/_actions-select.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/forms/_controls.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_actions.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_colors.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_components.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_forms.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_structure.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/styles-old.less\nAuto-merging dev/tests/integration/framework/deployTestModules.php\nAuto-merging dev/tests/integration/testsuite/Magento/Backend/Block/Page/FooterTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/Model/Product/IsSaleableTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/Model/ProductTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/_files/issaleable_product.php\nAuto-merging dev/tests/integration/testsuite/Magento/Catalog/Block/Product/ListProduct/SortingTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/CatalogInventory/Observer/SaveInventoryDataObserverTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/ConfigurableProduct/_files/configurable_product_with_two_child_products.php\nAuto-merging dev/tests/integration/testsuite/Magento/ConfigurableProduct/_files/product_configurable_with_assigned_simples.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Api/AddressRepositoryTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/LoginTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/RegisterTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Model/ResourceModel/AddressRepositoryTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Dhl/_files/domestic_shipment_request.xml\nAuto-merging dev/tests/integration/testsuite/Magento/Dhl/_files/shipment_request.xml\nCONFLICT (modify/delete): dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product.php deleted in HEAD and modified in 410b59d8e952e9c94447cc2b31e63aebce44e9ab.  Version 410b59d8e952e9c94447cc2b31e63aebce44e9ab of dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product.php left in tree.\nCONFLICT (modify/delete): dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product_rollback.php deleted in HEAD and modified in 410b59d8e952e9c94447cc2b31e63aebce44e9ab.  Version 410b59d8e952e9c94447cc2b31e63aebce44e9ab of dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product_rollback.php left in tree.\nAuto-merging dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_downloadable_product.php\nAuto-merging dev/tests/integration/testsuite/Magento/Framework/Backup/DbTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Framework/Backup/_files/trigger_rollback.php\nAuto-merging dev/tests/integration/testsuite/Magento/Paypal/Model/Express/CheckoutTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Security/Model/ResourceModel/UserExpirationTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Version/Controller/Index/IndexTest.php\nAuto-merging dev/tests/js/jasmine/tests/app/code/Magento/Payment/base/js/model/credit-card-validation/validator.test.js\nAuto-merging lib/internal/Magento/Framework/App/ProductMetadata.php\nAuto-merging lib/internal/Magento/Framework/Composer/ComposerInformation.php\nAuto-merging lib/internal/Magento/Framework/Composer/Test/Unit/ComposerInformationTest.php\nAuto-merging lib/internal/Magento/Framework/Image/Adapter/ImageMagick.php\nAuto-merging lib/internal/Magento/Framework/MessageQueue/Test/Unit/Consumer/Config/XsdTest.php\nAuto-merging setup/index.php\nAuto-merging setup/view/magento/setup/index.phtml\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "6e3a202ad4f4d43345b0e537b99676fe8438e418",
+      "mergedDate": "2025-12-02T01:22:40Z",
+      "type": "security"
+    },
+    {
+      "number": 182,
+      "title": "Chore: Resolve merge of 2.4 develop upstream",
+      "author": "rhoerr",
+      "description": "",
+      "labels": [],
+      "mergeCommitHash": "52d6a2c41e0dca86205e47d0472e3827d17f4315",
+      "mergedDate": "2025-11-30T23:01:07Z",
+      "type": "chore"
+    },
+    {
+      "number": 180,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/design/adminhtml/Magento/backend/Magento_AdminNotification/web/css/source/_module.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/_footer.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/_menu.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/main/_page-nav.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/pages/_cache-management.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Backend/web/css/source/module/pages/_login.less\nAuto-merging app/design/adminhtml/Magento/backend/Magento_Ui/web/css/source/module/data-grid/data-grid-header/_data-grid-filters.less\nAuto-merging app/design/adminhtml/Magento/backend/web/app/setup/styles/less/lib/_variables.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/_actions.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/_structure.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/_tabs.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/actions/_actions-dropdown.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/actions/_actions-multiselect.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/actions/_actions-select.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/forms/_controls.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_actions.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_colors.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_components.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_forms.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_structure.less\nAuto-merging app/design/adminhtml/Magento/backend/web/css/styles-old.less\nAuto-merging dev/tests/integration/framework/deployTestModules.php\nAuto-merging dev/tests/integration/testsuite/Magento/Backend/Block/Page/FooterTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/Model/Product/IsSaleableTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/Model/ProductTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Bundle/_files/issaleable_product.php\nAuto-merging dev/tests/integration/testsuite/Magento/Catalog/Block/Product/ListProduct/SortingTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/CatalogInventory/Observer/SaveInventoryDataObserverTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/ConfigurableProduct/_files/configurable_product_with_two_child_products.php\nAuto-merging dev/tests/integration/testsuite/Magento/ConfigurableProduct/_files/product_configurable_with_assigned_simples.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Api/AddressRepositoryTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/LoginTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Block/Form/RegisterTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Customer/Model/ResourceModel/AddressRepositoryTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Dhl/_files/domestic_shipment_request.xml\nAuto-merging dev/tests/integration/testsuite/Magento/Dhl/_files/shipment_request.xml\nCONFLICT (modify/delete): dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product.php deleted in HEAD and modified in 410b59d8e952e9c94447cc2b31e63aebce44e9ab.  Version 410b59d8e952e9c94447cc2b31e63aebce44e9ab of dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product.php left in tree.\nCONFLICT (modify/delete): dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product_rollback.php deleted in HEAD and modified in 410b59d8e952e9c94447cc2b31e63aebce44e9ab.  Version 410b59d8e952e9c94447cc2b31e63aebce44e9ab of dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_configurable_downloadable_product_rollback.php left in tree.\nAuto-merging dev/tests/integration/testsuite/Magento/Downloadable/_files/quote_with_downloadable_product.php\nAuto-merging dev/tests/integration/testsuite/Magento/Framework/Backup/DbTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Framework/Backup/_files/trigger_rollback.php\nAuto-merging dev/tests/integration/testsuite/Magento/Paypal/Model/Express/CheckoutTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Security/Model/ResourceModel/UserExpirationTest.php\nAuto-merging dev/tests/integration/testsuite/Magento/Version/Controller/Index/IndexTest.php\nAuto-merging dev/tests/js/jasmine/tests/app/code/Magento/Payment/base/js/model/credit-card-validation/validator.test.js\nAuto-merging lib/internal/Magento/Framework/App/ProductMetadata.php\nAuto-merging lib/internal/Magento/Framework/Composer/ComposerInformation.php\nAuto-merging lib/internal/Magento/Framework/Composer/Test/Unit/ComposerInformationTest.php\nAuto-merging lib/internal/Magento/Framework/Image/Adapter/ImageMagick.php\nAuto-merging lib/internal/Magento/Framework/MessageQueue/Test/Unit/Consumer/Config/XsdTest.php\nAuto-merging setup/index.php\nAuto-merging setup/view/magento/setup/index.phtml\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "49b88728de902cb185bf801f83a9f38d01b3d2cd",
+      "mergedDate": "2025-11-30T23:01:56Z",
+      "type": "security"
+    },
+    {
+      "number": 176,
+      "title": "AC-14999: FPC not work when login by @rogerdz",
+      "author": "rhoerr",
+      "description": "Fixes #175 by way of https://github.com/magento/magento2/issues/40008",
+      "labels": [],
+      "mergeCommitHash": "81d158244d35ad2fcd27c50314ae690bb5f6946d",
+      "mergedDate": "2025-11-23T00:07:55Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 174,
+      "title": "fix: file validation bypass by targeting non file input types during customer file upload",
+      "author": "SamJUK",
+      "description": "Applies proposed upstream changes in https://github.com/magento/magento2/pull/40262\r\n\r\n### Description (*)\r\nCurrently you can bypass file validation logic within the customer upload controllers, by uploading arbitrary files against non file input type attributes (Select/Hidden/Text etc).\r\n\r\nAnd as far as I am aware, there is no valid reason to be uploading a file, to non file input types (e.g select / text).\r\n\r\nThis specific functionality is actively being exploited as part of the Session Reaper (CVE-2025-54236) chain to achieve RCE.\r\nhttps://slcyber.io/assetnote-security-research-center/why-nested-deserialization-is-still-harmful-magento-rce-cve-2025-54236/\r\n\r\nThis PR restricts the file uploads to only input types that are expected to have file uploads. Whilst leaving the input types configurable to merchants/extension developers via di.xml\r\n\r\n\r\n### Related Pull Requests\r\nhttps://github.com/magento/magento2/pull/40262\r\n\r\n### Manual testing scenarios (*)\r\n1. Checkout 2.4-develop\r\n\r\n2. Post an arbitrary file to the `customer/address_file/upload` endpoint, targeting a select attribute (`country_id`)\r\nNote a success message, and the file is present in the `pub/media/customer_address` directory\r\n\r\n3. Post an arbitrary file to the `customer/address_file/upload` endpoint, targeting a text attribute (`city`)\r\nNote a error message, referencing text based validation error trying to validate a file as a string\r\n\r\n4. Checkout this PR\r\n5. Repeat Steps 2 & 3, note a friendly error message stating file uploads are unexpected.\r\n6. Create a image/file based attribute, update the curl command to target that. Upload should succeed.\r\n\r\n```sh\r\n# ENV Prep\r\necho \"hello-world\" > /tmp/hello-world\r\nFORMKEY=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1)\r\n\r\n# Test post targeting country_id (select type)\r\ncurl -k --cookie \"form_key=$FORMKEY\" -F \"form_key=$FORMKEY\" -F \"custom_attributes[country_id]=@/tmp/hello-world\" https://app.luma.test/customer/address_file/upload\r\n\r\n# Test post targeting city (text type)\r\ncurl -k --cookie \"form_key=$FORMKEY\" -F \"form_key=$FORMKEY\" -F \"custom_attributes[city]=@/tmp/hello-world\" https://app.luma.test/customer/address_file/upload\r\n\r\n# Confirm the file is uploaded to the media file system\r\nfind pub/media/customer_address/ -type f\r\n```\r\n\r\nBefore Patch | After Patch\r\n--- | ---\r\n<img width=\"2054\" height=\"248\" alt=\"Screenshot 2025-10-30 at 23 13 58\" src=\"https://github.com/user-attachments/assets/8f8f0a89-1a5f-4156-92ff-c87739e47c9f\" /> | <img width=\"1738\" height=\"174\" alt=\"Screenshot 2025-10-30 at 23 13 31\" src=\"https://github.com/user-attachments/assets/b322a8f2-5d53-4439-b9ac-32e6d11bc414\" />\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "8afe79751dc58fb30df8b3bbbea4d6156bc088d6",
+      "mergedDate": "2025-11-08T01:07:34Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 53,
+      "title": "Fix customer group extension attributes for lists",
+      "author": "avstudnitz",
+      "description": "### Description\r\nThe plugin `\\Magento\\Customer\\Model\\Plugin\\GetListCustomerGroupExcludedWebsite` always created a new extension object for customer group lists, regardless of if one already exists. So it overwrote other extension attributes. This change checks if an extension object already exists.\r\n\r\n### Manual testing scenarios (*)\r\nCreate your own module, introducing another extension attribute for the customer group entity. In this example, an extension attribute named \"discount_percentage\" is used. \r\n\r\netc/db_schema.xml:\r\n```\r\n<?xml version=\"1.0\"?>\r\n<schema xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n        xsi:noNamespaceSchemaLocation=\"urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd\">\r\n    <table name=\"customer_group\">\r\n        <column xsi:type=\"decimal\" name=\"discount_percentage\" scale=\"2\" precision=\"4\" unsigned=\"true\"\r\n                nullable=\"true\" default=\"0\" comment=\"Discount Percentage\"/>\r\n    </table>\r\n</schema>\r\n```\r\n\r\netc/extension_attributes.xml:\r\n```\r\n<?xml version=\"1.0\"?>\r\n<config xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"urn:magento:framework:Api/etc/extension_attributes.xsd\">\r\n    <extension_attributes for=\"Magento\\Customer\\Api\\Data\\GroupInterface\">\r\n        <attribute code=\"discount_percentage\" type=\"float\" />\r\n    </extension_attributes>\r\n</config>\r\n```\r\n\r\netc/di.xml:\r\n```\r\n<?xml version=\"1.0\"?>\r\n<config xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n        xsi:noNamespaceSchemaLocation=\"urn:magento:framework:ObjectManager/etc/config.xsd\">\r\n    <type name=\"Magento\\Framework\\Api\\ExtensionAttribute\\JoinProcessor\">\r\n        <plugin name=\"customer_group_discount_extension_attribute\"\r\n                type=\"Custom\\CustomerGroupDiscount\\Plugin\\ExtensionAttributeJoinProcessorPlugin\"/>\r\n    </type>\r\n</config>\r\n```\r\n\r\nPlugin/ExtensionAttributeJoinProcessorPlugin.php:\r\n```\r\n<?php\r\ndeclare(strict_types=1);\r\n\r\nnamespace Custom\\CustomerGroupDiscount\\Plugin;\r\n\r\nuse Magento\\Customer\\Api\\Data\\GroupExtensionInterfaceFactory;\r\nuse Magento\\Customer\\Api\\Data\\GroupInterface;\r\nuse Magento\\Framework\\Api\\ExtensibleDataInterface;\r\nuse Magento\\Framework\\Api\\ExtensionAttribute\\JoinProcessor;\r\n\r\nclass ExtensionAttributeJoinProcessorPlugin\r\n{\r\n    public function __construct(\r\n        private readonly GroupExtensionInterfaceFactory $groupExtensionInterfaceFactory\r\n    ) {\r\n    }\r\n\r\n    /**\r\n     * Set \"discount_percentage\" extension attribute based on raw data from database\r\n     */\r\n    public function afterExtractExtensionAttributes(\r\n        JoinProcessor $subject,\r\n        array $result,\r\n        string $extensibleEntityClass,\r\n        array $data\r\n    ): array {\r\n        if ($extensibleEntityClass != ltrim(GroupInterface::class, '\\\\')) {\r\n            return $result;\r\n        }\r\n        if (!isset($result[ExtensibleDataInterface::EXTENSION_ATTRIBUTES_KEY])) {\r\n            $extensionAttributes = $this->groupExtensionInterfaceFactory->create();\r\n            $result[ExtensibleDataInterface::EXTENSION_ATTRIBUTES_KEY] = $extensionAttributes;\r\n        }\r\n        $result[ExtensibleDataInterface::EXTENSION_ATTRIBUTES_KEY]->setDiscountPercentage($data['discount_percentage']);\r\n\r\n        return $result;\r\n    }\r\n}\r\n```\r\n\r\nWithout this PR, the customer group list doesn't contain the extension attribute discount_percentage. \r\n\r\n### Contribution checklist\r\n - [ ] Pull request has a meaningful description of its purpose\r\n - [ ] All commits are accompanied by meaningful commit messages\r\n - [ ] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "3073325d015b1a8ce53b5b94c32a03bbacedc5af",
+      "mergedDate": "2025-10-24T00:53:19Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 173,
+      "title": "Add missing composer file for Magento_Stomp",
+      "author": "rhoerr",
+      "description": "Should fix the build error in https://github.com/mage-os/generate-mirror-repo-js/actions/runs/18515542675",
+      "labels": [],
+      "mergeCommitHash": "86cca87dcca84533851c5642b3fc2b14eedd8289",
+      "mergedDate": "2025-10-15T14:30:30Z",
+      "type": "feature"
+    },
+    {
+      "number": 172,
+      "title": "Added missing composer file for Magento/Framework/Stomp",
+      "author": "rhoerr",
+      "description": "I skipped composer.json files in #171 but we do need this specific one (in a dev version, other than what was released).\r\n\r\nFixes build error: https://github.com/mage-os/generate-mirror-repo-js/actions/runs/18514612643/job/52762454141\r\n\r\n```\r\nError: Error: generate-repo/repositories/mageos-magento2/app/code/Magento/Stomp doesn't contain a composer.json! Please add to excludes in config.\r\n```",
+      "labels": [],
+      "mergeCommitHash": "068b3de3357cb44648816cd7f7b9dd99d220e892",
+      "mergedDate": "2025-10-15T01:43:23Z",
+      "type": "feature"
+    },
+    {
+      "number": 170,
+      "title": "AC-15210: Migrate USPS integration from Web Tools APIs to REST APIs",
+      "author": "rhoerr",
+      "description": "This applies https://github.com/magento/quality-patches/blob/1.1.70/patches/os/AC-15210_2.4.8-2.4.7-2.4.6.patch to update USPS from Web Services APIs (deprecated and EOL in January) to the new REST APIs. USPS shipping rates will break in January without it.\r\n\r\nMagento has it available as a quality patch tool patch, and is expected to include it in a future patch for 2.4.8 based on discussion at https://github.com/magento/magento2/issues/39991.\r\n\r\nBased on discussion in 39991, I made two further changes for this PR:\r\n* Updating the production URL from `api.` to `apis.`\r\n* Fixing package weight, based on @PhanQuocPhu's solution",
+      "labels": [],
+      "mergeCommitHash": "b8ab937b19787b828d2fef0c81a090d043591cc5",
+      "mergedDate": "2025-10-15T00:04:14Z",
+      "type": "feature"
+    },
+    {
+      "number": 171,
+      "title": "Security changes from upstream 2.4.8-p3",
+      "author": "rhoerr",
+      "description": "Obtained change list from a cloned Magento2 repository via\r\n\r\n```bash\r\ngit diff 2.4.8-p2 2.4.8-p3 -- . > 2.4.8-p2-to-p3.diff\r\n```\r\n\r\nAnd then applied that on Mage-OS `main` minus composer file changes. There were some conflicts, all from differences from `2.4-develop` that made it to Mage-OS 1.2 but not Magento 2.4.8.\r\n\r\nCompare changes to https://github.com/magento/magento2/compare/2.4.8-p2..2.4.8-p3\r\nThere are some differences because of the conflicts (different origin for us vs 2.4.8).",
+      "labels": [],
+      "mergeCommitHash": "e3a1709890f688e169015c48f137e8ae86d9f3f0",
+      "mergedDate": "2025-10-15T00:03:28Z",
+      "type": "security"
+    },
+    {
+      "number": 167,
+      "title": "Check if array element exists  in config load",
+      "author": "ProxiBlue",
+      "description": "Description (*)\r\nthe core code assumes the 'id' element exists, and if not causes a hard fail, with no information to help debug the issue, which is especially frustrating if issue only appears on a production server.\r\n\r\nThe issue causes a hard fail, and will result in admin config section being broken.\r\nThe resulting error information is not helpful, especially if the issue only appears on a remote production server\r\n\r\n```{\"0\":\"Warning: Undefined array key \\\"id\\\" in \\/data\\/web\\/deployments\\/a769d743e06e2e725dbad93f75570a5744504dd8_29\\/vendor\\/mage-os\\/module-config\\/Model\\/Config\\/Structure\\/Element\\/Iterator.php on line 63\",\"1\":\"#1 Magento\\\\Config\\\\Model\\\\Config\\\\Structure\\\\Element\\\\Iterator->setElements() called at [vendor\\/mage-os\\/module-config\\/Model\\/Config\\/Structure.php:146]\\n#2 Magento\\\\Config\\\\Model\\\\Config\\\\Structure->getTabs() called at [vendor\\/mage-os\\/module-config\\/Model\\/Config\\/Structure.php:211]\\n#3 Magento\\\\Config\\\\Model\\\\Config\\\\Structure->getFirstSection() called at [vendor\\/mage-os\\/module-config\\/Controller\\/Adminhtml\\/System\\/AbstractConfig.php:63]\\n#4 Magento\\\\Config\\\\Controller\\\\Adminhtml\\\\System\\\\AbstractConfig->dispatch() called at [generated\\/code\\/Magento\\/Config\\/Controller\\/Adminhtml\\/System\\/Config\\/Index\\/Interceptor.php:176]\\n#5 Magento\\\\Config\\\\Controller\\\\Adminhtml\\\\System\\\\Config\\\\Index\\\\Interceptor->Magento\\\\Config\\\\Controller\\\\Adminhtml\\\\System\\\\Config\\\\Index\\\\{closure}() called at [vendor\\/mage-os\\/module-backend\\/App\\/Action\\/Plugin\\/Authentication.php:145]\\n#6 Magento\\\\Backend\\\\App\\\\Action\\\\Plugin\\\\Authentication->aroundDispatch() called at [generated\\/code\\/Magento\\/Config\\/Controller\\/Adminhtml\\/System\\/Config\\/Index\\/Interceptor.php:171]\\n#7 Magento\\\\Config\\\\Controller\\\\Adminhtml\\\\System\\\\Config\\\\Index\\\\Interceptor->dispatch() called at [vendor\\/mage-os\\/framework\\/App\\/FrontController.php:245]\\n#8 Magento\\\\Framework\\\\App\\\\FrontController->getActionResponse() called at [vendor\\/mage-os\\/framework\\/App\\/FrontController.php:212]\\n#9 Magento\\\\Framework\\\\App\\\\FrontController->processRequest() called at [vendor\\/mage-os\\/framework\\/App\\/FrontController.php:146]\\n#10 Magento\\\\Framework\\\\App\\\\FrontController->dispatch() called at [generated\\/code\\/Magento\\/Framework\\/App\\/FrontController\\/Interceptor.php:102]\\n#11 Magento\\\\Framework\\\\App\\\\FrontController\\\\Interceptor->dispatch() called at [vendor\\/mage-os\\/framework\\/App\\/Http.php:116]\\n#12 Magento\\\\Framework\\\\App\\\\Http->launch() called at [generated\\/code\\/Magento\\/Framework\\/App\\/Http\\/Interceptor.php:50]\\n#13 Magento\\\\Framework\\\\App\\\\Http\\\\Interceptor->Magento\\\\Framework\\\\App\\\\Http\\\\{closure}() called at [vendor\\/mage-os\\/module-application-performance-monitor\\/Plugin\\/ApplicationPerformanceMonitor.php:43]\\n#14 Magento\\\\ApplicationPerformanceMonitor\\\\Plugin\\\\ApplicationPerformanceMonitor->Magento\\\\ApplicationPerformanceMonitor\\\\Plugin\\\\{closure}() called at [vendor\\/mage-os\\/module-application-performance-monitor\\/Profiler\\/Profiler.php:59]\\n#15 Magento\\\\ApplicationPerformanceMonitor\\\\Profiler\\\\Profiler->doProfile() called at [vendor\\/mage-os\\/module-application-performance-monitor\\/Plugin\\/ApplicationPerformanceMonitor.php:41]\\n#16 Magento\\\\ApplicationPerformanceMonitor\\\\Plugin\\\\ApplicationPerformanceMonitor->aroundLaunch() called at [generated\\/code\\/Magento\\/Framework\\/App\\/Http\\/Interceptor.php:48]\\n#17 Magento\\\\Framework\\\\App\\\\Http\\\\Interceptor->launch() called at [vendor\\/mage-os\\/framework\\/App\\/Bootstrap.php:264]\\n#18 Magento\\\\Framework\\\\App\\\\Bootstrap->run() called at [pub\\/index.php:30]\\n\",\"url\":\"\\/admin-uptactics\\/admin\\/system_config\\/index\\/key\\/b9047e4f1dc769fd7262ec670d8070fab118e260211b8076e321e5345d8d3da0\\/\",\"script_name\":\"\\/index.php\",\"report_id\":\"b58f50a8853cadb32577c03b8e0eca008ee4702a9de80d9d01f00a7bac4985de\"```\r\n\r\nThe proposed change will trap this occurrence, and log a more meaningful error/information: (full error not shown as not all relevant needed for this ticket)\r\n\r\n```[2025-10-09T01:05:48.209305+00:00] main.ERROR: Missing id key in config structure element. LastElement: {\"children\":{\"amasty_report_builder\":{\"id\":\"amasty_report_builder\",\"translate\":\"label\",\"type\":\"text\",\"sortOrder\":\"031802\",\"showInDefault\":\"1\",\"showInWebsite\":\"1\",\"showInStore\":\"1\",\"resource\":\"Amasty_ReportBuilder::config\",\"class\":\"separator-top\",\"label\":\"Custom Reports Builder\",\"tab\":\"amasty\",\"children\":{\"amasty_information\":{\"id\":\"amasty_information\",```\r\n\r\nNow, in this instance, armed with better logging, I can see issue is triggered by an amasty module having child elements, rather than a direct occurrence of 'id'. Why I don;t know yet, and is not in scope of this ticket, which is to facilitate better logging.\r\n\r\n\r\nThis is extremely edge case:\r\n\r\nThe amasty module has a base module: Amasty_Base\r\nIt was being disabled/was disabled on this specific instance, via a custom config.php on that server.\r\nSo, since two other amasty modules were enabled, but the base was disabled, it skewed the config array, thus eliminating the top level config array details, as what is held in Amasty_Base\r\n\r\nTh end result is an array with just the child elements (modules) but no actual 'id' key for own details (as it was disabled)\r\n",
+      "labels": [],
+      "mergeCommitHash": "5b666fdd63503126617dd07e339c490628ed4521",
+      "mergedDate": "2025-10-12T00:44:32Z",
+      "type": "security"
+    },
+    {
+      "number": 169,
+      "title": "fix product export of configurable_variations for configurable products with multiple super attributes (#142)",
+      "author": "rhoerr",
+      "description": "Cherry-pick of #142 from `2.4-develop` to `main`",
+      "labels": [],
+      "mergeCommitHash": "57b525ad1cc8da0dd681f80fbbd5071a18549d22",
+      "mergedDate": "2025-10-12T00:39:01Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 142,
+      "title": "fix product export of configurable_variations for configurable products with multiple super attributes",
+      "author": "rhoerr",
+      "description": "### Description (*)\r\n\r\nDefault export functionality outputs invalid data for configurable products having more than one super attribute.\r\n\r\nColumn `configurable_variations` should contain all child SKUs, with the unique super attribute values of each one.\r\nInstead, it outputs only the first SKU matched for each super attribute value.\r\n\r\nInvalid, with attributes color and size: Note that most SKUs do not include both size and color. Only one row is output for each size and each color. (I put each SKU on a new line for clarity.)\r\n\r\n```\r\nsku=ABC-BM,color=Black,size=Medium|\r\nsku=ABC-RM,color=Red|\r\nsku=ABC-NM,color=Navy|\r\nsku=ABC-BS,size=Small|\r\nsku=ABC-BL,size=Large|\r\nsku=ABC-BXL,size=XLarge|\r\nsku=ABC-BXXL,size=XXLarge\r\n```\r\n\r\nCorrected: All child SKUs are output, with all super attribute values for each.\r\n```\r\nsku=ABC-RS,color=Red,size=Small|\r\nsku=ABC-RM,color=Red,size=Medium|\r\nsku=ABC-RL,color=Red,size=Large|\r\nsku=ABC-RXL,color=Red,size=XLarge|\r\nsku=ABC-RXXL,color=Red,size=XXLarge|\r\nsku=ABC-NS,color=Navy,size=Small|\r\nsku=ABC-NM,color=Navy,size=Medium|\r\nsku=ABC-NL,color=Navy,size=Large|\r\nsku=ABC-NXL,color=Navy,size=XLarge|\r\nsku=ABC-NXXL,color=Navy,size=XXLarge|\r\nsku=ABC-BS,color=Black,size=Small|\r\nsku=ABC-BM,color=Black,size=Medium|\r\nsku=ABC-BL,color=Black,size=Large|\r\nsku=ABC-BXL,color=Black,size=XLarge|\r\nsku=ABC-BXXL,color=Black,size=XXLarge\r\n```\r\n\r\nThe issue was the core code iterating over super attributes and options (one match for each separate value), not over the combinations of super attributes and options (one match for each combination of values). I changed the loop to iterate over assigned child products and then output each super attribute in order, for each one.\r\n\r\n### Related Pull Requests\r\nN/A\r\n\r\n### Fixed Issues (if relevant)\r\n<!---\r\n    If relevant, please provide a list of fixed issues in the format mage-os/mageos-magento2#<issue_number>.\r\n    There could be 1 or more issues linked here and it will help us find some more information about the reasoning behind this change.\r\n-->\r\n1. No related issues that I've seen\r\n\r\n### Manual testing scenarios (*)\r\n<!---\r\n    Please provide a set of unambiguous steps to test the proposed code change.\r\n    Giving us manual testing scenarios will help with the processing and validation process.\r\n-->\r\n1. Have a product with two or more configurable attributes.\r\n2. Export that product.\r\n3. Examine the export `configurable_variations` to confirm whether all child products and options are represented.\r\n\r\n### Questions or comments\r\n<!---\r\n\tIf relevant, here you can ask questions or provide comments on your pull request for the reviewer\r\n\tFor example if you need assistance with writing tests or would like some feedback on one of your development ideas\r\n-->\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [ ] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "56635a6b81a3e1706ba245612558733da22224db",
+      "mergedDate": "2025-10-12T00:07:18Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 164,
+      "title": "Fix admin dashboard JS error on login",
+      "author": "rhoerr",
+      "description": "### Description (*)\r\n\r\nThe dashboard can have a JS error on login if admin analytics are disabled, because there's a dependent JS module declaration that never gets output. This happens because of a layout config check that was added in #45 but isn't necessary.\r\n\r\n### Related Pull Requests\r\n#45\r\n\r\n### Fixed Issues (if relevant)\r\n\r\n### Manual testing scenarios (*)\r\n1. Log into the admin panel\r\n2. Observe that it works\r\n\r\n### Questions or comments\r\n\\-\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [x] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "51a9c61e086afc9639de348da8d2a97a714f1b2d",
+      "mergedDate": "2025-09-19T02:30:55Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 163,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging dev/tests/integration/framework/Magento/TestFramework/ApplicationStateComparator/_files/state-skip-list.php\nCONFLICT (content): Merge conflict in dev/tests/integration/framework/Magento/TestFramework/ApplicationStateComparator/_files/state-skip-list.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "7a5848b5c8b6d44540cb7f150634192f19eb3e09",
+      "mergedDate": "2025-09-18T00:43:20Z",
+      "type": "security"
+    },
+    {
+      "number": 157,
+      "title": "Fix PHP 8.4 Deprecation: Explicitly Mark Nullable Parameter in CanViewNotification",
+      "author": "aelmizeb",
+      "description": "### Description (*)\r\nThis pull request updates the constructor of the CanViewNotification class to explicitly declare the nullable parameter $scopeConfig as ?ScopeConfigInterface. This change resolves the PHP 8.4 deprecation warning regarding implicitly nullable parameters.\r\n\r\n<img width=\"1881\" height=\"193\" alt=\"image\" src=\"https://github.com/user-attachments/assets/44f18b63-7538-4238-a1aa-e31931a46f9d\" />\r\n\r\n\r\n### Related Pull Requests\r\n\r\n\r\n### Fixed Issues (if relevant)\r\n\r\n\r\n### Manual testing scenarios (*)\r\nTested on PHP 8.4 to confirm that the deprecation warning is resolved and that the application behaves as expected:\r\n - Run bin/magento setup:di:compile and ensure no PHP 8.4 deprecation warnings appear.\r\n - Verify that the admin panel and frontend load correctly without errors.\r\n\r\n### Questions or comments\r\n\r\n### Contribution checklist (*)\r\n - [x] Pull request has a meaningful description of its purpose\r\n - [x] All commits are accompanied by meaningful commit messages\r\n - [x] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [x] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [x] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "cd0a7d47a933cb8a5bc9a4f29f4c6563011ee509",
+      "mergedDate": "2025-08-18T09:21:25Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 158,
+      "title": "Fix PHP 8.4 Deprecation: Explicitly Mark Nullable Parameter in CanViewNotification (cherry-pick of #157)",
+      "author": "fballiano",
+      "description": "",
+      "labels": [],
+      "mergeCommitHash": "bafc10d18514db8a2844031677d73bddbe5e9b34",
+      "mergedDate": "2025-09-16T07:07:28Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 162,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/code/Magento/Backend/i18n/en_US.csv\nAuto-merging app/code/Magento/Quote/etc/di.xml\nAuto-merging composer.json\nAuto-merging dev/tests/integration/framework/Magento/TestFramework/ApplicationStateComparator/_files/state-skip-list.php\nCONFLICT (content): Merge conflict in dev/tests/integration/framework/Magento/TestFramework/ApplicationStateComparator/_files/state-skip-list.php\nAuto-merging dev/tests/js/jasmine/tests/lib/mage/validation.test.js\nAuto-merging lib/web/mage/validation.js\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "df3c637e3a91f3285ef60590c37c0b0fdcb530b9",
+      "mergedDate": "2025-09-16T01:21:13Z",
+      "type": "security"
+    },
+    {
+      "number": 159,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/code/Magento/Backend/Block/Page/Footer.php\nAuto-merging app/code/Magento/CatalogInventory/Model/ResourceModel/Stock/Item/StockItemCriteria.php\nCONFLICT (content): Merge conflict in app/code/Magento/CatalogInventory/Model/ResourceModel/Stock/Item/StockItemCriteria.php\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "73d5fe26ee36307cdecd6915583336f7cd099d9e",
+      "mergedDate": "2025-09-16T01:12:51Z",
+      "type": "security"
+    },
+    {
+      "number": 160,
+      "title": "Patch for CVE-2025-54236 - WebAPI-improvement",
+      "author": "rhoerr",
+      "description": "Applies Magento security patch for APSB25-88 to Mage-OS\r\n\r\nReference:\r\n\r\nhttps://helpx.adobe.com/security/products/magento/apsb25-88.html\r\nhttps://experienceleague.adobe.com/en/docs/experience-cloud-kcs/kbarticles/ka-27397",
+      "labels": [],
+      "mergeCommitHash": "69a60878acad40a630aceaa9651a48bbebbcf7f1",
+      "mergedDate": "2025-09-09T13:39:37Z",
+      "type": "security"
+    },
+    {
+      "number": 156,
+      "title": "Fixed city name validation to allow digits, &, ., () characters (magento/magento2#39859)",
+      "author": "fballiano",
+      "description": "This was also a merge commit",
+      "labels": [],
+      "mergeCommitHash": "38bbc5b37279c41f187ca1eb8db5dfa6d1d3ccb1",
+      "mergedDate": "2025-08-13T14:17:32Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 155,
+      "title": "Fixed missing screen-l styles added using .media-width mixin (magento/magento2#39871)",
+      "author": "fballiano",
+      "description": "The original commit was a merge, so I used `git cherry-pick -m 1 61cab4b` to bring it here",
+      "labels": [],
+      "mergeCommitHash": "93d86bbf46fb5e4431e1d154f5953fd11b6641d3",
+      "mergedDate": "2025-08-13T14:16:50Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 151,
+      "title": "Fix integration tests for Magento_Backend and Magento_Bundle (Cherry-picked PR #134 into `release/1.x`)",
+      "author": "fballiano",
+      "description": "There were some conflicts there got auto-fixed, all except one, which I committed this way:\r\n\r\n<img width=\"1512\" height=\"468\" alt=\"Screenshot 2025-07-29 alle 13 21 55\" src=\"https://github.com/user-attachments/assets/12ab417c-65b4-48c3-9cd2-edc7c098620f\" />\r\n\r\nbut I'm not sure, please @rhoerr @sprankhub @simsComputing @Vinai could you check this?\r\n\r\nFixes https://github.com/mage-os/mageos-magento2/issues/148",
+      "labels": [],
+      "mergeCommitHash": "04f6d1d1b2bc8e0b04666905ae682aba137fdd96",
+      "mergedDate": "2025-08-13T13:52:38Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 152,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nCONFLICT (modify/delete): app/code/Magento/CatalogRule/etc/config.xml deleted in e347a9fb47e0206198e1bbd6fed9d05c7b83a0c4 and modified in HEAD.  Version HEAD of app/code/Magento/CatalogRule/etc/config.xml left in tree.\nAuto-merging app/code/Magento/Customer/etc/config.xml\nCONFLICT (content): Merge conflict in app/code/Magento/Customer/etc/config.xml\nAuto-merging app/code/Magento/Quote/etc/di.xml\nAuto-merging app/code/Magento/SalesRule/etc/config.xml\nCONFLICT (content): Merge conflict in app/code/Magento/SalesRule/etc/config.xml\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "84200ef44fbccf29118332da0af32fff58238923",
+      "mergedDate": "2025-08-13T13:50:18Z",
+      "type": "security"
+    },
+    {
+      "number": 134,
+      "title": "Fix integration tests for Magento_Backend and Magento_Bundle",
+      "author": "simsComputing",
+      "description": "<!---\r\n    Thank you for contributing to Mage-OS.\r\n    To help us process this pull request we recommend that you add the following information:\r\n     - Summary of the pull request,\r\n     - Issue(s) related to the changes made,\r\n     - Manual testing scenarios\r\n    Fields marked with (*) are required. Please don't remove the template.\r\n-->\r\n\r\n<!--- Please provide a general summary of the Pull Request in the Title above -->\r\n\r\n### Description (*)\r\n\r\nI have fixed all integration tests on Magento_Backend and Magento_Bundle. For the first one it was about rewriting the test to adapt it to the class's new dependencies. \r\nFor the second one it was about fixing Magento. \r\n\r\nI added fixes for the Magento_CatalogInventory module. It was about fixing the integration with the new ParentItemProcessInterface\r\n\r\n### Fixed Issues (if relevant)\r\n\r\nI cannot access github issues on the mage-os repo. So here is the taiga ticket : \r\n\r\n[\r\nFix all broken integration tests\r\n](https://tree.taiga.io/project/mage-os-mage-os-technical-initiatives/us/23?kanban-status=9349606)\r\n\r\nBut the PR for now does not fix all integration tests. it will be a long way to go. \r\n\r\n### Manual testing scenarios (*)\r\n\r\nFirst make sure you're in the dev/tests/integration folder. then : \r\n\r\n1. ../../../vendor/bin/phpunit testsuite/Magento/Backend\r\n2. ../../../vendor/bin/phpunit testsuite/Magento/Bundle\r\n3. ../../../vendor/bin/phpunit testsuite/Magento/CatalogInventory\r\n\r\nYou should have 0 broken test\r\n\r\n### Contribution checklist (*)\r\n - [ ] Pull request has a meaningful description of its purpose\r\n - [ ] All commits are accompanied by meaningful commit messages\r\n - [ ] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "5293fb8f5adc04bcd9437e567b436c33a640ed1a",
+      "mergedDate": "2025-07-22T09:11:08Z",
+      "type": "bugfix"
+    },
+    {
+      "number": 150,
+      "title": "AC-14597: JavaScript error encountered when selecting \"All Resources\"…",
+      "author": "ProxiBlue",
+      "description": "Fixes #148 \r\n\r\n### Description (*)\r\n\r\nFix js issue as described in #148 , which has been fixed upstream, so fix was cherry picked into this release\r\n\r\n\r\n### Fixed Issues (if relevant)\r\n\r\n1. Fixes #148 \r\n\r\n### Manual testing scenarios (*)\r\n1. Create new integration via admin->system->integrations\r\n2. St api for integration to ALL\r\n3. Save\r\n4. Activate\r\n\r\n### Contribution checklist (*)\r\n - [*] Pull request has a meaningful description of its purpose\r\n - [*] All commits are accompanied by meaningful commit messages\r\n - [ ] All new or changed code is covered with unit/integration tests (if applicable)\r\n - [ ] README.md files for modified modules are updated and included in the pull request if any [README.md predefined sections](https://github.com/magento/devdocs/wiki/Magento-module-README.md) require an update\r\n - [ ] All automated tests passed successfully (all builds are green)\r\n",
+      "labels": [],
+      "mergeCommitHash": "4f16b29e32e4fef484b1c7acbcebf37861e95793",
+      "mergedDate": "2025-07-21T14:29:31Z",
+      "type": "feature"
+    },
+    {
+      "number": 146,
+      "title": "Upstream Merge Conflict (2.4-develop)",
+      "author": "mage-os-ci",
+      "description": "This PR was automatically generated: a human is required.\n\nAuto-merging app/code/Magento/AdminAnalytics/Model/Condition/CanViewNotification.php\nAuto-merging app/code/Magento/AdminAnalytics/Test/Unit/Condition/CanViewNotificationTest.php\nAuto-merging app/code/Magento/AdminAnalytics/etc/config.xml\nAuto-merging app/code/Magento/AdminAnalytics/view/adminhtml/layout/adminhtml_dashboard_index.xml\nAuto-merging app/code/Magento/AdminAnalytics/view/adminhtml/layout/default.xml\nAuto-merging app/code/Magento/Backend/Block/Page/Footer.php\nAuto-merging app/code/Magento/Backend/view/adminhtml/layout/admin_login.xml\nAuto-merging app/code/Magento/Backend/view/adminhtml/layout/default.xml\nAuto-merging app/code/Magento/Backend/view/adminhtml/templates/page/copyright.phtml\nAuto-merging app/code/Magento/Backend/view/adminhtml/templates/page/footer.phtml\nAuto-merging app/code/Magento/Backend/view/adminhtml/templates/page/header.phtml\nAuto-merging app/code/Magento/CatalogInventory/Model/ResourceModel/Stock.php\nAuto-merging app/design/adminhtml/Magento/backend/web/css/source/variables/_data-grid.less\nCONFLICT (content): Merge conflict in app/design/adminhtml/Magento/backend/web/css/source/variables/_data-grid.less\nAutomatic merge failed; fix conflicts and then commit the result.",
+      "labels": [],
+      "mergeCommitHash": "7d3ffdca808e580b6d311705a43398a269d2ea03",
+      "mergedDate": "2025-07-14T19:24:34Z",
+      "type": "security"
+    },
+    {
+      "number": 147,
+      "title": "Changes from upstream release Magento 2.4.8-p1",
+      "author": "rhoerr",
+      "description": "Obtained change list from a cloned Magento2 repository via\r\n```\r\ngit diff 2.4.8 2.4.8-p1 -- . > 2.4.8-to-p1.diff\r\n```\r\n\r\nAnd then applied that on Mage-OS `release/1.x` minus composer file changes, manually reconciling conflicts (mostly from the GraphQL reversions in this release).\r\n\r\nCompare changes to https://github.com/magento/magento2/compare/2.4.8..2.4.8-p1 -- should match.",
+      "labels": [],
+      "mergeCommitHash": "1027727d98036749777c2471f7126807db9b29c4",
+      "mergedDate": "2025-06-13T01:28:43Z",
+      "type": "other"
+    }
+  ]
+}

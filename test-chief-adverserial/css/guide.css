@@ -1,0 +1,51 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a0a;
+    color: #ccc;
+    font-family: 'Courier New', monospace;
+    padding: 40px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+h1 { color: #f26322; font-size: 32px; margin-bottom: 8px; }
+h1 span { color: #888; font-size: 16px; font-weight: normal; }
+h2 {
+    color: #4FC3F7; font-size: 20px; margin-top: 32px; margin-bottom: 12px;
+    border-bottom: 1px solid #333; padding-bottom: 4px;
+}
+h3 { color: #FFD700; font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+p { margin-bottom: 12px; }
+a { color: #4FC3F7; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.subtitle { color: #888; font-size: 14px; margin-bottom: 24px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+th { background: #1a1a1a; color: #f26322; text-align: left; padding: 8px 10px; border-bottom: 2px solid #333; }
+td { padding: 6px 10px; border-bottom: 1px solid #222; }
+.pad-color { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.pad-security { background: #DC143C; }
+.pad-bugfix { background: #FFB300; }
+.pad-feature { background: #00BCD4; }
+.pad-chore { background: #AB47BC; }
+.pad-other { background: #9E9E9E; }
+ul { margin: 8px 0 16px 20px; }
+li { margin-bottom: 4px; }
+.mini-game { background: #111; border-left: 3px solid #333; padding: 12px 16px; margin: 12px 0; }
+.mini-game h3 { margin-top: 0; }
+.mini-game .tagline { color: #aaa; font-style: italic; font-size: 13px; }
+.mini-game-security { border-color: #DC143C; }
+.mini-game-security h3 { color: #DC143C; }
+.mini-game-bugfix { border-color: #FFB300; }
+.mini-game-bugfix h3 { color: #FFB300; }
+.mini-game-feature { border-color: #00BCD4; }
+.mini-game-feature h3 { color: #00BCD4; }
+.mini-game-other { border-color: #9E9E9E; }
+.mini-game-other h3 { color: #9E9E9E; }
+.mini-game-chore { border-color: #AB47BC; }
+.mini-game-chore h3 { color: #AB47BC; }
+code { background: #1a1a1a; color: #4CAF50; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+pre { background: #111; padding: 12px; border-radius: 4px; overflow-x: auto; margin: 8px 0 16px; font-size: 13px; color: #4CAF50; }
+.controls-table td:first-child { color: #f26322; font-weight: bold; white-space: nowrap; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #f26322; font-size: 14px; }
+.credits { color: #666; font-size: 12px; margin-top: 40px; border-top: 1px solid #222; padding-top: 16px; }
+.credits a { color: #888; }

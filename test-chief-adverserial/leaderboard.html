@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.dreamlo.com; style-src 'self'; connect-src https://www.dreamlo.com; img-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+    <title>Mage Lander - Leaderboard</title>
+    <link rel="stylesheet" href="css/leaderboard.css">
+</head>
+<body>
+    <div class="container">
+        <h1>MAGE LANDER</h1>
+        <div class="subtitle">Global Leaderboard</div>
+        <div class="refresh-row">
+            <button class="refresh-btn" id="refreshBtn">Refresh</button>
+        </div>
+        <div id="status"></div>
+        <table id="leaderboardTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Player</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="leaderboardBody"></tbody>
+        </table>
+        <div id="lastUpdated"></div>
+    </div>
+
+    <script src="js/onlineConfig.js"></script>
+    <script src="js/leaderboardPage.js"></script>
+</body>
+</html>

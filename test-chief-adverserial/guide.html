@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<meta name="referrer" content="no-referrer">
+<title>Mage Lander — Game Guide</title>
+<link rel="stylesheet" href="css/guide.css">
+</head>
+<body>
+
+<a href="index.html" class="back-link">&larr; Back to Game</a>
+
+<h1>MAGE LANDER <span>Game Guide</span></h1>
+<p class="subtitle">A fan-made arcade game compilation by <a href="https://github.com/ProxiBlue">ProxiBlue</a>, built around real GitHub repository data from <a href="https://github.com/mage-os">Mage-OS</a>.</p>
+
+<h2>How Repository Data Drives Gameplay</h2>
+<p>The game uses real pull request and commit data from a GitHub repository, pre-fetched and cached to a local JSON data file (not fetched in real-time). This data shapes every aspect of the gameplay experience.</p>
+
+<h3>Landing Pads = Pull Requests</h3>
+<p>Each landing pad on the terrain represents a real merged pull request. The PR's classification determines the pad's colour, width, point value, and which mini-game triggers on landing.</p>
+
+<table>
+<tr><th>PR Type</th><th>Pad</th><th>Points</th><th>Width</th><th>Mini-Game</th></tr>
+<tr><td><span class="pad-color pad-security"></span>Security</td><td>Red</td><td>200 (3x)</td><td>Narrow</td><td>Missile Command / Invaders</td></tr>
+<tr><td><span class="pad-color pad-bugfix"></span>Bug Fix</td><td>Yellow</td><td>100 (2x)</td><td>Medium</td><td>Bug Bombing Run</td></tr>
+<tr><td><span class="pad-color pad-feature"></span>Feature</td><td>Cyan</td><td>50 (1x)</td><td>Wide</td><td>Feature Drive</td></tr>
+<tr><td><span class="pad-color pad-chore"></span>Chore</td><td>Purple</td><td>75 (1x)</td><td>Medium</td><td>Code Breaker</td></tr>
+<tr><td><span class="pad-color pad-other"></span>Other</td><td>Grey</td><td>100 (1x)</td><td>Medium</td><td>Tech Debt Blaster</td></tr>
+</table>
+
+<ul>
+<li><strong>Harder pads (narrower) = more points</strong> &mdash; security fixes are the riskiest changes</li>
+<li><strong>5 PRs per level</strong> &mdash; each level pulls the next 5 merged PRs chronologically</li>
+<li><strong>PR metadata on pads</strong> &mdash; each pad shows PR number, author, title, and merge date</li>
+</ul>
+
+<h3>PR Classification</h3>
+<p>PRs are classified by scanning labels, titles, and descriptions:</p>
+<ul>
+<li><strong>Security:</strong> CVE, vulnerability, RCE, attacker, merge conflict</li>
+<li><strong>Bug Fix:</strong> fix, hotfix, bug, patch</li>
+<li><strong>Feature:</strong> feat, add, migrate, integrate, implement, support</li>
+<li><strong>Chore:</strong> chore, cleanup, readme, bump, upgrade</li>
+<li><strong>Other:</strong> refactor, rebase, upstream, release</li>
+</ul>
+
+<h3>Terrain &amp; Difficulty</h3>
+<ul>
+<li>Commit frequency determines terrain complexity</li>
+<li>Date ranges in the HUD show which period of the repo you're flying over</li>
+<li>Level progression moves chronologically through the repo's merge history</li>
+<li><strong>Gravity:</strong> 1.6 m/s&sup2; at start, +0.2/level, caps at 5.0</li>
+<li><strong>Wind:</strong> 0 at start, +0.1/level, caps at 2.0 m/s&sup2;</li>
+</ul>
+
+<h2>Mini-Games</h2>
+
+<div class="mini-game mini-game-security">
+<h3>Missile Command (Security Pads)</h3>
+<p class="tagline">"Incoming threats detected &mdash; defend the codebase"</p>
+<p>Incoming missiles labeled with conflict markers rain down toward buildings labeled with filenames from the PR. Fire interceptor missiles from defense batteries to protect your codebase.</p>
+</div>
+
+<div class="mini-game mini-game-security">
+<h3>Space Invaders (Security Pads, alternating)</h3>
+<p class="tagline">"Defend against security threats"</p>
+<p>Alien waves scroll in from the right. Shoot them for bonus points. Ship uses thruster-based physics with retro thrusters for braking. Alien contact ends the mini-game.</p>
+</div>
+
+<div class="mini-game mini-game-bugfix">
+<h3>Bug Bombing Run (Bug Fix Pads)</h3>
+<p class="tagline">"Squash the bugs &mdash; every fix counts"</p>
+<p>Fly over terrain and drop bombs on scuttling bugs. Normal lander physics apply. Kill bugs to earn points and restore fuel with extension tank overflow.</p>
+</div>
+
+<div class="mini-game mini-game-feature">
+<h3>Feature Drive (Feature Pads)</h3>
+<p class="tagline">"Ship the feature &mdash; deploy to production"</p>
+<p>The M ship sprouts wheels and drives across side-scrolling terrain to a destination pad. Jump over gaps, dodge rocks, collect review approvals.</p>
+</div>
+
+<div class="mini-game mini-game-other">
+<h3>Tech Debt Blaster (Other Pads)</h3>
+<p class="tagline">"Refactor: systematically clear the debris"</p>
+<p>Classic Asteroids gameplay. Large asteroids labeled with tech debt split into smaller, faster pieces. Some contain hidden aliens that escape and shoot at you. ProxiBlue power-up asteroids grant a shield.</p>
+</div>
+
+<div class="mini-game mini-game-chore">
+<h3>Code Breaker (Chore Pads)</h3>
+<p class="tagline">"Chore: methodically clear the backlog"</p>
+<p>Breakout/Arkanoid gameplay. The M ship is the paddle, bouncing a ball into bricks labeled with code smells. Power-ups: wide paddle, multi-ball, fireball, shooting, extra ball.</p>
+</div>
+
+<h2>Controls</h2>
+<table class="controls-table">
+<tr><td>Up / W</td><td>Thrust</td></tr>
+<tr><td>Left / A</td><td>Rotate left</td></tr>
+<tr><td>Right / D</td><td>Rotate right</td></tr>
+<tr><td>Down / S</td><td>Retro thrust (mini-games)</td></tr>
+<tr><td>Space</td><td>Start / Continue / Shoot / Launch</td></tr>
+<tr><td>R</td><td>Restart level</td></tr>
+</table>
+
+<h2>Scoring</h2>
+<ul>
+<li><strong>Landing precision</strong> &mdash; slower approach + more fuel = higher score</li>
+<li><strong>Pad multiplier</strong> &mdash; security (3x), bugfix (2x), feature/chore/other (1x)</li>
+<li><strong>Mini-game bonuses</strong> &mdash; points earned during mini-games add to total</li>
+<li><strong>Fuel bonus</strong> &mdash; remaining fuel percentage adds to landing score</li>
+</ul>
+
+<h2>Setup Your Own Repo</h2>
+<pre>
+# Fetch PR and commit data from any GitHub repository
+node fetch-github-data.js owner/repo
+
+# Classify PRs by type
+node classify-prs.js data/&lt;repo&gt;.json
+</pre>
+<p>Open <code>index.html</code> in a browser. Select a repository if multiple data files exist, then press Space to start.</p>
+
+<h2>Why This Game Exists</h2>
+<p>This game was built as a real-world test case for <a href="https://github.com/MiniCodeMonkey/chief" rel="noopener noreferrer">Chief</a> &mdash; an autonomous PRD agent that runs Claude Code in a loop to build software from product requirements.</p>
+<p>I'm enhancing Chief with an <strong>adversarial evaluation system</strong> in my <a href="https://github.com/ProxiBlue/chief" rel="noopener noreferrer">fork</a> (main branch). In the standard Chief loop, a single agent builds code and checks its own work. My fork adds independent adversarial evaluator agents and a dedicated security evaluator (OWASP Top 10) that review every completed story before it's allowed to pass. If the evaluators find missing features, broken acceptance criteria, or security issues, the story is failed and retried automatically.</p>
+<p>This game is the proving ground &mdash; a complex, multi-system project designed to stress-test the adversarial evaluation loop and surface implementation bugs. Every mini-game, every feature, every PR-data integration was built by the Chief agent loop and validated by adversarial reviewers. The <a href="https://github.com/ProxiBlue/chiefloopEVALexample" rel="noopener noreferrer">chiefloopEVALexample</a> repository contains side-by-side output comparing standard (no eval) vs adversarial (with eval) builds of the same game.</p>
+<p>The mini-games &mdash; Lunar Lander, Asteroids, Missile Command, Space Invaders, Breakout, Moon Buggy &mdash; are all classics from the Atari 2600, my first ever game console. That console is part of what got me interested in coding in the first place. Building these games with AI felt like coming full circle.</p>
+<p>Some aspects of each mini-game were refined outside the Chief loop after the initial build &mdash; gameplay tuning, physics adjustments, visual polish, and security hardening. These refinements were fed back as PRD updates so the non-adversarial comparison test has the same information on changes and tweaks. Security hardening (CSP headers, input validation, JSONP removal) was also done manually outside the loop.</p>
+
+<div class="credits">
+<p><strong>Game compilation:</strong> <a href="https://github.com/ProxiBlue">ProxiBlue</a></p>
+<p><strong>Built with:</strong> <a href="https://github.com/MiniCodeMonkey/chief">Chief</a> &mdash; autonomous PRD agent with adversarial evaluation</p>
+<p><strong>Ship logo:</strong> <a href="https://mage-os.org">Mage-OS</a> M logomark (fan use, not affiliated)</p>
+<p><strong>Inspired by:</strong> Lunar Lander, Asteroids, Missile Command, Space Invaders, Breakout, Moon Buggy (Atari)</p>
+</div>
+
+</body>
+</html>

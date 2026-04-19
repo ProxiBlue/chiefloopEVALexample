@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mage Lander</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #111;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        (function () {
+            'use strict';
+
+            // --- Audio Setup (Web Audio API — no external files) ---
+            var audioCtx = null;
+            var thrustOsc = null;
+            var thrustGain = null;
+            var thrustNoiseSource = null;
+            var thrustNoiseGain = null;
+            var isThrustSoundPlaying = false;
+
+            function ensureAudioCtx() {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                return audioCtx;
+            }
+
+            function createNoiseBuffer(ctx, duration) {
+                var sampleRate = ctx.sampleRate;
+                var length = sampleRate * duration;
+                var buffer = ctx.createBuffer(1, length, sampleRate);
+                var data = buffer.getChannelData(0);
+                for (var i = 0; i < length; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                return buffer;
+            }
+
+            function startThrustSound() {
+                if (isThrustSoundPlaying) return;
+                var ctx = ensureAudioCtx();
+                isThrustSoundPlaying = true;
+
+                // Low rumble oscillator
+                thrustOsc = ctx.createOscillator();
+                thrustOsc.type = 'sawtooth';
+                thrustOsc.frequency.setValueAtTime(55, ctx.currentTime);
+                thrustGain = ctx.createGain();
+                thrustGain.gain.setValueAtTime(0, ctx.currentTime);
+                thrustGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+                thrustOsc.connect(thrustGain);
+                thrustGain.connect(ctx.destination);
+                thrustOsc.start();
+
+                // White noise hiss layer
+                thrustNoiseGain = ctx.createGain();
+                thrustNoiseGain.gain.setValueAtTime(0, ctx.currentTime);
+                thrustNoiseGain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.05);
+                var noiseBuffer = createNoiseBuffer(ctx, 2);
+                thrustNoiseSource = ctx.createBufferSource();
+                thrustNoiseSource.buffer = noiseBuffer;
+                thrustNoiseSource.loop = true;
+                var hipass = ctx.createBiquadFilter();
+                hipass.type = 'highpass';
+                hipass.frequency.setValueAtTime(800, ctx.currentTime);
+                thrustNoiseSource.connect(hipass);
+                hipass.connect(thrustNoiseGain);
+                thrustNoiseGain.connect(ctx.destination);
+                thrustNoiseSource.start();
+            }
+
+            function stopThrustSound() {
+                if (!isThrustSoundPlaying) return;
+                isThrustSoundPlaying = false;
+                var ctx = audioCtx;
+                if (!ctx) return;
+                var t = ctx.currentTime;
+                if (thrustGain) {
+                    thrustGain.gain.cancelScheduledValues(t);
+                    thrustGain.gain.setValueAtTime(thrustGain.gain.value, t);
+                    thrustGain.gain.linearRampToValueAtTime(0, t + 0.05);
+                }
+                if (thrustNoiseGain) {
+                    thrustNoiseGain.gain.cancelScheduledValues(t);
+                    thrustNoiseGain.gain.setValueAtTime(thrustNoiseGain.gain.value, t);
+                    thrustNoiseGain.gain.linearRampToValueAtTime(0, t + 0.05);
+                }
+                setTimeout(function () {
+                    if (thrustOsc) { try { thrustOsc.stop(); } catch(e){} thrustOsc = null; }
+                    if (thrustNoiseSource) { try { thrustNoiseSource.stop(); } catch(e){} thrustNoiseSource = null; }
+                    thrustGain = null;
+                    thrustNoiseGain = null;
+                }, 80);
+            }
+
+            function playExplosionSound() {
+                var ctx = ensureAudioCtx();
+                var t = ctx.currentTime;
+
+                // Noise burst
+                var noiseBuffer = createNoiseBuffer(ctx, 1);
+                var noise = ctx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                var noiseGain = ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.4, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.8);
+                var lp = ctx.createBiquadFilter();
+                lp.type = 'lowpass';
+                lp.frequency.setValueAtTime(2000, t);
+                lp.frequency.exponentialRampToValueAtTime(100, t + 0.8);
+                noise.connect(lp);
+                lp.connect(noiseGain);
+                noiseGain.connect(ctx.destination);
+                noise.start(t);
+                noise.stop(t + 0.8);
+
+                // Low thud
+                var osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(80, t);
+                osc.frequency.exponentialRampToValueAtTime(20, t + 0.5);
+                var oscGain = ctx.createGain();
+                oscGain.gain.setValueAtTime(0.5, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+                osc.connect(oscGain);
+                oscGain.connect(ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.5);
+            }
+
+            function playLandingSound() {
+                var ctx = ensureAudioCtx();
+                var t = ctx.currentTime;
+
+                // Pleasant chime — two tones
+                [523.25, 659.25].forEach(function(freq, i) {
+                    var osc = ctx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, t + i * 0.12);
+                    var gain = ctx.createGain();
+                    gain.gain.setValueAtTime(0, t);
+                    gain.gain.linearRampToValueAtTime(0.25, t + i * 0.12 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.6);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(t + i * 0.12);
+                    osc.stop(t + i * 0.12 + 0.6);
+                });
+            }
+
+            function playClickSound() {
+                var ctx = ensureAudioCtx();
+                var t = ctx.currentTime;
+                var osc = ctx.createOscillator();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, t);
+                var gain = ctx.createGain();
+                gain.gain.setValueAtTime(0.1, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(t);
+                osc.stop(t + 0.06);
+            }
+
+            // --- Canvas Setup ---
+            var canvas = document.getElementById('gameCanvas');
+            var ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', function() {
+                resizeCanvas();
+                generateStars();
+            });
+            resizeCanvas();
+
+            // --- Game State ---
+            var STATES = {
+                MENU: 'menu',
+                PLAYING: 'playing',
+                LANDED: 'landed',
+                CRASHED: 'crashed',
+                GAMEOVER: 'gameover'
+            };
+
+            var gameState = STATES.MENU;
+
+            // --- Repository Selector ---
+            var availableRepos = [];        // array of {file, name} from data/repos.json
+            var selectedRepoIndex = 0;      // currently highlighted repo in selector
+            var selectedRepoName = '';      // display name of selected repo
+            var repoSelectorActive = false; // true when selector is shown on menu
+            var repoLoadError = '';         // error message if repos can't be loaded
+            var reposLoaded = false;        // true once repo list has been fetched
+            var repoCommits = [];           // loaded commit data for selected repo (chronological order)
+            var repoPRs = [];               // loaded PR data for selected repo (merged PRs with type)
+            var unplacedPRs = [];           // PRs that couldn't be placed on previous levels (carried forward)
+            var repoDataLoaded = false;     // true once repo JSON has been fetched
+            var repoDataError = '';         // error message if repo data fails to load
+            var repoDataLoading = false;    // true while repo data is being fetched
+            var repoFallbackNotice = '';    // notice shown when falling back to random terrain
+            var levelDateRange = '';        // date range string for current level's PR batch (e.g., "Mar 2024 - Apr 2024")
+            var levelCommits = [];          // commits filtered to current level's PR batch date range
+
+            // PR-based landing pad configuration
+            var MAX_PADS_PER_LEVEL = 5;     // PRs per level batch (5 per batch)
+            var PR_PAD_WIDTHS = {           // pad width by PR type
+                security: 1,                // narrow (hardest)
+                bugfix: 2,                  // medium
+                feature: 3,                 // wide (easiest)
+                other: 2                    // medium
+            };
+            var PR_PAD_POINTS = {           // points by PR type (inverse of difficulty)
+                security: 200,              // hardest = most points
+                bugfix: 100,
+                feature: 50,
+                other: 100
+            };
+            var PR_TYPE_MULTIPLIERS = {     // score multiplier by PR type
+                security: 3,
+                bugfix: 2,
+                feature: 1,
+                other: 1
+            };
+            var PR_TYPE_COLORS = {          // pad color by PR type
+                security: '#DC143C',        // crimson/red
+                bugfix: '#FFB300',          // amber/yellow
+                feature: '#00BCD4',         // cyan/blue
+                other: '#9E9E9E'            // gray
+            };
+
+            function loadRepoData(repoFile) {
+                repoDataLoaded = false;
+                repoDataLoading = true;
+                repoDataError = '';
+                repoFallbackNotice = '';
+                repoCommits = [];
+                repoPRs = [];
+                unplacedPRs = [];
+                levelDateRange = '';
+                levelCommits = [];
+                fetch('data/' + repoFile)
+                    .then(function (res) {
+                        if (!res.ok) {
+                            if (res.status === 404) {
+                                throw new Error('Data file not found: data/' + repoFile);
+                            }
+                            throw new Error('Failed to load data (HTTP ' + res.status + ')');
+                        }
+                        return res.json();
+                    })
+                    .then(function (data) {
+                        // Validate data structure
+                        if (!data || typeof data !== 'object') {
+                            throw new Error('Invalid data format in ' + repoFile);
+                        }
+                        var hasCommits = data.commits && Array.isArray(data.commits) && data.commits.length > 0;
+                        var hasPRs = data.pullRequests && Array.isArray(data.pullRequests) && data.pullRequests.length > 0;
+
+                        if (hasCommits) {
+                            repoCommits = data.commits.slice().sort(function (a, b) {
+                                return new Date(a.date) - new Date(b.date);
+                            });
+                        }
+                        if (hasPRs) {
+                            repoPRs = data.pullRequests
+                                .filter(function (pr) { return pr.mergedDate; })
+                                .sort(function (a, b) {
+                                    return new Date(b.mergedDate) - new Date(a.mergedDate);
+                                });
+                        }
+
+                        // Set fallback notice if no commits and no PRs
+                        if (!hasCommits && !hasPRs) {
+                            repoFallbackNotice = 'No commit or PR data found — using random terrain';
+                        } else if (!hasCommits) {
+                            repoFallbackNotice = 'No commit data found — terrain will be randomized';
+                        } else if (!hasPRs) {
+                            repoFallbackNotice = 'No PR data found — using random landing pads';
+                        }
+
+                        repoDataLoaded = true;
+                        repoDataLoading = false;
+                    })
+                    .catch(function (err) {
+                        repoDataError = err.message || 'Failed to load repository data';
+                        repoDataLoaded = false;
+                        repoDataLoading = false;
+                    });
+            }
+
+            function loadRepoList() {
+                fetch('data/repos.json')
+                    .then(function (res) {
+                        if (!res.ok) throw new Error('No repos.json found');
+                        return res.json();
+                    })
+                    .then(function (repos) {
+                        availableRepos = repos;
+                        reposLoaded = true;
+                        if (repos.length === 0) {
+                            repoLoadError = 'No data files found. Run fetch-github-data.js to fetch repository data.';
+                            repoSelectorActive = false;
+                        } else if (repos.length === 1) {
+                            // Auto-select the only repo
+                            selectedRepoIndex = 0;
+                            selectedRepoName = repos[0].name;
+                            loadRepoData(repos[0].file);
+                            repoSelectorActive = false;
+                        } else {
+                            selectedRepoIndex = 0;
+                            selectedRepoName = repos[0].name;
+                            repoSelectorActive = true;
+                        }
+                    })
+                    .catch(function () {
+                        reposLoaded = true;
+                        repoLoadError = 'No data files found. Run fetch-github-data.js to fetch repository data.';
+                        repoSelectorActive = false;
+                    });
+            }
+
+            // Load repos on startup
+            loadRepoList();
+
+            // --- Score ---
+            var score = 0;
+
+            // --- Level Configuration (endless scaling) ---
+            function getLevelConfig(level) {
+                // Gravity: starts at 1.6, increases by 0.2 per level, caps at 5.0
+                var gravity = Math.min(1.6 + level * 0.2, 5.0);
+                // Pad count: starts at 3, decreases by 1 every 2 levels, minimum 1
+                var padCount = Math.max(1, 3 - Math.floor(level / 2));
+                // Wind: starts at 0, increases by 0.75 per level, caps at 8.0
+                var maxWind = Math.min(level * 0.75, 8.0);
+                return { gravity: gravity, padCount: padCount, maxWind: maxWind };
+            }
+            var currentLevel = 0;
+
+            // --- Physics Constants ---
+            var GRAVITY = getLevelConfig(currentLevel).gravity;  // m/s^2, configurable per level
+            var THRUST_POWER = GRAVITY * 2.5;  // 2.5x gravity so thrust clearly overcomes gravity
+            var PIXELS_PER_METER = 50;  // scale factor: 1 m/s = 50 px/s
+
+            // --- Wind ---
+            var wind = {
+                strength: 0,        // current wind strength in m/s^2 (positive = right, negative = left)
+                maxStrength: 0,     // max wind strength for current level
+                gustTimer: 0,       // time until next gust change
+                gustInterval: 2,    // seconds between gust changes (randomized)
+                targetStrength: 0   // wind lerps toward this value
+            };
+
+            function resetWind() {
+                wind.maxStrength = getLevelConfig(currentLevel).maxWind || 0;
+                wind.strength = 0;
+                wind.targetStrength = 0;
+                wind.gustTimer = 1 + Math.random() * 2;
+            }
+
+            // --- Stars ---
+            var stars = [];
+
+            function generateStars() {
+                stars = [];
+                var count = 200;
+                for (var i = 0; i < count; i++) {
+                    stars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: 0.5 + Math.random() * 2,
+                        brightness: 0.3 + Math.random() * 0.7
+                    });
+                }
+            }
+
+            function drawStars() {
+                for (var i = 0; i < stars.length; i++) {
+                    var s = stars[i];
+                    var alpha = s.brightness;
+                    ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // --- Terrain ---
+            var terrain = [];       // array of {x, y} points
+            var landingPadIndex = -1; // index into terrain[] where the first flat landing pad starts (kept for backward compat)
+            var landingPads = [];    // array of {index, width, points} for all landing pads
+
+            // Build per-segment height values from commit data.
+            // Returns an array of normalized heights (0 = smallest commit, 1 = largest commit)
+            // for exactly segmentCount segments.
+            function buildCommitHeights(segmentCount, commits) {
+                var source = commits || repoCommits;
+                if (source.length === 0) return null;
+
+                // Compute total lines changed per commit
+                var commitSizes = [];
+                for (var i = 0; i < source.length; i++) {
+                    var c = source[i];
+                    commitSizes.push((c.linesAdded || 0) + (c.linesDeleted || 0));
+                }
+
+                var rawHeights = [];
+
+                if (commitSizes.length >= segmentCount) {
+                    // More commits than segments: group/average per segment
+                    var commitsPerSeg = commitSizes.length / segmentCount;
+                    for (var s = 0; s < segmentCount; s++) {
+                        var startIdx = Math.floor(s * commitsPerSeg);
+                        var endIdx = Math.floor((s + 1) * commitsPerSeg);
+                        if (endIdx <= startIdx) endIdx = startIdx + 1;
+                        var sum = 0;
+                        var count = 0;
+                        for (var j = startIdx; j < endIdx && j < commitSizes.length; j++) {
+                            sum += commitSizes[j];
+                            count++;
+                        }
+                        rawHeights.push(count > 0 ? sum / count : 0);
+                    }
+                } else {
+                    // Fewer commits than segments: interpolate intermediate points
+                    // Place commits evenly across segments, linearly interpolate between them
+                    if (commitSizes.length === 1) {
+                        for (var s = 0; s < segmentCount; s++) {
+                            rawHeights.push(commitSizes[0]);
+                        }
+                    } else {
+                        var step = (commitSizes.length - 1) / (segmentCount - 1);
+                        for (var s = 0; s < segmentCount; s++) {
+                            var pos = s * step;
+                            var lo = Math.floor(pos);
+                            var hi = Math.ceil(pos);
+                            if (hi >= commitSizes.length) hi = commitSizes.length - 1;
+                            var frac = pos - lo;
+                            rawHeights.push(commitSizes[lo] * (1 - frac) + commitSizes[hi] * frac);
+                        }
+                    }
+                }
+
+                // Normalize to 0..1 range
+                var minVal = rawHeights[0];
+                var maxVal = rawHeights[0];
+                for (var i = 1; i < rawHeights.length; i++) {
+                    if (rawHeights[i] < minVal) minVal = rawHeights[i];
+                    if (rawHeights[i] > maxVal) maxVal = rawHeights[i];
+                }
+                var range = maxVal - minVal;
+                var normalized = [];
+                for (var i = 0; i < rawHeights.length; i++) {
+                    normalized.push(range > 0 ? (rawHeights[i] - minVal) / range : 0.5);
+                }
+
+                // Smoothing pass: limit max slope between adjacent segments
+                // Max allowed change per segment (0.25 = 25% of full height range per step)
+                var maxSlope = 0.25;
+                for (var pass = 0; pass < 3; pass++) {
+                    for (var i = 1; i < normalized.length; i++) {
+                        var diff = normalized[i] - normalized[i - 1];
+                        if (Math.abs(diff) > maxSlope) {
+                            normalized[i] = normalized[i - 1] + (diff > 0 ? maxSlope : -maxSlope);
+                        }
+                    }
+                    // Reverse pass for symmetry
+                    for (var i = normalized.length - 2; i >= 0; i--) {
+                        var diff = normalized[i] - normalized[i + 1];
+                        if (Math.abs(diff) > maxSlope) {
+                            normalized[i] = normalized[i + 1] + (diff > 0 ? maxSlope : -maxSlope);
+                        }
+                    }
+                }
+
+                return normalized;
+            }
+
+            // Get total number of PR batches available
+            function getTotalBatches() {
+                if (repoPRs.length === 0) return 0;
+                return Math.ceil(repoPRs.length / MAX_PADS_PER_LEVEL);
+            }
+
+            // Get the PRs assigned to the current level (batched by MAX_PADS_PER_LEVEL)
+            // PRs are sorted most-recent-first, so level 0 = most recent batch, level 1 = next, etc.
+            // If past all batches, loops back to the beginning
+            // Also sets levelDateRange and levelCommits for the current batch
+            function getLevelPRs(level) {
+                levelDateRange = '';
+                levelCommits = [];
+
+                if (repoPRs.length === 0 && unplacedPRs.length === 0) return [];
+
+                var totalBatches = getTotalBatches();
+                var effectiveLevel = level;
+                var looped = false;
+
+                // If past all available batches, loop back
+                if (totalBatches > 0 && effectiveLevel >= totalBatches) {
+                    effectiveLevel = effectiveLevel % totalBatches;
+                    looped = true;
+                }
+
+                var startIdx = effectiveLevel * MAX_PADS_PER_LEVEL;
+                // Get the scheduled PRs for this level from the main list
+                var scheduled = [];
+                if (startIdx < repoPRs.length) {
+                    scheduled = repoPRs.slice(startIdx, startIdx + MAX_PADS_PER_LEVEL);
+                }
+                // Prepend any unplaced PRs carried over from previous levels
+                var carried = unplacedPRs.splice(0);
+                var combined = carried.concat(scheduled);
+                // Cap at MAX_PADS_PER_LEVEL; put overflow back into unplacedPRs
+                if (combined.length > MAX_PADS_PER_LEVEL) {
+                    unplacedPRs = combined.slice(MAX_PADS_PER_LEVEL);
+                    combined = combined.slice(0, MAX_PADS_PER_LEVEL);
+                }
+
+                // Compute date range for this batch and filter commits
+                if (combined.length > 0) {
+                    var dates = [];
+                    for (var i = 0; i < combined.length; i++) {
+                        if (combined[i].mergedDate) {
+                            dates.push(new Date(combined[i].mergedDate).getTime());
+                        }
+                    }
+                    if (dates.length > 0) {
+                        var minDate = Math.min.apply(null, dates);
+                        var maxDate = Math.max.apply(null, dates);
+                        // Format date range for HUD display
+                        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        var d1 = new Date(minDate);
+                        var d2 = new Date(maxDate);
+                        levelDateRange = months[d1.getMonth()] + ' ' + d1.getFullYear() + ' - ' + months[d2.getMonth()] + ' ' + d2.getFullYear();
+
+                        // Filter commits to this batch's date range
+                        if (repoCommits.length > 0) {
+                            levelCommits = [];
+                            for (var c = 0; c < repoCommits.length; c++) {
+                                var commitDate = new Date(repoCommits[c].date).getTime();
+                                if (commitDate >= minDate && commitDate <= maxDate) {
+                                    levelCommits.push(repoCommits[c]);
+                                }
+                            }
+                            // If no commits in range, use all commits as fallback
+                            if (levelCommits.length === 0) {
+                                levelCommits = repoCommits;
+                            }
+                        }
+                    }
+                }
+
+                return combined;
+            }
+
+            // Map a PR's merge date to a terrain segment index based on the commit timeline
+            function prMergeDateToSegment(pr, segmentCount) {
+                var commits = levelCommits.length > 0 ? levelCommits : repoCommits;
+                if (commits.length === 0) return Math.floor(segmentCount / 2);
+
+                var prDate = new Date(pr.mergedDate).getTime();
+                var firstCommitDate = new Date(commits[0].date).getTime();
+                var lastCommitDate = new Date(commits[commits.length - 1].date).getTime();
+                var timeRange = lastCommitDate - firstCommitDate;
+
+                if (timeRange <= 0) return Math.floor(segmentCount / 2);
+
+                // Map to segment, clamping to avoid very edges (segments 2 to segmentCount-3)
+                var ratio = (prDate - firstCommitDate) / timeRange;
+                ratio = Math.max(0, Math.min(1, ratio));
+                var seg = Math.round(2 + ratio * (segmentCount - 5));
+                return Math.max(2, Math.min(segmentCount - 3, seg));
+            }
+
+            function generateTerrain() {
+                terrain = [];
+                landingPads = [];
+                var w = canvas.width;
+                var h = canvas.height;
+                var segmentCount = 40;
+                var segWidth = w / segmentCount;
+
+                var usedSegments = {};
+                var placedPads = [];
+
+                // Get PRs for this level
+                var levelPRs = getLevelPRs(currentLevel);
+
+                if (levelPRs.length > 0) {
+                    // PR-based pad placement
+                    for (var p = 0; p < levelPRs.length; p++) {
+                        var pr = levelPRs[p];
+                        var prType = pr.type || 'other';
+                        var padWidth = PR_PAD_WIDTHS[prType] || PR_PAD_WIDTHS.other;
+                        var padPoints = PR_PAD_POINTS[prType] || PR_PAD_POINTS.other;
+
+                        // Calculate target segment from PR merge date
+                        var targetSeg = prMergeDateToSegment(pr, segmentCount);
+
+                        // Find nearest non-overlapping position (with 1-segment gap)
+                        var padIdx = -1;
+                        for (var offset = 0; offset < segmentCount; offset++) {
+                            var candidates = [targetSeg + offset, targetSeg - offset];
+                            for (var ci = 0; ci < candidates.length; ci++) {
+                                var candidate = candidates[ci];
+                                if (candidate < 2 || candidate + padWidth >= segmentCount - 1) continue;
+                                var overlap = false;
+                                for (var s = candidate - 1; s <= candidate + padWidth + 1; s++) {
+                                    if (usedSegments[s]) { overlap = true; break; }
+                                }
+                                if (!overlap) {
+                                    padIdx = candidate;
+                                    break;
+                                }
+                            }
+                            if (padIdx >= 0) break;
+                        }
+
+                        // Retry without gap requirement if gap-based search failed
+                        if (padIdx < 0) {
+                            for (var offset = 0; offset < segmentCount; offset++) {
+                                var candidates = [targetSeg + offset, targetSeg - offset];
+                                for (var ci = 0; ci < candidates.length; ci++) {
+                                    var candidate = candidates[ci];
+                                    if (candidate < 1 || candidate + padWidth >= segmentCount) continue;
+                                    var overlap = false;
+                                    for (var s = candidate; s <= candidate + padWidth; s++) {
+                                        if (usedSegments[s]) { overlap = true; break; }
+                                    }
+                                    if (!overlap) {
+                                        padIdx = candidate;
+                                        break;
+                                    }
+                                }
+                                if (padIdx >= 0) break;
+                            }
+                        }
+
+                        // If still no position found, carry PR to the next level
+                        if (padIdx < 0) {
+                            unplacedPRs.push(pr);
+                        } else {
+                            for (var s = padIdx; s <= padIdx + padWidth; s++) {
+                                usedSegments[s] = true;
+                            }
+                            placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: pr.mergeCommitHash ? pr.mergeCommitHash.substring(0, 7) : '', prAuthor: pr.author || '', prMergedDate: pr.mergedDate || '' });
+                        }
+                    }
+                }
+
+                // Fallback: if fewer than 1 valid pad, generate a fallback pad
+                if (placedPads.length < 1) {
+                    var fallbackWidth = 2; // medium width
+                    var fallbackIdx = Math.floor(segmentCount / 2) - 1;
+                    // Find non-overlapping spot near center
+                    for (var offset = 0; offset < segmentCount; offset++) {
+                        var candidates = [fallbackIdx + offset, fallbackIdx - offset];
+                        for (var ci = 0; ci < candidates.length; ci++) {
+                            var candidate = candidates[ci];
+                            if (candidate < 2 || candidate + fallbackWidth >= segmentCount - 1) continue;
+                            var overlap = false;
+                            for (var s = candidate - 1; s <= candidate + fallbackWidth + 1; s++) {
+                                if (usedSegments[s]) { overlap = true; break; }
+                            }
+                            if (!overlap) {
+                                fallbackIdx = candidate;
+                                break;
+                            }
+                        }
+                        if (fallbackIdx !== Math.floor(segmentCount / 2) - 1) break;
+                    }
+                    for (var s = fallbackIdx; s <= fallbackIdx + fallbackWidth; s++) {
+                        usedSegments[s] = true;
+                    }
+                    placedPads.push({ index: fallbackIdx, width: fallbackWidth, points: 100, prType: 'fallback', prNumber: null, prTitle: '', prHash: '' });
+                }
+
+                placedPads.sort(function(a, b) { return a.index - b.index; });
+                landingPads = placedPads;
+                landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
+
+                // Base terrain height range (bottom 40% of screen)
+                var minY = h * 0.55;
+                var maxY = h * 0.95;
+
+                // Build a lookup: for each segment index, which pad does it belong to?
+                var segmentPadMap = {};
+                for (var p = 0; p < landingPads.length; p++) {
+                    var pad = landingPads[p];
+                    for (var s = pad.index; s <= pad.index + pad.width; s++) {
+                        segmentPadMap[s] = p;
+                    }
+                }
+
+                // Get commit-driven heights using level-filtered commits (or all commits as fallback)
+                var commitsForTerrain = levelCommits.length > 0 ? levelCommits : repoCommits;
+                var commitHeights = buildCommitHeights(segmentCount, commitsForTerrain);
+
+                for (var i = 0; i <= segmentCount; i++) {
+                    var x = i * segWidth;
+                    var y;
+
+                    if (segmentPadMap[i] !== undefined) {
+                        var padRef = landingPads[segmentPadMap[i]];
+                        if (i === padRef.index) {
+                            // First point of pad: use commit height if available, else random
+                            if (commitHeights && i < commitHeights.length) {
+                                y = maxY - commitHeights[i] * (maxY - minY);
+                            } else {
+                                y = minY + Math.random() * (maxY - minY) * 0.6 + (maxY - minY) * 0.2;
+                            }
+                        } else {
+                            // Subsequent points of pad: match the pad's starting height (flatten terrain)
+                            y = terrain[padRef.index].y;
+                        }
+                    } else if (commitHeights && i < commitHeights.length) {
+                        // Commit-driven terrain: map normalized height to Y range
+                        y = maxY - commitHeights[i] * (maxY - minY);
+                    } else {
+                        // Fallback: random terrain (v1 style)
+                        y = minY + Math.random() * (maxY - minY);
+                    }
+
+                    terrain.push({ x: x, y: y });
+                }
+            }
+
+            // Animation time tracker for pad glow pulse
+            var animTime = 0;
+
+            // --- Celebration Particles ---
+            var celebrationParticles = [];
+            var celebrationTimer = 0;
+            var CELEBRATION_DELAY = 1.5; // seconds before "Press Space" prompt appears
+            var celebrationReady = false; // true when prompt should show
+            var landedPadPoints = 0; // pad difficulty bonus points (after multiplier)
+            var landedFuelBonus = 0; // fuel bonus points
+            var landedTotalPoints = 0; // total points earned from landing
+            var landedTypeMultiplier = 1; // type multiplier applied
+            var landedPadBasePoints = 0; // base pad points (before multiplier)
+            var landedPRTitle = '';       // full PR title for celebration screen
+            var landedPRNumber = null;   // PR number for info panel
+            var landedPRAuthor = '';      // PR author for info panel
+            var landedPRType = '';        // PR type for info panel badge
+            var landedPRMergedDate = '';  // PR merge date for info panel
+
+            function spawnCelebration(x, y) {
+                celebrationParticles = [];
+                celebrationTimer = 0;
+                celebrationReady = false;
+                var colors = ['#4CAF50', '#66BB6A', '#A5D6A7', '#FFD700', '#FFC107', '#FFEB3B', '#81C784', '#C8E6C9'];
+                for (var i = 0; i < 50; i++) {
+                    var angle = Math.random() * Math.PI * 2;
+                    var speed = 30 + Math.random() * 120;
+                    var life = 1.0 + Math.random() * 1.5;
+                    celebrationParticles.push({
+                        x: x + (Math.random() - 0.5) * 40,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: -Math.abs(Math.sin(angle) * speed) - 20, // bias upward
+                        life: life,
+                        maxLife: life,
+                        size: 1.5 + Math.random() * 3.5,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+            }
+
+            function updateCelebration(dt) {
+                celebrationTimer += dt;
+                if (celebrationTimer >= CELEBRATION_DELAY) {
+                    celebrationReady = true;
+                }
+                for (var i = celebrationParticles.length - 1; i >= 0; i--) {
+                    var p = celebrationParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 40 * dt; // gentle gravity on sparkles
+                    p.life -= dt;
+                    if (p.life <= 0) {
+                        celebrationParticles.splice(i, 1);
+                    }
+                }
+            }
+
+            function drawCelebration() {
+                for (var i = 0; i < celebrationParticles.length; i++) {
+                    var p = celebrationParticles[i];
+                    var alpha = Math.max(0, p.life / p.maxLife);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * (0.5 + 0.5 * alpha), 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // --- Explosion Particles ---
+            var explosionParticles = [];
+            var explosionTimer = 0;
+            var EXPLOSION_DURATION = 1.5; // seconds for explosion to finish
+            var explosionFinished = false;
+
+            function spawnExplosion(x, y) {
+                explosionParticles = [];
+                explosionTimer = 0;
+                explosionFinished = false;
+                var colors = ['#ff4500', '#ff6600', '#ff8800', '#ffaa00', '#ffcc00', '#ff2200', '#ff0000'];
+                for (var i = 0; i < 60; i++) {
+                    var angle = Math.random() * Math.PI * 2;
+                    var speed = 50 + Math.random() * 200;
+                    var life = 0.5 + Math.random() * 1.0;
+                    explosionParticles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: life,
+                        maxLife: life,
+                        size: 2 + Math.random() * 4,
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+            }
+
+            function updateExplosion(dt) {
+                explosionTimer += dt;
+                for (var i = explosionParticles.length - 1; i >= 0; i--) {
+                    var p = explosionParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.vy += 80 * dt; // slight gravity on particles
+                    p.life -= dt;
+                    if (p.life <= 0) {
+                        explosionParticles.splice(i, 1);
+                    }
+                }
+                if (explosionTimer >= EXPLOSION_DURATION) {
+                    explosionFinished = true;
+                }
+            }
+
+            function drawExplosion() {
+                for (var i = 0; i < explosionParticles.length; i++) {
+                    var p = explosionParticles[i];
+                    var alpha = Math.max(0, p.life / p.maxLife);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            // --- Screen Shake ---
+            var screenShake = 0;
+            var SCREEN_SHAKE_DURATION = 0.3;
+            var SCREEN_SHAKE_INTENSITY = 8;
+
+            function startScreenShake() {
+                screenShake = SCREEN_SHAKE_DURATION;
+            }
+
+            function drawTerrain() {
+                if (terrain.length === 0) return;
+
+                // Filled polygon: terrain line segments + bottom corners
+                ctx.beginPath();
+                ctx.moveTo(terrain[0].x, terrain[0].y);
+                for (var i = 1; i < terrain.length; i++) {
+                    ctx.lineTo(terrain[i].x, terrain[i].y);
+                }
+                // Close along the bottom of the canvas
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.lineTo(0, canvas.height);
+                ctx.closePath();
+
+                ctx.fillStyle = '#444';
+                ctx.fill();
+
+                // Stroke the top surface
+                ctx.beginPath();
+                ctx.moveTo(terrain[0].x, terrain[0].y);
+                for (var i = 1; i < terrain.length; i++) {
+                    ctx.lineTo(terrain[i].x, terrain[i].y);
+                }
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Highlight all landing pads with glow/pulse animation
+                var pulseAlpha = 0.5 + 0.5 * Math.sin(animTime * 3);  // oscillates between 0 and 1
+                // Scale glow based on viewport size so pads remain visible on large/zoomed-out displays
+                var glowScale = Math.max(1, Math.min(canvas.width, canvas.height) / 800);
+                for (var p = 0; p < landingPads.length; p++) {
+                    var pad = landingPads[p];
+                    if (pad.index >= 0 && pad.index < terrain.length) {
+                        var padStart = terrain[pad.index];
+                        var padEnd = terrain[pad.index + pad.width] || terrain[terrain.length - 1];
+
+                        // Color based on PR type
+                        var padColor = PR_TYPE_COLORS[pad.prType] || PR_TYPE_COLORS.other;
+
+                        // Wide outer glow for distance visibility (scales with viewport)
+                        ctx.save();
+                        ctx.shadowColor = padColor;
+                        ctx.shadowBlur = (20 + 12 * pulseAlpha) * glowScale;
+                        ctx.beginPath();
+                        ctx.moveTo(padStart.x, padStart.y);
+                        ctx.lineTo(padEnd.x, padEnd.y);
+                        ctx.strokeStyle = padColor;
+                        ctx.globalAlpha = 0.25 + 0.2 * pulseAlpha;
+                        ctx.lineWidth = 6 * glowScale;
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Inner glow effect (scales with viewport)
+                        ctx.save();
+                        ctx.shadowColor = padColor;
+                        ctx.shadowBlur = (10 + 8 * pulseAlpha) * glowScale;
+                        ctx.beginPath();
+                        ctx.moveTo(padStart.x, padStart.y);
+                        ctx.lineTo(padEnd.x, padEnd.y);
+                        ctx.strokeStyle = padColor;
+                        ctx.globalAlpha = 0.6 + 0.4 * pulseAlpha;
+                        ctx.lineWidth = 4 * glowScale;
+                        ctx.stroke();
+                        ctx.restore();
+
+                        // Solid pad line on top (scales with viewport)
+                        ctx.beginPath();
+                        ctx.moveTo(padStart.x, padStart.y);
+                        ctx.lineTo(padEnd.x, padEnd.y);
+                        ctx.strokeStyle = padColor;
+                        ctx.lineWidth = 3 * glowScale;
+                        ctx.stroke();
+
+                        // Point value label with multiplier (scales with viewport)
+                        var midX = (padStart.x + padEnd.x) / 2;
+                        ctx.fillStyle = padColor;
+                        ctx.font = 'bold ' + Math.round(12 * glowScale) + 'px sans-serif';
+                        ctx.textAlign = 'center';
+                        var padMultiplier = PR_TYPE_MULTIPLIERS[pad.prType] || 1;
+                        var labelText = pad.points + 'pts';
+                        if (padMultiplier > 1) {
+                            labelText += ' x' + padMultiplier;
+                        }
+                        ctx.fillText(labelText, midX, padStart.y - 8);
+
+                        // PR/commit hash label below the pad
+                        var padLabel = '';
+                        if (pad.prNumber) {
+                            padLabel = 'PR #' + pad.prNumber;
+                        } else if (pad.prHash) {
+                            padLabel = pad.prHash;
+                        }
+                        if (padLabel) {
+                            ctx.save();
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.font = Math.round(9 * glowScale) + 'px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(padLabel, midX, padStart.y + 14 * glowScale);
+                            ctx.restore();
+                        }
+                    }
+                }
+            }
+
+            // --- Ship ---
+            // --- Fuel ---
+            var FUEL_MAX = 100;         // fuel units per level
+            var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
+
+            var ship = {
+                x: 0,
+                y: 0,
+                vx: 0,              // velocity in pixels/s
+                vy: 0,              // velocity in pixels/s
+                angle: 0,           // radians, 0 = upright
+                rotationSpeed: 3,   // radians per second
+                thrusting: false,   // whether thrust is currently active
+                fuel: FUEL_MAX      // remaining fuel
+            };
+
+            function resetShip() {
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 3;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.angle = 0;
+                ship.thrusting = false;
+                ship.fuel = FUEL_MAX;
+            }
+
+            function drawShip(x, y, angle, size, thrusting) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+
+                // Mage-OS "M" logo as a spacecraft
+                // The M is drawn centered at (0,0) with the given size
+                var s = size;
+                var halfW = s * 0.5;
+                var halfH = s * 0.6;
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#f26322';
+                ctx.fillStyle = '#f26322';
+                ctx.lineWidth = s * 0.08;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+
+                // Outer M shape — five points forming the M
+                // Left leg base
+                ctx.moveTo(-halfW, halfH);
+                // Left leg top
+                ctx.lineTo(-halfW, -halfH);
+                // Center valley — down to middle
+                ctx.lineTo(-halfW * 0.35, -halfH * 0.15);
+                // Peak tip (top center) — the nose of the ship
+                ctx.lineTo(0, -halfH);
+                // Right inner valley
+                ctx.lineTo(halfW * 0.35, -halfH * 0.15);
+                // Right leg top
+                ctx.lineTo(halfW, -halfH);
+                // Right leg base
+                ctx.lineTo(halfW, halfH);
+
+                ctx.stroke();
+
+                // Draw small accent marks at the base to suggest thrusters
+                ctx.beginPath();
+                ctx.moveTo(-halfW * 0.5, halfH);
+                ctx.lineTo(-halfW * 0.5, halfH + s * 0.08);
+                ctx.moveTo(0, halfH);
+                ctx.lineTo(0, halfH + s * 0.08);
+                ctx.moveTo(halfW * 0.5, halfH);
+                ctx.lineTo(halfW * 0.5, halfH + s * 0.08);
+                ctx.strokeStyle = '#f26322';
+                ctx.lineWidth = s * 0.04;
+                ctx.stroke();
+
+                // Draw thrust flame when thrusting
+                if (thrusting) {
+                    var flameLen = s * (0.4 + Math.random() * 0.25);
+                    var flameWidth = halfW * (0.35 + Math.random() * 0.08);
+
+                    // Outer flame — orange/yellow gradient
+                    var flameGrad = ctx.createLinearGradient(0, halfH, 0, halfH + flameLen);
+                    flameGrad.addColorStop(0, '#ff8800');
+                    flameGrad.addColorStop(0.5, '#ffaa00');
+                    flameGrad.addColorStop(1, '#ffdd00');
+                    ctx.beginPath();
+                    ctx.moveTo(-flameWidth, halfH);
+                    ctx.lineTo(0, halfH + flameLen);
+                    ctx.lineTo(flameWidth, halfH);
+                    ctx.fillStyle = flameGrad;
+                    ctx.fill();
+
+                    // Inner flame — yellow core
+                    var innerLen = flameLen * (0.55 + Math.random() * 0.1);
+                    var innerWidth = flameWidth * 0.5;
+                    var innerGrad = ctx.createLinearGradient(0, halfH, 0, halfH + innerLen);
+                    innerGrad.addColorStop(0, '#ffcc00');
+                    innerGrad.addColorStop(1, '#ffee66');
+                    ctx.beginPath();
+                    ctx.moveTo(-innerWidth, halfH);
+                    ctx.lineTo(0, halfH + innerLen);
+                    ctx.lineTo(innerWidth, halfH);
+                    ctx.fillStyle = innerGrad;
+                    ctx.fill();
+                }
+
+                ctx.restore();
+            }
+
+            // --- Timing ---
+            var lastTime = 0;
+
+            // --- Input ---
+            var keys = {};
+            window.addEventListener('keydown', function (e) {
+                keys[e.key] = true;
+                if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
+                    e.preventDefault();
+                }
+                if (gameState === STATES.GAMEOVER && gameOverEnteringName && e.key === 'Backspace') {
+                    e.preventDefault();
+                }
+                handleKeyPress(e.key);
+            });
+            window.addEventListener('keyup', function (e) {
+                keys[e.key] = false;
+            });
+
+            function startNewGame() {
+                currentLevel = 0;
+                unplacedPRs = [];
+                levelDateRange = '';
+                levelCommits = [];
+                repoFallbackNotice = '';
+                score = 0;
+                GRAVITY = getLevelConfig(currentLevel).gravity;
+                THRUST_POWER = GRAVITY * 2.5;
+                resetShip();
+                resetWind();
+                generateTerrain();
+                gameState = STATES.PLAYING;
+            }
+
+            function handleKeyPress(key) {
+                // Handle name entry in game over state
+                if (gameState === STATES.GAMEOVER && gameOverEnteringName) {
+                    if (key === 'Enter') {
+                        var name = gameOverName.trim() || 'AAA';
+                        addToLeaderboard(name, score);
+                        gameOverEnteringName = false;
+                        return;
+                    } else if (key === 'Backspace') {
+                        gameOverName = gameOverName.slice(0, -1);
+                        return;
+                    } else if (key.length === 1 && gameOverName.length < 10) {
+                        gameOverName += key;
+                        return;
+                    }
+                    return;
+                }
+
+                // Repo selector navigation on menu
+                if (gameState === STATES.MENU && repoSelectorActive) {
+                    if (key === 'ArrowUp') {
+                        playClickSound();
+                        selectedRepoIndex = (selectedRepoIndex - 1 + availableRepos.length) % availableRepos.length;
+                        selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        return;
+                    } else if (key === 'ArrowDown') {
+                        playClickSound();
+                        selectedRepoIndex = (selectedRepoIndex + 1) % availableRepos.length;
+                        selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        return;
+                    } else if (key === 'Enter') {
+                        playClickSound();
+                        selectedRepoName = availableRepos[selectedRepoIndex].name;
+                        loadRepoData(availableRepos[selectedRepoIndex].file);
+                        repoSelectorActive = false;
+                        return;
+                    }
+                }
+
+                // Handle R key for retrying repo data load on error
+                if ((key === 'r' || key === 'R') && gameState === STATES.MENU && repoDataError) {
+                    repoDataError = '';
+                    if (availableRepos.length > 0) {
+                        loadRepoData(availableRepos[selectedRepoIndex].file);
+                    }
+                    return;
+                }
+
+                if (key === ' ') {
+                    if (gameState === STATES.MENU) {
+                        if (repoLoadError || repoDataError || repoDataLoading || !repoDataLoaded || repoSelectorActive) return; // can't start without loaded data
+                        playClickSound();
+                        startNewGame();
+                    } else if (gameState === STATES.LANDED && celebrationReady) {
+                        playClickSound();
+                        // Advance to next level (endless progression)
+                        currentLevel++;
+                        GRAVITY = getLevelConfig(currentLevel).gravity;
+                        THRUST_POWER = GRAVITY * 2.5;
+                        resetShip();
+                        resetWind();
+                        generateTerrain();
+                        gameState = STATES.PLAYING;
+                    } else if (gameState === STATES.CRASHED && explosionFinished) {
+                        gameOverLevel = currentLevel + 1;
+                        if (isHighScore(score)) {
+                            gameOverEnteringName = true;
+                            gameOverName = '';
+                        } else {
+                            gameOverEnteringName = false;
+                        }
+                        gameState = STATES.GAMEOVER;
+                    } else if (gameState === STATES.GAMEOVER && !gameOverEnteringName) {
+                        startNewGame();
+                    }
+                }
+                if (key === 'r' || key === 'R') {
+                    if (gameState === STATES.PLAYING || gameState === STATES.CRASHED || gameState === STATES.LANDED) {
+                        stopThrustSound();
+                        playClickSound();
+                        GRAVITY = getLevelConfig(currentLevel).gravity;
+                        THRUST_POWER = GRAVITY * 2.5;
+                        resetShip();
+                        resetWind();
+                        gameState = STATES.PLAYING;
+                    }
+                }
+            }
+
+            // --- Collision Detection ---
+            var SHIP_SIZE = 40; // must match the size passed to drawShip in renderPlaying
+            var landingResult = ''; // stores reason for crash or success message
+
+            // Get the two bottom-edge corners of the ship in world coordinates
+            function getShipBottomEdge() {
+                var halfW = SHIP_SIZE * 0.5;
+                var halfH = SHIP_SIZE * 0.6;
+                var cosA = Math.cos(ship.angle);
+                var sinA = Math.sin(ship.angle);
+                // Bottom-left in local coords: (-halfW, halfH)
+                // Bottom-right in local coords: (halfW, halfH)
+                return [
+                    { x: ship.x + (-halfW * cosA - halfH * sinA), y: ship.y + (-halfW * sinA + halfH * cosA) },
+                    { x: ship.x + (halfW * cosA - halfH * sinA), y: ship.y + (halfW * sinA + halfH * cosA) }
+                ];
+            }
+
+            // Get the terrain Y at a given X by interpolating between terrain points
+            function getTerrainYAtX(px) {
+                for (var i = 0; i < terrain.length - 1; i++) {
+                    var t0 = terrain[i];
+                    var t1 = terrain[i + 1];
+                    if (px >= t0.x && px <= t1.x) {
+                        var t = (px - t0.x) / (t1.x - t0.x);
+                        return { y: t0.y + t * (t1.y - t0.y), segIndex: i };
+                    }
+                }
+                return null;
+            }
+
+            // Get altitude: distance from ship bottom to terrain directly below
+            function getAltitude() {
+                var bottomEdge = getShipBottomEdge();
+                var centerX = (bottomEdge[0].x + bottomEdge[1].x) / 2;
+                var bottomY = Math.max(bottomEdge[0].y, bottomEdge[1].y);
+                var hit = getTerrainYAtX(centerX);
+                if (!hit) return 0;
+                var altPixels = hit.y - bottomY;
+                return Math.max(0, altPixels / PIXELS_PER_METER);
+            }
+
+            // Check if a terrain segment index is part of a landing pad
+            function getPadAtSegment(segIndex) {
+                for (var p = 0; p < landingPads.length; p++) {
+                    var pad = landingPads[p];
+                    if (segIndex >= pad.index && segIndex < pad.index + pad.width) {
+                        return pad;
+                    }
+                }
+                return null;
+            }
+
+            // Check collision and landing conditions
+            function checkCollision() {
+                if (terrain.length === 0) return;
+
+                var bottomEdge = getShipBottomEdge();
+
+                for (var b = 0; b < bottomEdge.length; b++) {
+                    var pt = bottomEdge[b];
+                    var hit = getTerrainYAtX(pt.x);
+                    if (!hit) continue;
+
+                    if (pt.y >= hit.y) {
+                        // Collision detected — check landing conditions
+                        var vyMs = ship.vy / PIXELS_PER_METER;  // vertical speed in m/s
+                        var vxMs = ship.vx / PIXELS_PER_METER;  // horizontal speed in m/s
+
+                        // Normalize angle to [-PI, PI]
+                        var angle = ship.angle % (2 * Math.PI);
+                        if (angle > Math.PI) angle -= 2 * Math.PI;
+                        if (angle < -Math.PI) angle += 2 * Math.PI;
+                        var angleDeg = Math.abs(angle) * (180 / Math.PI);
+
+                        // Check if both bottom points are on a landing pad
+                        var pad0 = null;
+                        var pad1 = null;
+                        for (var c = 0; c < bottomEdge.length; c++) {
+                            var ptc = bottomEdge[c];
+                            var hitc = getTerrainYAtX(ptc.x);
+                            if (hitc) {
+                                var padAtSeg = getPadAtSegment(hitc.segIndex);
+                                if (c === 0) pad0 = padAtSeg;
+                                else pad1 = padAtSeg;
+                            }
+                        }
+
+                        var onPad = pad0 !== null && pad1 !== null;
+                        var verticalOk = vyMs < 2;
+                        var horizontalOk = Math.abs(vxMs) < 1;
+                        var angleOk = angleDeg < 15;
+
+                        if (onPad && verticalOk && horizontalOk && angleOk) {
+                            // Snap ship to terrain surface
+                            ship.vy = 0;
+                            ship.vx = 0;
+                            landingResult = 'SUCCESS';
+                            var landedPad = pad0 || pad1;
+                            landedTypeMultiplier = PR_TYPE_MULTIPLIERS[landedPad.prType] || 1;
+                            landedPadBasePoints = landedPad.points;
+                            landedPadPoints = landedPad.points * landedTypeMultiplier;
+                            landedPRTitle = landedPad.prTitle || '';
+                            landedPRNumber = landedPad.prNumber || null;
+                            landedPRAuthor = landedPad.prAuthor || '';
+                            landedPRType = landedPad.prType || '';
+                            landedPRMergedDate = landedPad.prMergedDate || '';
+                            // Fuel bonus: remaining fuel percentage * 100, rounded
+                            landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
+                            landedTotalPoints = landedPadPoints + landedFuelBonus;
+                            score += landedTotalPoints;
+                            spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
+                            stopThrustSound();
+                            playLandingSound();
+                            gameState = STATES.LANDED;
+                        } else {
+                            // Crash — build reason
+                            var reasons = [];
+                            if (!onPad) reasons.push('Not on a landing pad');
+                            if (!verticalOk) reasons.push('Too fast vertically (' + vyMs.toFixed(1) + ' m/s)');
+                            if (!horizontalOk) reasons.push('Too fast horizontally (' + Math.abs(vxMs).toFixed(1) + ' m/s)');
+                            if (!angleOk) reasons.push('Angle too steep (' + angleDeg.toFixed(1) + '°)');
+                            ship.vy = 0;
+                            ship.vx = 0;
+                            landingResult = reasons.join('\n');
+                            spawnExplosion(ship.x, ship.y);
+                            startScreenShake();
+                            stopThrustSound();
+                            playExplosionSound();
+                            gameState = STATES.CRASHED;
+                        }
+                        return;
+                    }
+                }
+            }
+
+            // --- Update ---
+            function update(dt) {
+                // Update animation timer for pad glow pulse
+                animTime += dt;
+
+                // Update screen shake timer
+                if (screenShake > 0) {
+                    screenShake -= dt;
+                    if (screenShake < 0) screenShake = 0;
+                }
+
+                // Update explosion particles during crash
+                if (gameState === STATES.CRASHED) {
+                    updateExplosion(dt);
+                }
+
+                // Update celebration particles during landed
+                if (gameState === STATES.LANDED) {
+                    updateCelebration(dt);
+                }
+
+                if (gameState === STATES.PLAYING) {
+                    // Ship rotation
+                    if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
+                        ship.angle -= ship.rotationSpeed * dt;
+                    }
+                    if (keys['ArrowRight'] || keys['d'] || keys['D']) {
+                        ship.angle += ship.rotationSpeed * dt;
+                    }
+
+                    // Wind — update gusts and apply horizontal force
+                    if (wind.maxStrength > 0) {
+                        wind.gustTimer -= dt;
+                        if (wind.gustTimer <= 0) {
+                            // Pick a new random target wind strength and direction
+                            wind.targetStrength = (Math.random() * 2 - 1) * wind.maxStrength;
+                            wind.gustTimer = 1.5 + Math.random() * 2.5;
+                        }
+                        // Smoothly lerp toward target
+                        wind.strength += (wind.targetStrength - wind.strength) * dt * 2;
+                        // Apply wind as horizontal acceleration
+                        ship.vx += wind.strength * PIXELS_PER_METER * dt;
+                    }
+
+                    // Gravity — accelerates downward (positive Y is down in canvas)
+                    ship.vy += GRAVITY * PIXELS_PER_METER * dt;
+
+                    // Thrust — applied in the direction the ship is facing (nose = -Y when angle=0)
+                    // Thrust requires fuel; pressing thrust with no fuel does nothing
+                    var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+                    ship.thrusting = wantsThrust && ship.fuel > 0;
+                    if (ship.thrusting) {
+                        ship.fuel -= FUEL_BURN_RATE * dt;
+                        if (ship.fuel < 0) ship.fuel = 0;
+                        ship.vx += Math.sin(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
+                        ship.vy += -Math.cos(ship.angle) * THRUST_POWER * PIXELS_PER_METER * dt;
+                        startThrustSound();
+                    } else {
+                        stopThrustSound();
+                    }
+
+                    // Update position
+                    ship.x += ship.vx * dt;
+                    ship.y += ship.vy * dt;
+
+                    // Clamp left/right edges — ship cannot leave the viewport
+                    if (ship.x < 0) {
+                        ship.x = 0;
+                        ship.vx = 0;
+                    } else if (ship.x > canvas.width) {
+                        ship.x = canvas.width;
+                        ship.vx = 0;
+                    }
+
+                    // Check for terrain collision
+                    checkCollision();
+                }
+            }
+
+            // --- Leaderboard ---
+            var LEADERBOARD_KEY = 'mageLanderLeaderboard';
+            var LEADERBOARD_MAX = 10;
+
+            function getLeaderboard() {
+                try {
+                    var data = localStorage.getItem(LEADERBOARD_KEY);
+                    if (data) {
+                        var parsed = JSON.parse(data);
+                        if (Array.isArray(parsed)) return parsed;
+                    }
+                } catch (e) {}
+                return [];
+            }
+
+            function saveLeaderboard(board) {
+                try {
+                    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(board));
+                } catch (e) {}
+            }
+
+            function isHighScore(s) {
+                if (s <= 0) return false;
+                var board = getLeaderboard();
+                if (board.length < LEADERBOARD_MAX) return true;
+                return s > board[board.length - 1].score;
+            }
+
+            function addToLeaderboard(name, s) {
+                var board = getLeaderboard();
+                board.push({ name: name, score: s });
+                board.sort(function(a, b) { return b.score - a.score; });
+                if (board.length > LEADERBOARD_MAX) {
+                    board = board.slice(0, LEADERBOARD_MAX);
+                }
+                saveLeaderboard(board);
+                return board;
+            }
+
+            // Backward compat: migrate old single high score to leaderboard
+            (function migrateOldHighScore() {
+                try {
+                    var old = localStorage.getItem('mageLanderHighScore');
+                    if (old) {
+                        var val = parseInt(old, 10);
+                        if (val > 0) {
+                            var board = getLeaderboard();
+                            if (board.length === 0) {
+                                addToLeaderboard('???', val);
+                            }
+                        }
+                        localStorage.removeItem('mageLanderHighScore');
+                    }
+                } catch (e) {}
+            })();
+
+            // --- Game Over State ---
+            var gameOverEnteringName = false;
+            var gameOverName = '';
+            var gameOverLevel = 0;  // level reached (stored on game over)
+
+            // --- Render ---
+
+            function renderMenu() {
+                var cx = canvas.width / 2;
+                var baseY = canvas.height / 2 - 120;
+
+                // Draw ship logo on menu (Mage-OS "M" logo)
+                drawShip(cx, baseY, 0, 60);
+
+                // Title
+                ctx.fillStyle = '#f26322';
+                ctx.font = 'bold 48px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('MAGE LANDER', cx, baseY + 100);
+
+                // Show selected repo name below title
+                if (selectedRepoName && !repoSelectorActive) {
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '16px monospace';
+                    ctx.fillText('Repo: ' + selectedRepoName, cx, baseY + 125);
+                }
+
+                // Error state — no data files or repo data load failure
+                if (repoLoadError) {
+                    ctx.fillStyle = '#f44336';
+                    ctx.font = '18px monospace';
+                    ctx.fillText('No repository data found', cx, baseY + 150);
+                    ctx.fillStyle = '#ccc';
+                    ctx.font = '14px monospace';
+                    ctx.fillText('To fetch data, run:', cx, baseY + 180);
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '13px monospace';
+                    ctx.fillText('node fetch-github-data.js owner/repo', cx, baseY + 200);
+                    ctx.fillStyle = '#888';
+                    ctx.font = '12px monospace';
+                    ctx.fillText('Then reload this page', cx, baseY + 225);
+                    return;
+                }
+                if (repoDataError) {
+                    ctx.fillStyle = '#f44336';
+                    ctx.font = '16px monospace';
+                    ctx.fillText('Error: ' + repoDataError, cx, baseY + 155);
+                    ctx.fillStyle = '#888';
+                    ctx.font = '14px monospace';
+                    ctx.fillText('Press R to retry or select another repo', cx, baseY + 180);
+                    return;
+                }
+
+                // Loading state — repo list
+                if (!reposLoaded) {
+                    ctx.fillStyle = '#888';
+                    ctx.font = '18px monospace';
+                    ctx.fillText('Loading repositories...', cx, baseY + 160);
+                    return;
+                }
+
+                // Loading state — repo data
+                if (repoDataLoading) {
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '18px monospace';
+                    var dots = '';
+                    for (var d = 0; d < ((Date.now() / 500) % 4); d++) dots += '.';
+                    ctx.fillText('Loading repository data' + dots, cx, baseY + 160);
+                    return;
+                }
+
+                // Repo selector — shown when multiple repos available
+                if (repoSelectorActive) {
+                    ctx.fillStyle = '#ccc';
+                    ctx.font = '18px monospace';
+                    ctx.fillText('Select a repository:', cx, baseY + 150);
+
+                    var listY = baseY + 180;
+                    for (var i = 0; i < availableRepos.length; i++) {
+                        var isSelected = (i === selectedRepoIndex);
+                        ctx.fillStyle = isSelected ? '#f26322' : '#888';
+                        ctx.font = isSelected ? 'bold 16px monospace' : '16px monospace';
+                        var prefix = isSelected ? '> ' : '  ';
+                        ctx.fillText(prefix + availableRepos[i].name, cx, listY + i * 28);
+                    }
+
+                    ctx.fillStyle = '#888';
+                    ctx.font = '14px monospace';
+                    ctx.fillText('Up/Down to navigate, Enter to select', cx, listY + availableRepos.length * 28 + 20);
+                    return;
+                }
+
+                // Controls
+                ctx.fillStyle = '#ccc';
+                ctx.font = '16px monospace';
+                var controlsY = baseY + 145;
+                ctx.fillText('Up / W  =  Thrust', cx, controlsY);
+                ctx.fillText('Left / A  =  Rotate Left', cx, controlsY + 24);
+                ctx.fillText('Right / D  =  Rotate Right', cx, controlsY + 48);
+                ctx.fillText('R  =  Restart', cx, controlsY + 72);
+
+                // Fallback notice (when data has no commits or no PRs)
+                if (repoFallbackNotice) {
+                    ctx.fillStyle = '#FFB300';
+                    ctx.font = '14px monospace';
+                    ctx.fillText(repoFallbackNotice, cx, controlsY + 110);
+                }
+
+                // "Press Space to Start" prompt
+                ctx.fillStyle = '#888';
+                ctx.font = '20px sans-serif';
+                var startPromptY = repoFallbackNotice ? controlsY + 140 : controlsY + 120;
+                ctx.fillText('Press SPACE to Start', cx, startPromptY);
+
+                // Leaderboard on start screen
+                var board = getLeaderboard();
+                if (board.length > 0) {
+                    drawLeaderboard(cx, controlsY + 150, null);
+                }
+            }
+
+            function renderPlaying() {
+                // Draw terrain
+                drawTerrain();
+
+                // Draw ship
+                drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting);
+
+                // --- HUD ---
+                var vyMs = ship.vy / PIXELS_PER_METER;
+                var vxMs = ship.vx / PIXELS_PER_METER;
+                var angleDeg = ship.angle % (2 * Math.PI);
+                if (angleDeg > Math.PI) angleDeg -= 2 * Math.PI;
+                if (angleDeg < -Math.PI) angleDeg += 2 * Math.PI;
+                angleDeg = angleDeg * (180 / Math.PI);
+                var altitude = getAltitude();
+                var fuelPct = ship.fuel / FUEL_MAX;
+
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'left';
+
+                // Altitude
+                ctx.fillStyle = '#fff';
+                ctx.fillText('Alt:     ' + altitude.toFixed(1) + ' m', 10, 25);
+
+                // Vertical velocity — color-coded: green if safe (<2), red if too fast
+                ctx.fillStyle = vyMs >= 2 ? '#f44336' : '#4CAF50';
+                ctx.fillText('V-Speed: ' + vyMs.toFixed(1) + ' m/s', 10, 45);
+
+                // Horizontal velocity — color-coded: green if safe (<1), red if too fast
+                ctx.fillStyle = Math.abs(vxMs) >= 1 ? '#f44336' : '#4CAF50';
+                ctx.fillText('H-Speed: ' + vxMs.toFixed(1) + ' m/s', 10, 65);
+
+                // Angle
+                ctx.fillStyle = Math.abs(angleDeg) >= 15 ? '#f44336' : '#4CAF50';
+                ctx.fillText('Angle:   ' + angleDeg.toFixed(1) + '\u00B0', 10, 85);
+
+                // Fuel bar
+                var fuelBarW = 120;
+                var fuelBarH = 14;
+                var fuelBarX = 10;
+                var fuelBarY = 98;
+
+                ctx.fillStyle = '#333';
+                ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+                var fuelColor;
+                if (fuelPct > 0.5) {
+                    fuelColor = '#4CAF50';
+                } else if (fuelPct > 0.25) {
+                    fuelColor = '#FFC107';
+                } else {
+                    fuelColor = '#f44336';
+                }
+                ctx.fillStyle = fuelColor;
+                ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+
+                // Score, Level, and Repo
+                ctx.fillStyle = '#fff';
+                ctx.font = '14px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('Score: ' + score, 10, fuelBarY + 36);
+                ctx.fillText('Level: ' + (currentLevel + 1), 10, fuelBarY + 56);
+
+                // Repo name in HUD (top-right)
+                if (selectedRepoName) {
+                    ctx.fillStyle = '#4FC3F7';
+                    ctx.font = '12px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('Repo: ' + selectedRepoName, canvas.width - 10, 25);
+                    ctx.textAlign = 'left';
+                }
+
+                // PR Type Legend (top-right, below repo name)
+                var legendX = canvas.width - 10;
+                var legendY = 45;
+                ctx.font = '11px monospace';
+                ctx.textAlign = 'right';
+                var legendTypes = [
+                    { label: 'Security (3x)', color: PR_TYPE_COLORS.security },
+                    { label: 'Bug Fix (2x)', color: PR_TYPE_COLORS.bugfix },
+                    { label: 'Feature (1x)', color: PR_TYPE_COLORS.feature },
+                    { label: 'Other (1x)', color: PR_TYPE_COLORS.other }
+                ];
+                for (var li = 0; li < legendTypes.length; li++) {
+                    var lt = legendTypes[li];
+                    ctx.fillStyle = lt.color;
+                    ctx.fillRect(legendX - 8, legendY + li * 16 - 8, 8, 8);
+                    ctx.fillStyle = '#ccc';
+                    ctx.fillText(lt.label, legendX - 14, legendY + li * 16);
+                }
+
+                // Date range of current level's data
+                if (levelDateRange) {
+                    ctx.fillStyle = '#aaa';
+                    ctx.font = '11px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(levelDateRange, legendX, legendY + legendTypes.length * 16 + 6);
+                }
+                ctx.textAlign = 'left';
+
+                // Wind indicator (only shown when wind is active)
+                if (wind.maxStrength > 0) {
+                    var windY = fuelBarY + 76;
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '14px monospace';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Wind:', 10, windY);
+
+                    // Draw wind arrow — length proportional to strength, direction shows left/right
+                    var arrowBaseX = 70;
+                    var arrowY = windY - 5;
+                    var maxArrowLen = 60;
+                    var arrowLen = (wind.strength / wind.maxStrength) * maxArrowLen;
+                    var absArrowLen = Math.abs(arrowLen);
+
+                    if (absArrowLen > 1) {
+                        var arrowEndX = arrowBaseX + arrowLen;
+                        // Arrow shaft
+                        ctx.strokeStyle = '#4FC3F7';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(arrowBaseX, arrowY);
+                        ctx.lineTo(arrowEndX, arrowY);
+                        ctx.stroke();
+                        // Arrowhead
+                        var headDir = arrowLen > 0 ? 1 : -1;
+                        ctx.beginPath();
+                        ctx.moveTo(arrowEndX, arrowY);
+                        ctx.lineTo(arrowEndX - headDir * 6, arrowY - 4);
+                        ctx.lineTo(arrowEndX - headDir * 6, arrowY + 4);
+                        ctx.closePath();
+                        ctx.fillStyle = '#4FC3F7';
+                        ctx.fill();
+                    } else {
+                        // Calm — show a dot
+                        ctx.fillStyle = '#4FC3F7';
+                        ctx.beginPath();
+                        ctx.arc(arrowBaseX, arrowY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // HUD hint
+                ctx.fillStyle = '#555';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Arrow keys to steer | UP or W for thrust | Land on pads', canvas.width / 2, canvas.height - 30);
+            }
+
+            function renderLanded() {
+                drawTerrain();
+
+                // Ship remains visible on the pad
+                drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false);
+
+                // Draw celebration particles
+                drawCelebration();
+
+                // "LANDED SUCCESSFULLY!" title
+                ctx.fillStyle = '#4CAF50';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('LANDED SUCCESSFULLY!', canvas.width / 2, canvas.height / 2 - 40);
+
+                // Score breakdown displayed prominently
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 28px sans-serif';
+                ctx.fillText('+' + landedTotalPoints + ' pts', canvas.width / 2, canvas.height / 2 + 5);
+
+                // Breakdown: pad bonus (with multiplier) + fuel bonus
+                ctx.fillStyle = '#ccc';
+                ctx.font = '16px sans-serif';
+                var padBreakdown = 'Pad: ' + landedPadBasePoints + (landedTypeMultiplier > 1 ? ' x' + landedTypeMultiplier + ' = ' + landedPadPoints : '');
+                ctx.fillText(padBreakdown + ' | Fuel bonus: ' + landedFuelBonus, canvas.width / 2, canvas.height / 2 + 30);
+
+                // PR Info Panel on successful landing
+                if (landedPRNumber) {
+                    var panelCx = canvas.width / 2;
+                    var panelTop = canvas.height / 2 + 48;
+                    var panelW = 400;
+                    var panelH = 100;
+                    var panelLeft = panelCx - panelW / 2;
+
+                    // Panel background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.roundRect(panelLeft, panelTop, panelW, panelH, 8);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    var lineY = panelTop + 22;
+
+                    // Row 1: PR number + type badge
+                    ctx.font = 'bold 15px sans-serif';
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'left';
+                    var prLabel = 'PR #' + landedPRNumber;
+                    ctx.fillText(prLabel, panelLeft + 14, lineY);
+
+                    // Type badge
+                    if (landedPRType && landedPRType !== 'fallback') {
+                        var badgeColor = PR_TYPE_COLORS[landedPRType] || PR_TYPE_COLORS.other;
+                        var badgeText = landedPRType.charAt(0).toUpperCase() + landedPRType.slice(1);
+                        var prLabelWidth = ctx.measureText(prLabel).width;
+                        var badgeX = panelLeft + 14 + prLabelWidth + 10;
+                        ctx.font = 'bold 11px sans-serif';
+                        var badgeTextWidth = ctx.measureText(badgeText).width;
+                        // Badge background
+                        ctx.fillStyle = badgeColor;
+                        ctx.beginPath();
+                        ctx.roundRect(badgeX, lineY - 11, badgeTextWidth + 12, 16, 4);
+                        ctx.fill();
+                        // Badge text
+                        ctx.fillStyle = '#000';
+                        ctx.fillText(badgeText, badgeX + 6, lineY - 0.5);
+                    }
+
+                    // Merge date (right-aligned)
+                    if (landedPRMergedDate) {
+                        var mergeDate = new Date(landedPRMergedDate);
+                        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        var dateStr = months[mergeDate.getMonth()] + ' ' + mergeDate.getDate() + ', ' + mergeDate.getFullYear();
+                        ctx.font = '12px sans-serif';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'right';
+                        ctx.fillText(dateStr, panelLeft + panelW - 14, lineY);
+                    }
+
+                    lineY += 22;
+
+                    // Row 2: PR title (truncated)
+                    ctx.font = '13px sans-serif';
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.textAlign = 'left';
+                    var maxTitleW = panelW - 28;
+                    var displayTitle = landedPRTitle;
+                    while (displayTitle.length > 0 && ctx.measureText(displayTitle).width > maxTitleW) {
+                        displayTitle = displayTitle.substring(0, displayTitle.length - 1);
+                    }
+                    if (displayTitle.length < landedPRTitle.length) {
+                        displayTitle = displayTitle.substring(0, displayTitle.length - 3) + '...';
+                    }
+                    ctx.fillText(displayTitle, panelLeft + 14, lineY);
+
+                    lineY += 20;
+
+                    // Row 3: Author
+                    if (landedPRAuthor) {
+                        ctx.font = '12px sans-serif';
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.textAlign = 'left';
+                        ctx.fillText('by ' + landedPRAuthor, panelLeft + 14, lineY);
+                    }
+
+                    // Reset text align for subsequent draws
+                    ctx.textAlign = 'center';
+                }
+
+                // "Press Space for next level" appears after delay
+                if (celebrationReady) {
+                    ctx.fillStyle = '#888';
+                    ctx.font = '20px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Press SPACE for next level', canvas.width / 2, canvas.height / 2 + (landedPRNumber ? 170 : 65));
+                }
+            }
+
+            function renderCrashed() {
+                drawTerrain();
+
+                // During explosion, show particles instead of ship
+                if (!explosionFinished) {
+                    drawExplosion();
+                } else {
+                    // After explosion finishes, show "Crashed!" message
+                    ctx.fillStyle = '#f44336';
+                    ctx.font = 'bold 36px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('CRASHED!', canvas.width / 2, canvas.height / 2 - 40);
+
+                    // Show crash reasons
+                    if (landingResult) {
+                        var reasons = landingResult.split('\n');
+                        ctx.fillStyle = '#ccc';
+                        ctx.font = '16px sans-serif';
+                        for (var i = 0; i < reasons.length; i++) {
+                            ctx.fillText(reasons[i], canvas.width / 2, canvas.height / 2 + i * 22);
+                        }
+                    }
+
+                    ctx.fillStyle = '#888';
+                    ctx.font = '20px sans-serif';
+                    ctx.fillText('Press R to retry | Press SPACE for game over', canvas.width / 2, canvas.height / 2 + (landingResult ? landingResult.split('\n').length * 22 + 15 : 30));
+                }
+            }
+
+            function drawLeaderboard(cx, startY, highlight) {
+                var board = getLeaderboard();
+                if (board.length === 0) return startY;
+
+                ctx.fillStyle = '#ccc';
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('--- HIGH SCORES ---', cx, startY);
+
+                var y = startY + 24;
+                ctx.font = '14px monospace';
+                for (var i = 0; i < board.length; i++) {
+                    var entry = board[i];
+                    var rank = (i + 1) + '.';
+                    var padding = i < 9 ? '  ' : ' ';
+                    var line = rank + padding + entry.name;
+                    // Pad name to align scores
+                    while (line.length < 18) line += ' ';
+                    line += entry.score;
+
+                    if (highlight && entry.score === score && entry.name === highlight) {
+                        ctx.fillStyle = '#FFD700';
+                        highlight = null; // only highlight first match
+                    } else {
+                        ctx.fillStyle = '#aaa';
+                    }
+                    ctx.fillText(line, cx, y);
+                    y += 20;
+                }
+                return y;
+            }
+
+            function renderGameOver() {
+                var cx = canvas.width / 2;
+                var y = canvas.height / 2 - 120;
+
+                ctx.fillStyle = '#f44336';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', cx, y);
+
+                y += 40;
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 28px sans-serif';
+                ctx.fillText('Score: ' + score, cx, y);
+
+                y += 30;
+                ctx.fillStyle = '#ccc';
+                ctx.font = '18px sans-serif';
+                ctx.fillText('Level Reached: ' + gameOverLevel, cx, y);
+
+                y += 30;
+
+                if (gameOverEnteringName) {
+                    // Name entry prompt
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 18px sans-serif';
+                    ctx.fillText('NEW HIGH SCORE!', cx, y);
+                    y += 28;
+                    ctx.fillStyle = '#ccc';
+                    ctx.font = '16px sans-serif';
+                    ctx.fillText('Enter your name:', cx, y);
+                    y += 28;
+                    // Draw input box
+                    var boxW = 200;
+                    var boxH = 30;
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(cx - boxW / 2, y - 20, boxW, boxH);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 18px monospace';
+                    var displayName = gameOverName;
+                    // Blinking cursor
+                    if (Math.floor(Date.now() / 500) % 2 === 0) {
+                        displayName += '_';
+                    }
+                    ctx.fillText(displayName, cx, y + 2);
+                    y += 24;
+                    ctx.fillStyle = '#888';
+                    ctx.font = '14px sans-serif';
+                    ctx.fillText('Press ENTER to confirm (max 10 chars)', cx, y);
+                } else {
+                    // Show leaderboard
+                    y = drawLeaderboard(cx, y, gameOverName.trim() || null);
+                    y += 15;
+                    ctx.fillStyle = '#888';
+                    ctx.font = '20px sans-serif';
+                    ctx.fillText('Press Space to Play Again', cx, y);
+                }
+            }
+
+            function render() {
+                // Clear canvas with dark background
+                ctx.fillStyle = '#111';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw starfield background
+                drawStars();
+
+                // Apply screen shake offset
+                var shaking = screenShake > 0;
+                if (shaking) {
+                    var shakeX = (Math.random() - 0.5) * 2 * SCREEN_SHAKE_INTENSITY * (screenShake / SCREEN_SHAKE_DURATION);
+                    var shakeY = (Math.random() - 0.5) * 2 * SCREEN_SHAKE_INTENSITY * (screenShake / SCREEN_SHAKE_DURATION);
+                    ctx.save();
+                    ctx.translate(shakeX, shakeY);
+                }
+
+                switch (gameState) {
+                    case STATES.MENU:
+                        renderMenu();
+                        break;
+                    case STATES.PLAYING:
+                        renderPlaying();
+                        break;
+                    case STATES.LANDED:
+                        renderLanded();
+                        break;
+                    case STATES.CRASHED:
+                        renderCrashed();
+                        break;
+                    case STATES.GAMEOVER:
+                        renderGameOver();
+                        break;
+                }
+
+                // Restore screen shake offset
+                if (shaking) {
+                    ctx.restore();
+                }
+            }
+
+            // --- Game Loop ---
+            function gameLoop(timestamp) {
+                var dt = (timestamp - lastTime) / 1000;
+                lastTime = timestamp;
+
+                // Clamp delta time to avoid spiral of death on tab switch
+                if (dt > 0.1) {
+                    dt = 0.1;
+                }
+
+                update(dt);
+                render();
+
+                requestAnimationFrame(gameLoop);
+            }
+
+            // Generate initial starfield
+            generateStars();
+
+            // Start the loop
+            requestAnimationFrame(function (timestamp) {
+                lastTime = timestamp;
+                gameLoop(timestamp);
+            });
+        })();
+    </script>
+</body>
+</html>
