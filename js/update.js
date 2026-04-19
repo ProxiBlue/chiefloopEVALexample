@@ -1550,6 +1550,65 @@ function update(dt) {
         }
     }
 
+    // Tech debt playing: Asteroids-style ship physics (US-005).
+    // - Left/Right (or A/D) rotate using the existing ROTATION_SPEED.
+    // - Up (or W) applies thrust in the ship's facing direction; thrust
+    //   consumes fuel at FUEL_BURN_RATE. When fuel hits 0 thrust is disabled
+    //   but the player can still rotate (and shoot, in a later story).
+    // - Zero-G: no gravity, no wind. Only drag (TECHDEBT_SHIP_DRAG, per-frame
+    //   multiplier) decelerates the ship; max speed is clamped to
+    //   TECHDEBT_SHIP_MAX_SPEED.
+    // - Ship wraps around all four screen edges.
+    if (gameState === STATES.TECHDEBT_PLAYING) {
+        var rotatingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
+        var rotatingRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        if (rotatingLeft) {
+            ship.angle -= ship.rotationSpeed * dt;
+        }
+        if (rotatingRight) {
+            ship.angle += ship.rotationSpeed * dt;
+        }
+        ship.rotating = rotatingLeft ? 'left' : rotatingRight ? 'right' : null;
+
+        var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+        ship.thrusting = wantsThrust && ship.fuel > 0;
+        if (ship.thrusting) {
+            ship.fuel -= FUEL_BURN_RATE * dt;
+            if (ship.fuel < 0) ship.fuel = 0;
+            // Asteroids-style: thrust applies acceleration in screen-space
+            // px/s² along the ship's facing direction (nose = -Y at angle=0).
+            // No gravity scaling here — this is open space, not lander mode.
+            var accel = THRUST_POWER * PIXELS_PER_METER * dt;
+            ship.vx += Math.sin(ship.angle) * accel;
+            ship.vy += -Math.cos(ship.angle) * accel;
+            startThrustSound();
+        } else {
+            stopThrustSound();
+        }
+
+        // Per-frame drag — keeps the ship controllable without killing momentum.
+        ship.vx *= TECHDEBT_SHIP_DRAG;
+        ship.vy *= TECHDEBT_SHIP_DRAG;
+
+        // Clamp velocity magnitude to TECHDEBT_SHIP_MAX_SPEED.
+        var speedSq = ship.vx * ship.vx + ship.vy * ship.vy;
+        var maxSq = TECHDEBT_SHIP_MAX_SPEED * TECHDEBT_SHIP_MAX_SPEED;
+        if (speedSq > maxSq) {
+            var scale = TECHDEBT_SHIP_MAX_SPEED / Math.sqrt(speedSq);
+            ship.vx *= scale;
+            ship.vy *= scale;
+        }
+
+        ship.x += ship.vx * dt;
+        ship.y += ship.vy * dt;
+
+        // Toroidal wrap on all four edges.
+        if (ship.x < 0) ship.x += canvas.width;
+        else if (ship.x >= canvas.width) ship.x -= canvas.width;
+        if (ship.y < 0) ship.y += canvas.height;
+        else if (ship.y >= canvas.height) ship.y -= canvas.height;
+    }
+
     if (gameState === STATES.PLAYING) {
         // Ship rotation
         var rotatingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);

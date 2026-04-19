@@ -1553,6 +1553,15 @@ function renderTechdebtTransition() {
     }
 }
 
+function renderTechdebtPlaying() {
+    // Open starfield only — no terrain. Stars are already drawn by render()
+    // before this function runs.
+    for (var i = 0; i < techdebtAsteroids.length; i++) {
+        drawTechdebtAsteroid(techdebtAsteroids[i]);
+    }
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -1721,6 +1730,9 @@ function render() {
             break;
         case STATES.TECHDEBT_TRANSITION:
             renderTechdebtTransition();
+            break;
+        case STATES.TECHDEBT_PLAYING:
+            renderTechdebtPlaying();
             break;
         case STATES.CRASHED:
             renderCrashed();
