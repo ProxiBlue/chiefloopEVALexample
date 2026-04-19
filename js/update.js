@@ -1822,9 +1822,60 @@ function update(dt) {
                     BREAKOUT_BALL_SPEED_MAX,
                     BREAKOUT_BALL_SPEED_BASE + currentLevel * BREAKOUT_BALL_SPEED_PER_LEVEL
                 );
-                breakoutBallVX = 0;
-                breakoutBallVY = -launchSpeed;
+                // Random angle in [60°, 120°] from horizontal — mostly up with ±30° spread.
+                var launchAngle = Math.PI / 3 + Math.random() * (Math.PI / 3);
+                breakoutBallVX = launchSpeed * Math.cos(launchAngle);
+                breakoutBallVY = -launchSpeed * Math.sin(launchAngle);
                 breakoutBallStuck = false;
+            }
+        } else {
+            // Integrate ball motion.
+            breakoutBallX += breakoutBallVX * dt;
+            breakoutBallY += breakoutBallVY * dt;
+
+            // Left / right / top wall reflections.
+            if (breakoutBallX - BREAKOUT_BALL_RADIUS < 0) {
+                breakoutBallX = BREAKOUT_BALL_RADIUS;
+                breakoutBallVX = -breakoutBallVX;
+            } else if (breakoutBallX + BREAKOUT_BALL_RADIUS > canvas.width) {
+                breakoutBallX = canvas.width - BREAKOUT_BALL_RADIUS;
+                breakoutBallVX = -breakoutBallVX;
+            }
+            if (breakoutBallY - BREAKOUT_BALL_RADIUS < 0) {
+                breakoutBallY = BREAKOUT_BALL_RADIUS;
+                breakoutBallVY = -breakoutBallVY;
+            }
+
+            // Paddle collision — reflect + directional control via hit position.
+            // Bounce angle follows the standard Breakout formula:
+            //   hitPosNorm in [-1, 1]; vX = hitPosNorm * speed * sin(maxAngle);
+            //   vY = -sqrt(speed² - vX²) so magnitude is preserved.
+            var paddleTop = canvas.height - BREAKOUT_PADDLE_Y_OFFSET;
+            var paddleBottom = paddleTop + BREAKOUT_PADDLE_HEIGHT;
+            if (breakoutBallVY > 0 &&
+                breakoutBallY + BREAKOUT_BALL_RADIUS >= paddleTop &&
+                breakoutBallY - BREAKOUT_BALL_RADIUS <= paddleBottom &&
+                breakoutBallX >= breakoutPaddleX &&
+                breakoutBallX <= breakoutPaddleX + BREAKOUT_PADDLE_WIDTH) {
+                var ballSpeed = Math.sqrt(
+                    breakoutBallVX * breakoutBallVX + breakoutBallVY * breakoutBallVY
+                );
+                var paddleCenterX = breakoutPaddleX + BREAKOUT_PADDLE_WIDTH / 2;
+                var hitPosNorm = (breakoutBallX - paddleCenterX) / (BREAKOUT_PADDLE_WIDTH / 2);
+                if (hitPosNorm > 1) hitPosNorm = 1;
+                if (hitPosNorm < -1) hitPosNorm = -1;
+                var maxAngleComponent = ballSpeed * Math.sin(BREAKOUT_PADDLE_MAX_BOUNCE_ANGLE);
+                breakoutBallVX = hitPosNorm * maxAngleComponent;
+                breakoutBallVY = -Math.sqrt(
+                    Math.max(0, ballSpeed * ballSpeed - breakoutBallVX * breakoutBallVX)
+                );
+                breakoutBallY = paddleTop - BREAKOUT_BALL_RADIUS;
+            }
+
+            // Bottom-out: ball is lost. Full life/ball decrement lives in US-009;
+            // here we just re-stick the ball on the paddle so play can continue.
+            if (breakoutBallY - BREAKOUT_BALL_RADIUS > canvas.height) {
+                breakoutBallStuck = true;
             }
         }
     }

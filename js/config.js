@@ -525,6 +525,7 @@ var BREAKOUT_PADDLE_WIDTH = 80;           // paddle width in px (wider than ship
 var BREAKOUT_PADDLE_HEIGHT = 16;          // paddle height in px
 var BREAKOUT_PADDLE_SPEED = 400;          // paddle move speed in px/s
 var BREAKOUT_PADDLE_Y_OFFSET = 40;        // px from canvas bottom to paddle top
+var BREAKOUT_PADDLE_MAX_BOUNCE_ANGLE = Math.PI / 3; // 60° from vertical — angle when ball hits paddle edge (US-006)
 
 // --- Code Breaker Power-Up Configuration ---
 var BREAKOUT_POWERUP_CHANCE = 0.15;       // 15% of bricks drop a power-up
