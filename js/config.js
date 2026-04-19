@@ -360,3 +360,56 @@ var missileRoundLabelPool = [];
 // (see startNewGame in js/input.js). Odd value -> invaders mini-game,
 // even value -> missile command mini-game.
 var securityMiniGameCount = 0;
+
+// --- Tech Debt Blaster Mini-Game Transition ---
+var TECHDEBT_TRANSITION_DURATION = 1.5;   // seconds — brief starfield zoom effect
+
+// --- Tech Debt Asteroid Configuration ---
+var TECHDEBT_ASTEROID_BASE_COUNT = 4;     // base count of large asteroids
+var TECHDEBT_ASTEROID_PER_LEVEL = 2;      // extra asteroids per level
+var TECHDEBT_ASTEROID_MAX = 16;           // hard cap on asteroids per round
+
+// --- Tech Debt Asteroid Size Tiers ---
+var TECHDEBT_SIZE_LARGE = 40;             // large asteroid radius in px
+var TECHDEBT_SIZE_MEDIUM = 20;            // medium asteroid radius in px
+var TECHDEBT_SIZE_SMALL = 10;             // small asteroid radius in px
+
+// --- Tech Debt Asteroid Speed ---
+var TECHDEBT_SPEED_BASE = 40;             // base drift speed in px/s
+var TECHDEBT_SPEED_PER_LEVEL = 5;         // additional speed per level in px/s
+var TECHDEBT_SPEED_VARIANCE = 15;         // +/- speed variance per asteroid in px/s
+
+// --- Tech Debt Scoring ---
+var TECHDEBT_POINTS_LARGE = 20;           // points for destroying a large asteroid
+var TECHDEBT_POINTS_MEDIUM = 50;          // points for destroying a medium asteroid
+var TECHDEBT_POINTS_SMALL = 100;          // points for destroying a small asteroid (hardest)
+
+// --- Tech Debt Bullet Configuration ---
+var TECHDEBT_BULLET_SPEED = 400;          // bullet travel speed in px/s
+var TECHDEBT_BULLET_LIFETIME = 1.5;       // seconds before a bullet expires
+var TECHDEBT_BULLET_COOLDOWN = 0.18;      // seconds between shots
+
+// --- Tech Debt Ship Configuration ---
+var TECHDEBT_SHIP_DRAG = 0.98;            // per-frame drag — slight deceleration for control feel
+var TECHDEBT_SHIP_MAX_SPEED = 250;        // ship velocity cap in px/s
+
+// --- ProxiBlue Power-Up Configuration ---
+var PROXIBLUE_SPAWN_CHANCE = 0.125;       // 1 in 8 chance to spawn on asteroid destruction
+var PROXIBLUE_SHIELD_DURATION = 8;        // seconds the shield stays active
+var PROXIBLUE_POINTS = 150;               // points awarded when collected
+
+// --- Tech Debt State Arrays ---
+var techdebtAsteroids = [];               // active asteroids on screen
+var techdebtBullets = [];                 // active bullets in flight
+var techdebtParticles = [];               // visual particles from destroyed asteroids
+
+// --- Tech Debt Per-Game Counters ---
+var techdebtScore = 0;                    // bonus points earned during tech debt phase
+var asteroidsDestroyed = 0;               // count of asteroids destroyed this round
+var asteroidsTotal = 0;                   // total asteroids to destroy this round
+var techdebtCompleteTimer = 0;            // elapsed time in TECHDEBT_COMPLETE state
+var techdebtTransitionTimer = 0;          // elapsed time in TECHDEBT_TRANSITION state
+
+// --- ProxiBlue Shield State ---
+var proxiblueShieldActive = false;        // true while shield power-up is protecting ship
+var proxiblueShieldTimer = 0;             // seconds remaining on active shield
