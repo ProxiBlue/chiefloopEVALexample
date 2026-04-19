@@ -2063,34 +2063,110 @@ function drawDriveWorld() {
         Math.ceil((scrollX + canvas.width) / segW) + 1
     );
 
-    ctx.save();
-    ctx.fillStyle = '#444';
-    ctx.beginPath();
-    var sFirst = driveRoadSegments[firstIdx];
-    ctx.moveTo(sFirst.x - scrollX, canvas.height);
-    ctx.lineTo(sFirst.x - scrollX, sFirst.y);
-    for (var fi = firstIdx; fi <= lastIdx; fi++) {
-        var fs = driveRoadSegments[fi];
-        ctx.lineTo(fs.x - scrollX, fs.y);
-        ctx.lineTo(fs.x - scrollX + segW, fs.y);
+    // Break the visible range into runs of contiguous non-gap segments so
+    // gaps render as actual holes (no fill, no surface line — starfield shows
+    // through). Each run is filled and outlined independently.
+    var runs = [];
+    var runStart = -1;
+    for (var ii = firstIdx; ii <= lastIdx; ii++) {
+        var seg = driveRoadSegments[ii];
+        if (seg.type === 'gap') {
+            if (runStart !== -1) { runs.push({ start: runStart, end: ii - 1 }); runStart = -1; }
+        } else {
+            if (runStart === -1) runStart = ii;
+        }
     }
-    var sLast = driveRoadSegments[lastIdx];
-    ctx.lineTo(sLast.x - scrollX + segW, canvas.height);
-    ctx.closePath();
-    ctx.fill();
+    if (runStart !== -1) runs.push({ start: runStart, end: lastIdx });
 
-    ctx.strokeStyle = '#777';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    var surfFirst = driveRoadSegments[firstIdx];
-    ctx.moveTo(surfFirst.x - scrollX, surfFirst.y);
+    for (var ri0 = 0; ri0 < runs.length; ri0++) {
+        var run = runs[ri0];
+        ctx.save();
+        ctx.fillStyle = '#444';
+        ctx.beginPath();
+        var rFirst = driveRoadSegments[run.start];
+        ctx.moveTo(rFirst.x - scrollX, canvas.height);
+        for (var fi = run.start; fi <= run.end; fi++) {
+            var fs = driveRoadSegments[fi];
+            ctx.lineTo(fs.x - scrollX, fs.y);
+            ctx.lineTo(fs.x - scrollX + segW, fs.y);
+        }
+        var rLast = driveRoadSegments[run.end];
+        ctx.lineTo(rLast.x - scrollX + segW, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Per-segment surface treatment — plain ground, slow (hatched/darker),
+    // or boost (bright chevrons). Skip gap segments entirely.
     for (var gi = firstIdx; gi <= lastIdx; gi++) {
         var gs = driveRoadSegments[gi];
-        ctx.lineTo(gs.x - scrollX, gs.y);
-        ctx.lineTo(gs.x - scrollX + segW, gs.y);
+        if (gs.type === 'gap') continue;
+        var sx = gs.x - scrollX;
+        var sy = gs.y;
+        ctx.save();
+        if (gs.type === 'slow') {
+            // Darker overlay + diagonal hatching across the segment surface.
+            ctx.fillStyle = 'rgba(20, 20, 20, 0.55)';
+            ctx.fillRect(sx, sy, segW, canvas.height - sy);
+            ctx.strokeStyle = 'rgba(120, 120, 120, 0.7)';
+            ctx.lineWidth = 1;
+            for (var hx = -6; hx < segW + 6; hx += 5) {
+                ctx.beginPath();
+                ctx.moveTo(sx + hx, sy);
+                ctx.lineTo(sx + hx + 8, sy + 8);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + segW, sy);
+            ctx.stroke();
+        } else if (gs.type === 'boost') {
+            // Brighter ground + yellow chevron arrow pointing forward.
+            ctx.fillStyle = 'rgba(80, 180, 80, 0.35)';
+            ctx.fillRect(sx, sy, segW, canvas.height - sy);
+            ctx.strokeStyle = '#FFEB3B';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx + 2, sy + 10);
+            ctx.lineTo(sx + 10, sy + 4);
+            ctx.lineTo(sx + 18, sy + 10);
+            ctx.stroke();
+            ctx.strokeStyle = '#BDFDBA';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + segW, sy);
+            ctx.stroke();
+        } else {
+            ctx.strokeStyle = '#777';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + segW, sy);
+            ctx.stroke();
+        }
+        ctx.restore();
     }
-    ctx.stroke();
-    ctx.restore();
+
+    // Zone labels — emit once at the first segment of each contiguous
+    // slow/boost run so the floating text sits at the zone's leading edge.
+    for (var li = firstIdx; li <= lastIdx; li++) {
+        var ls = driveRoadSegments[li];
+        if (ls.type !== 'slow' && ls.type !== 'boost') continue;
+        var prev = li > 0 ? driveRoadSegments[li - 1] : null;
+        if (prev && prev.type === ls.type) continue;
+        if (!ls.label) continue;
+        ctx.save();
+        ctx.fillStyle = ls.type === 'slow' ? '#FFA726' : '#FFEB3B';
+        ctx.font = '11px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(ls.label, ls.x - scrollX, ls.y - 8);
+        ctx.restore();
+    }
 
     // Rocks
     for (var ri = 0; ri < driveObstacles.length; ri++) {
@@ -2105,10 +2181,17 @@ function drawDriveWorld() {
         ctx.lineTo(rx, rock.y - rock.size);
         ctx.closePath();
         ctx.fill();
+        if (rock.label) {
+            ctx.fillStyle = '#ccc';
+            ctx.font = '9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(rock.label, rx, rock.y - rock.size - 2);
+        }
         ctx.restore();
     }
 
-    // Pickups — simple rotating diamonds
+    // Pickups — simple rotating diamonds with a small label above.
     var spin = (typeof driveTransitionTimer === 'number' ? driveTransitionTimer : 0) * 2;
     for (var pi = 0; pi < drivePickups.length; pi++) {
         var pu = drivePickups[pi];
@@ -2123,9 +2206,20 @@ function drawDriveWorld() {
         ctx.shadowBlur = 6;
         ctx.fillRect(-pu.size / 2, -pu.size / 2, pu.size, pu.size);
         ctx.restore();
+        if (pu.label) {
+            ctx.save();
+            ctx.fillStyle = '#9cf';
+            ctx.font = '9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(pu.label, px, pu.y - pu.size);
+            ctx.restore();
+        }
     }
 
-    // Destination pad at end of road
+    // Destination pad at end of road. Edge markers (short vertical ticks)
+    // frame each end; the glowing pad line and banner reuse the landing-pad
+    // visual vocabulary.
     var destX = driveRoadLength - scrollX;
     if (destX >= -120 && destX <= canvas.width + 120) {
         var destSegIdx = driveRoadSegments.length - 1;
@@ -2141,6 +2235,14 @@ function drawDriveWorld() {
         ctx.beginPath();
         ctx.moveTo(destX, destY);
         ctx.lineTo(destX + padWidth, destY);
+        ctx.stroke();
+        // Edge markers — short vertical ticks at each end of the pad.
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(destX, destY);
+        ctx.lineTo(destX, destY - 12);
+        ctx.moveTo(destX + padWidth, destY);
+        ctx.lineTo(destX + padWidth, destY - 12);
         ctx.stroke();
         ctx.restore();
 

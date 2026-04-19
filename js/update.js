@@ -785,11 +785,10 @@ function setupMissileWorld() {
 
 // Initialize Feature Drive world on entry to DRIVE_TRANSITION. Resets
 // per-round state + arrays, generates the side-scrolling road (segments + a
-// destination pad at the end), and scatters rocks + pickups along the road.
-// Road length scales with currentLevel per the PRD formula. Full terrain
-// variation (gaps, slow zones, speed boosts) is deferred to US-005; this
-// setup lays down a gently-rolling ground strip so the camera has something
-// to render during the transition window.
+// destination pad at the end), and scatters gaps, slow zones, speed boosts,
+// rocks, and pickups along the road per the US-005 procedural-generation
+// spec. Road length scales with currentLevel per the PRD formula. Safe
+// zones of 200px at the start and end are kept clear of any hazards.
 function setupDriveWorld() {
     driveScrollX = 0;
     driveSpeed = 0;
@@ -818,13 +817,15 @@ function setupDriveWorld() {
     var currentY = groundYCenter;
     for (var si = 0; si < segmentCount; si++) {
         var drift = (Math.random() - 0.5) * 6;
+        if (Math.random() < 0.08) drift = 0; // occasional flat stretches
         currentY += drift;
         if (currentY < groundYMin) currentY = groundYMin;
         if (currentY > groundYMax) currentY = groundYMax;
         driveRoadSegments.push({
             x: si * segmentWidth,
             y: currentY,
-            type: 'ground'
+            type: 'ground',
+            label: null
         });
     }
 
@@ -836,53 +837,153 @@ function setupDriveWorld() {
     var safeEnd = driveRoadLength - 200;
     var minSpacing = 80;
 
+    // Spacing is tracked across two independent layers:
+    //   - `occupiedGround`: gaps, slow zones, speed boosts, rocks. These all
+    //     sit on the terrain surface and must stay out of each other's way
+    //     so layouts remain jumpable (per PRD tech considerations).
+    //   - `occupiedAir`: pickups. Pickups float above the terrain and can
+    //     coexist laterally with ground features (a pickup may hover over a
+    //     rock); they only need spacing against each other.
+    var occupiedGround = [];
+    var occupiedAir = [];
+    function canPlaceIn(list, x1, x2) {
+        var lo = x1 - minSpacing;
+        var hi = x2 + minSpacing;
+        for (var k = 0; k < list.length; k++) {
+            var r = list[k];
+            if (!(hi < r.x1 || lo > r.x2)) return false;
+        }
+        return true;
+    }
+    function markSegmentsRange(x1, x2, type, label) {
+        var startIdx = Math.max(0, Math.floor(x1 / segmentWidth));
+        var endIdx = Math.min(driveRoadSegments.length - 1, Math.floor((x2 - 0.001) / segmentWidth));
+        for (var i = startIdx; i <= endIdx; i++) {
+            driveRoadSegments[i].type = type;
+            driveRoadSegments[i].label = label;
+        }
+        occupiedGround.push({ x1: x1, x2: x2, kind: type });
+    }
+
+    // --- Gaps: frequency scales with level (AC). Widths in [MIN, MAX].
+    var gapFrequency = Math.min(0.004, 0.0015 + currentLevel * 0.0003);
+    var gapTarget = Math.floor(driveRoadLength * gapFrequency);
+    var gapAttemptCap = Math.max(1, gapTarget) * 10;
+    var gapsPlaced = 0;
+    var gapAttempts = 0;
+    while (gapsPlaced < gapTarget && gapAttempts < gapAttemptCap) {
+        gapAttempts++;
+        var gWidth = DRIVE_GAP_MIN_WIDTH + Math.random() * (DRIVE_GAP_MAX_WIDTH - DRIVE_GAP_MIN_WIDTH);
+        var gMaxStart = safeEnd - gWidth;
+        if (gMaxStart <= safeStart) break;
+        var gStart = safeStart + Math.random() * (gMaxStart - safeStart);
+        var gEnd = gStart + gWidth;
+        if (!canPlaceIn(occupiedGround, gStart, gEnd)) continue;
+        markSegmentsRange(gStart, gEnd, 'gap', null);
+        gapsPlaced++;
+    }
+
+
+    // --- Slow zones: darker/hatched stretches. Label pool per AC.
+    var slowLabels = ['// TODO', 'tech debt'];
+    var slowTarget = Math.max(1, Math.floor(driveRoadLength * 0.0008));
+    var slowAttemptCap = slowTarget * 10;
+    var slowsPlaced = 0;
+    var slowAttempts = 0;
+    while (slowsPlaced < slowTarget && slowAttempts < slowAttemptCap) {
+        slowAttempts++;
+        var sWidth = 80 + Math.random() * 60;
+        var sMaxStart = safeEnd - sWidth;
+        if (sMaxStart <= safeStart) break;
+        var sStart = safeStart + Math.random() * (sMaxStart - safeStart);
+        var sEnd = sStart + sWidth;
+        if (!canPlaceIn(occupiedGround, sStart, sEnd)) continue;
+        markSegmentsRange(sStart, sEnd, 'slow', slowLabels[Math.floor(Math.random() * slowLabels.length)]);
+        slowsPlaced++;
+    }
+
+    // --- Speed boosts: chevron stretches. Label pool per AC.
+    var boostLabels = ['CI passed', 'tests green'];
+    var boostTarget = Math.max(1, Math.floor(driveRoadLength * 0.0008));
+    var boostAttemptCap = boostTarget * 10;
+    var boostsPlaced = 0;
+    var boostAttempts = 0;
+    while (boostsPlaced < boostTarget && boostAttempts < boostAttemptCap) {
+        boostAttempts++;
+        var bWidth = 80 + Math.random() * 60;
+        var bMaxStart = safeEnd - bWidth;
+        if (bMaxStart <= safeStart) break;
+        var bStart = safeStart + Math.random() * (bMaxStart - safeStart);
+        var bEnd = bStart + bWidth;
+        if (!canPlaceIn(occupiedGround, bStart, bEnd)) continue;
+        markSegmentsRange(bStart, bEnd, 'boost', boostLabels[Math.floor(Math.random() * boostLabels.length)]);
+        boostsPlaced++;
+    }
+
+    // --- Rocks: only on plain ground segments. Full obstacle label pool.
+    var rockLabels = [
+        'edge case', 'null check', 'off-by-one', 'race condition',
+        'deprecated API', 'legacy code', 'flaky test', 'merge conflict',
+        'missing test', 'type error', 'lint warning', 'circular dep',
+        'memory leak', 'N+1 query'
+    ];
     var obstacleDensity = Math.min(
         DRIVE_OBSTACLE_DENSITY_MAX,
         DRIVE_OBSTACLE_DENSITY_BASE + currentLevel * DRIVE_OBSTACLE_DENSITY_PER_LEVEL
     );
     var obstacleTarget = Math.floor(driveRoadLength * obstacleDensity);
-    var rockLabels = ['tech debt', 'edge case', 'null check', '// TODO', 'flaky test'];
-    var lastObstacleX = -Infinity;
     var obstaclesPlaced = 0;
     var obstacleAttempts = 0;
     var obstacleAttemptCap = Math.max(1, obstacleTarget) * 8;
     while (obstaclesPlaced < obstacleTarget && obstacleAttempts < obstacleAttemptCap) {
         obstacleAttempts++;
         var owx = safeStart + Math.random() * (safeEnd - safeStart);
-        if (owx - lastObstacleX < minSpacing) continue;
+        if (!canPlaceIn(occupiedGround, owx - DRIVE_ROCK_SIZE, owx + DRIVE_ROCK_SIZE)) continue;
         var oSegIdx = Math.floor(owx / segmentWidth);
         if (oSegIdx < 0 || oSegIdx >= driveRoadSegments.length) continue;
+        var oSeg = driveRoadSegments[oSegIdx];
+        if (oSeg.type !== 'ground') continue;
         driveObstacles.push({
             type: 'rock',
             x: owx,
-            y: driveRoadSegments[oSegIdx].y,
+            y: oSeg.y,
             size: DRIVE_ROCK_SIZE,
             label: rockLabels[Math.floor(Math.random() * rockLabels.length)]
         });
-        lastObstacleX = owx;
+        occupiedGround.push({ x1: owx - DRIVE_ROCK_SIZE, x2: owx + DRIVE_ROCK_SIZE, kind: 'rock' });
         obstaclesPlaced++;
     }
 
+    // --- Pickups: varying heights. Full pickup label pool. Floating above
+    // the terrain; half are low (drive-through) and half elevated (require a
+    // jump) so the mix naturally produces a jump-or-skip decision.
+    var pickupLabels = [
+        'LGTM', '+1', 'approved', 'ship it!', 'CI passed',
+        'tests green', 'looks good', 'no comments', 'reviewed', 'merged'
+    ];
     var pickupTarget = Math.floor(driveRoadLength * DRIVE_PICKUP_DENSITY);
-    var pickupLabels = ['LGTM', '+1', 'approved', 'ship it!', 'CI passed'];
-    var lastPickupX = -Infinity;
     var pickupsPlaced = 0;
     var pickupAttempts = 0;
     var pickupAttemptCap = Math.max(1, pickupTarget) * 8;
     while (pickupsPlaced < pickupTarget && pickupAttempts < pickupAttemptCap) {
         pickupAttempts++;
         var pwx = safeStart + Math.random() * (safeEnd - safeStart);
-        if (pwx - lastPickupX < minSpacing) continue;
+        if (!canPlaceIn(occupiedAir, pwx - DRIVE_PICKUP_SIZE, pwx + DRIVE_PICKUP_SIZE)) continue;
         var pSegIdx = Math.floor(pwx / segmentWidth);
         if (pSegIdx < 0 || pSegIdx >= driveRoadSegments.length) continue;
+        var pSeg = driveRoadSegments[pSegIdx];
+        if (pSeg.type === 'gap') continue;
+        var heightOffset = Math.random() < 0.5
+            ? (20 + Math.random() * 10)   // low — collect while driving
+            : (55 + Math.random() * 25);  // elevated — need a jump
         drivePickups.push({
             x: pwx,
-            y: driveRoadSegments[pSegIdx].y - (30 + Math.random() * 20),
+            y: pSeg.y - heightOffset,
             size: DRIVE_PICKUP_SIZE,
             label: pickupLabels[Math.floor(Math.random() * pickupLabels.length)],
             collected: false
         });
-        lastPickupX = pwx;
+        occupiedAir.push({ x1: pwx - DRIVE_PICKUP_SIZE, x2: pwx + DRIVE_PICKUP_SIZE, kind: 'pickup' });
         pickupsPlaced++;
     }
 }
