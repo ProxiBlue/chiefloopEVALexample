@@ -595,3 +595,66 @@ var breakoutReturnRotationTimer = 0;      // elapsed time in BREAKOUT_RETURN fli
 // (see startNewGame in js/input.js). Odd value -> Tech Debt Blaster,
 // even value -> Code Breaker.
 var otherMiniGameCount = 0;
+
+// --- Feature Drive Mini-Game Transition ---
+var DRIVE_TRANSITION_DURATION = 1.5;      // seconds — wheels animate on, camera shifts
+var DRIVE_COMPLETE_DELAY = 2.0;           // seconds to show results before returning
+
+// --- Feature Drive Road Configuration ---
+var DRIVE_ROAD_BASE_LENGTH = 3000;        // total scrollable road at level 1 (px)
+var DRIVE_ROAD_PER_LEVEL = 500;           // extra road length per level (px)
+var DRIVE_ROAD_MAX_LENGTH = 8000;         // cap on road length (px)
+
+// --- Feature Drive Buggy Physics ---
+var DRIVE_SCROLL_SPEED_BASE = 120;        // auto-scroll base speed (px/s)
+var DRIVE_SCROLL_SPEED_MAX = 250;         // max forward speed (px/s)
+var DRIVE_ACCELERATION = 80;              // player speed-up (px/s²)
+var DRIVE_BRAKE_DECEL = 150;              // player slow-down (px/s²)
+var DRIVE_JUMP_VELOCITY = -280;           // upward impulse on jump (px/s)
+var DRIVE_GRAVITY = 500;                  // gravity (px/s²) — stronger than lander for snappy jumps
+var DRIVE_JUMP_FUEL_COST = 5;             // fuel consumed per jump
+
+// --- Feature Drive Wheel Configuration ---
+var DRIVE_WHEEL_RADIUS = 6;               // wheel radius in px
+var DRIVE_WHEEL_OFFSET_X = 10;            // spoke X offset magnitude (-10 left, +10 right) relative to M center
+var DRIVE_WHEEL_OFFSET_Y = 18;            // wheel Y offset (bottom of M)
+
+// --- Feature Drive Obstacle Configuration ---
+var DRIVE_GAP_MIN_WIDTH = 40;             // minimum gap width in px
+var DRIVE_GAP_MAX_WIDTH = 80;             // maximum gap width in px
+var DRIVE_ROCK_SIZE = 15;                 // rock obstacle size in px
+var DRIVE_OBSTACLE_DENSITY_BASE = 0.03;   // obstacles per px of road at level 1
+var DRIVE_OBSTACLE_DENSITY_PER_LEVEL = 0.005; // extra density per level
+var DRIVE_OBSTACLE_DENSITY_MAX = 0.08;    // density cap
+
+// --- Feature Drive Pickup Configuration ---
+var DRIVE_PICKUP_SIZE = 14;               // pickup sprite size in px
+var DRIVE_PICKUP_POINTS = 50;             // points per pickup collected
+var DRIVE_PICKUP_FUEL_RESTORE = 3;        // fuel restored per pickup
+var DRIVE_PICKUP_DENSITY = 0.01;          // pickups per px of road
+
+// --- Feature Drive Scoring ---
+var DRIVE_POINTS_COMPLETION = 200;        // bonus for reaching destination
+var DRIVE_POINTS_FUEL_BONUS_MULTIPLIER = 3; // points per remaining fuel unit
+
+// --- Feature Drive State ---
+var driveScrollX = 0;                     // camera position
+var driveSpeed = 0;                       // current forward speed (px/s)
+var driveBuggyY = 0;                      // buggy vertical position
+var driveBuggyVY = 0;                     // buggy vertical velocity (px/s)
+var driveGrounded = true;                 // whether buggy is on ground
+var driveWheelRotation = 0;               // visual wheel spin angle (radians)
+
+// --- Feature Drive State Arrays ---
+var driveRoadSegments = [];               // road segment definitions
+var driveObstacles = [];                  // active obstacles (gaps, rocks)
+var drivePickups = [];                    // active pickups
+var driveParticles = [];                  // visual particles (dust, wheel kick-up)
+
+// --- Feature Drive Per-Game Counters ---
+var driveScore = 0;                       // bonus points earned during drive phase
+var drivePickupsCollected = 0;            // count of pickups collected this round
+var driveDistance = 0;                    // distance travelled this round (px)
+var driveRoadLength = 0;                  // total road length for this round (px)
+var driveCompleteTimer = 0;               // elapsed time in DRIVE_COMPLETE state
+var driveTransitionTimer = 0;             // elapsed time in DRIVE_TRANSITION state
