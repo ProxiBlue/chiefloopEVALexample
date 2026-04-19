@@ -790,6 +790,28 @@ function playDriveBoostSound() {
     noise.stop(t + dur);
 }
 
+// Feature Drive US-011: Destination-arrival victory jingle. Variation on the
+// landing chime — four ascending sine notes (C5 → E5 → G5 → C6) at ~0.12s
+// stagger. Louder and longer than the two-note landing chime so the
+// completion moment reads as a celebration rather than a normal touchdown.
+function playDriveCompleteSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.50].forEach(function (freq, i) {
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + i * 0.12);
+        var gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t + i * 0.12);
+        gain.gain.linearRampToValueAtTime(0.25, t + i * 0.12 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.55);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + i * 0.12);
+        osc.stop(t + i * 0.12 + 0.6);
+    });
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

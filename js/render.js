@@ -2418,6 +2418,114 @@ function renderDrivePlaying() {
     }
 }
 
+// DRIVE_COMPLETE (US-011) — destination reached. World + buggy are drawn as in
+// DRIVE_PLAYING, but the wheels shrink from DRIVE_WHEEL_RADIUS to 0 over the
+// first 0.5s (reverse of the deploy animation in renderDriveTransition).
+// Celebration sparkles are drawn on top, then the "FEATURE DEPLOYED!" banner
+// + results breakdown is overlaid at canvas center.
+function renderDriveComplete() {
+    drawDriveWorld();
+
+    var buggyScreenX = canvas.width * 0.25;
+    var buggyScreenY = driveBuggyY;
+
+    drawShip(buggyScreenX, buggyScreenY, 0, SHIP_SIZE, false, null, false);
+
+    // Reverse of DRIVE_TRANSITION deploy: cubic ease-out on 1-t so wheels
+    // shrink quickly at first then settle to 0 over 0.5s.
+    var wheelT = Math.min(driveCompleteTimer / 0.5, 1);
+    var eased = 1 - Math.pow(1 - wheelT, 3);
+    var wheelRadius = DRIVE_WHEEL_RADIUS * (1 - eased);
+    if (wheelRadius > 0.5) {
+        var wheelLX = buggyScreenX - DRIVE_WHEEL_OFFSET_X;
+        var wheelRX = buggyScreenX + DRIVE_WHEEL_OFFSET_X;
+        var wheelY = buggyScreenY + DRIVE_WHEEL_OFFSET_Y;
+
+        ctx.save();
+        ctx.fillStyle = '#888';
+        ctx.beginPath();
+        ctx.arc(wheelLX, wheelY, wheelRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(wheelRX, wheelY, wheelRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        var spokeAng = driveWheelRotation;
+        var cx = Math.cos(spokeAng) * wheelRadius;
+        var sy = Math.sin(spokeAng) * wheelRadius;
+        ctx.beginPath();
+        ctx.moveTo(wheelLX - cx, wheelY - sy);
+        ctx.lineTo(wheelLX + cx, wheelY + sy);
+        ctx.moveTo(wheelRX - cx, wheelY - sy);
+        ctx.lineTo(wheelRX + cx, wheelY + sy);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    if (driveParticles && driveParticles.length) {
+        ctx.save();
+        for (var spi = 0; spi < driveParticles.length; spi++) {
+            var sp = driveParticles[spi];
+            var a = Math.max(0, sp.life / sp.maxLife);
+            ctx.globalAlpha = a;
+            ctx.fillStyle = sp.color;
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, Math.max(0.5, sp.size * a), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    drawCelebration();
+
+    var rcx = canvas.width / 2;
+    var rcy = canvas.height / 2;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillText('FEATURE DEPLOYED!', rcx, rcy - 95);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('Distance: 100%', rcx, rcy - 50);
+
+    ctx.fillText(
+        'Pickups: ' + drivePickupsCollected + ' collected',
+        rcx, rcy - 20
+    );
+
+    ctx.fillText(
+        'Fuel bonus: +' + driveCompleteFuelBonus + ' pts',
+        rcx, rcy + 10
+    );
+
+    ctx.fillStyle = '#FFEB3B';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillText(
+        'Total bonus: +' + driveCompleteTotalBonus + ' pts',
+        rcx, rcy + 45
+    );
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('Score: ' + score, rcx, rcy + 80);
+
+    ctx.restore();
+}
+
 function renderBreakoutTransition() {
     drawBreakoutWorld();
     drawBreakoutHUD();
@@ -2710,6 +2818,9 @@ function render() {
             break;
         case STATES.DRIVE_PLAYING:
             renderDrivePlaying();
+            break;
+        case STATES.DRIVE_COMPLETE:
+            renderDriveComplete();
             break;
         case STATES.CRASHED:
             renderCrashed();

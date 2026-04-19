@@ -93,6 +93,12 @@ var sandbox = {
     spawnExplosion: function () {},
     stopThrustSound: function () {},
     playExplosionSound: function () {},
+    // US-011: arrival branch in the DRIVE_PLAYING tick may fire when a test
+    // scrolls past driveRoadLength. Provide no-op stubs so these tests don't
+    // throw when the arrival condition is met during long test windows.
+    spawnCelebration: function () {},
+    updateCelebration: function () {},
+    playDriveCompleteSound: function () {},
 };
 sandbox.self = sandbox;
 sandbox.globalThis = sandbox;

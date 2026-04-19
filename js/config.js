@@ -685,3 +685,5 @@ var driveDistance = 0;                    // distance travelled this round (px)
 var driveRoadLength = 0;                  // total road length for this round (px)
 var driveCompleteTimer = 0;               // elapsed time in DRIVE_COMPLETE state
 var driveTransitionTimer = 0;             // elapsed time in DRIVE_TRANSITION state
+var driveCompleteFuelBonus = 0;           // fuel bonus banked on destination arrival (US-011)
+var driveCompleteTotalBonus = 0;          // completion + fuel bonus banked on arrival (US-011)

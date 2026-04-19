@@ -815,6 +815,8 @@ function setupDriveWorld() {
     drivePickupsCollected = 0;
     driveDistance = 0;
     driveCompleteTimer = 0;
+    driveCompleteFuelBonus = 0;
+    driveCompleteTotalBonus = 0;
     driveRoadSegments = [];
     driveObstacles = [];
     drivePickups = [];
@@ -2522,6 +2524,57 @@ function update(dt) {
             landingResult = 'Fell into a gap';
             gameState = STATES.CRASHED;
         }
+
+        // US-011: destination arrival. Trigger the moment the buggy's world-X
+        // reaches driveRoadLength. Award completion bonus + fuel bonus (points
+        // per remaining fuel unit) into driveScore and global score. Fire the
+        // shared celebration particle system, stop the thrust loop, play the
+        // victory jingle, and flip to DRIVE_COMPLETE. The buggy's deceleration
+        // and wheel retract animation run in the DRIVE_COMPLETE handler.
+        if (!driveFalling && gameState === STATES.DRIVE_PLAYING &&
+            driveScrollX + buggyScreenX >= driveRoadLength) {
+            var driveFuelBonus = Math.floor(ship.fuel) * DRIVE_POINTS_FUEL_BONUS_MULTIPLIER;
+            var driveTotalBonus = DRIVE_POINTS_COMPLETION + driveFuelBonus;
+            driveScore += driveTotalBonus;
+            score += driveTotalBonus;
+            driveCompleteFuelBonus = driveFuelBonus;
+            driveCompleteTotalBonus = driveTotalBonus;
+            driveCompleteTimer = 0;
+            stopThrustSound();
+            spawnCelebration(buggyScreenX, driveBuggyY - SHIP_SIZE * 0.3);
+            if (typeof playDriveCompleteSound === 'function') {
+                playDriveCompleteSound();
+            }
+            gameState = STATES.DRIVE_COMPLETE;
+        }
+    }
+
+    // Feature Drive complete (US-011): hold the results screen for
+    // DRIVE_COMPLETE_DELAY seconds. Buggy decelerates to a stop at
+    // DRIVE_BRAKE_DECEL; scroll continues advancing during that decel so the
+    // buggy visually slides to rest on the destination pad. Wheel retract
+    // animation is purely a render concern driven by driveCompleteTimer.
+    // Celebration sparkles + spark particles continue ticking so they finish
+    // out visually. DRIVE_RETURN routing is deferred to US-012.
+    if (gameState === STATES.DRIVE_COMPLETE) {
+        if (driveSpeed > 0) {
+            driveSpeed -= DRIVE_BRAKE_DECEL * dt;
+            if (driveSpeed < 0) driveSpeed = 0;
+        }
+        driveScrollX += driveSpeed * dt;
+        driveWheelRotation += driveSpeed * dt;
+
+        // Spark particles from rock hits / pickup sparkles — finish out.
+        for (var dcPi = driveParticles.length - 1; dcPi >= 0; dcPi--) {
+            var dcPp = driveParticles[dcPi];
+            dcPp.x += dcPp.vx * dt;
+            dcPp.y += dcPp.vy * dt;
+            dcPp.vy += 160 * dt;
+            dcPp.life -= dt;
+            if (dcPp.life <= 0) driveParticles.splice(dcPi, 1);
+        }
+        updateCelebration(dt);
+        driveCompleteTimer += dt;
     }
 
     // Tech debt transition: brief intro window between landing and asteroid
