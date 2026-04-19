@@ -171,6 +171,8 @@ function renderPlaying() {
     var fuelBarH = 14;
     var fuelBarX = 10;
     var fuelBarY = 98;
+    var fuelExtW = fuelBarW * (FUEL_EXTENSION_MAX / FUEL_MAX);
+    var basePct = Math.max(0, Math.min(1, fuelPct));
 
     ctx.fillStyle = '#333';
     ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
@@ -184,16 +186,25 @@ function renderPlaying() {
         fuelColor = '#f44336';
     }
     ctx.fillStyle = fuelColor;
-    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * basePct, fuelBarH);
 
     ctx.strokeStyle = '#888';
     ctx.lineWidth = 1;
     ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
 
+    if (ship.fuel > FUEL_MAX) {
+        var extPct = Math.max(0, Math.min(1, (ship.fuel - FUEL_MAX) / FUEL_EXTENSION_MAX));
+        ctx.fillStyle = '#333';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+        ctx.fillStyle = '#29B6F6';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW * extPct, fuelBarH);
+        ctx.strokeRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+    }
+
     ctx.fillStyle = '#fff';
     ctx.font = '14px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + fuelExtW + 8, fuelBarY + 12);
 
     // Score, Level, and Repo
     ctx.fillStyle = '#fff';
@@ -220,6 +231,7 @@ function renderPlaying() {
         { label: 'Security (3x)', color: PR_TYPE_COLORS.security },
         { label: 'Bug Fix (2x)', color: PR_TYPE_COLORS.bugfix },
         { label: 'Feature (1x)', color: PR_TYPE_COLORS.feature },
+        { label: 'Chore (1x)', color: PR_TYPE_COLORS.chore },
         { label: 'Other (1x)', color: PR_TYPE_COLORS.other }
     ];
     for (var li = 0; li < legendTypes.length; li++) {
@@ -1027,6 +1039,8 @@ function drawBugfixHUD() {
     var fuelBarH = 14;
     var fuelBarX = 10;
     var fuelBarY = 78;
+    var fuelExtW = fuelBarW * (FUEL_EXTENSION_MAX / FUEL_MAX);
+    var basePct = Math.max(0, Math.min(1, fuelPct));
 
     ctx.fillStyle = '#333';
     ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
@@ -1040,14 +1054,23 @@ function drawBugfixHUD() {
         fuelColor = '#f44336';
     }
     ctx.fillStyle = fuelColor;
-    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * basePct, fuelBarH);
 
     ctx.strokeStyle = '#888';
     ctx.lineWidth = 1;
     ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
 
+    if (ship.fuel > FUEL_MAX) {
+        var extPct = Math.max(0, Math.min(1, (ship.fuel - FUEL_MAX) / FUEL_EXTENSION_MAX));
+        ctx.fillStyle = '#333';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+        ctx.fillStyle = '#29B6F6';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW * extPct, fuelBarH);
+        ctx.strokeRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+    }
+
     ctx.fillStyle = '#fff';
-    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + fuelExtW + 8, fuelBarY + 12);
 
     // Level indicator
     ctx.fillStyle = '#fff';
@@ -1739,6 +1762,7 @@ function drawTechdebtHUD() {
     var fuelBarH = 14;
     var fuelBarX = 10;
     var fuelBarY = 78;
+    var fuelExtW = fuelBarW * (FUEL_EXTENSION_MAX / FUEL_MAX);
 
     ctx.fillStyle = '#333';
     ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
@@ -1758,8 +1782,17 @@ function drawTechdebtHUD() {
     ctx.lineWidth = 1;
     ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
 
+    if (ship.fuel > FUEL_MAX) {
+        var extPct = Math.max(0, Math.min(1, (ship.fuel - FUEL_MAX) / FUEL_EXTENSION_MAX));
+        ctx.fillStyle = '#333';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+        ctx.fillStyle = '#29B6F6';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW * extPct, fuelBarH);
+        ctx.strokeRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+    }
+
     ctx.fillStyle = '#fff';
-    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + fuelExtW + 8, fuelBarY + 12);
 
     ctx.restore();
 }
@@ -2366,16 +2399,26 @@ function drawDriveHUD() {
     var fuelBarY = hudY + 72;
     var fuelBarW = 120;
     var fuelBarH = 14;
+    var fuelExtW = fuelBarW * (FUEL_EXTENSION_MAX / FUEL_MAX);
+    var basePct = Math.max(0, Math.min(1, fuelPct));
     ctx.fillStyle = '#333';
     ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
     var fuelColor = fuelPct > 0.5 ? '#4CAF50' : (fuelPct > 0.25 ? '#FFC107' : '#f44336');
     ctx.fillStyle = fuelColor;
-    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * basePct, fuelBarH);
     ctx.strokeStyle = '#888';
     ctx.lineWidth = 1;
     ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+    if (typeof ship !== 'undefined' && ship && typeof FUEL_MAX !== 'undefined' && ship.fuel > FUEL_MAX) {
+        var extPct = Math.max(0, Math.min(1, (ship.fuel - FUEL_MAX) / FUEL_EXTENSION_MAX));
+        ctx.fillStyle = '#333';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+        ctx.fillStyle = '#29B6F6';
+        ctx.fillRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW * extPct, fuelBarH);
+        ctx.strokeRect(fuelBarX + fuelBarW, fuelBarY, fuelExtW, fuelBarH);
+    }
     ctx.fillStyle = '#fff';
-    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + fuelExtW + 8, fuelBarY + 12);
     ctx.restore();
 }
 

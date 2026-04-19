@@ -62,18 +62,17 @@ const TITLE_RULES = [
     ],
   },
   {
+    type: "chore",
+    patterns: [
+      "chore", "cleanup", "clean up", "remove outdated", "readme",
+      "update dep", "bump", "upgrade", "deprecat",
+    ],
+  },
+  {
     type: "other",
     patterns: [
-      "refactor",
-      "chore",
-      "cleanup",
-      "deprecat",
-      "remove",
-      "delete",
-      "drop",
-      "upgrade",
-      "update dep",
-      "bump",
+      "refactor", "rebase", "merge", "upstream", "release",
+      "remove", "delete", "drop",
     ],
   },
 ];
@@ -165,7 +164,7 @@ function main() {
     process.exit(1);
   }
 
-  const counts = { security: 0, feature: 0, bugfix: 0, other: 0 };
+  const counts = { security: 0, feature: 0, bugfix: 0, chore: 0, other: 0 };
 
   for (const pr of data.pullRequests) {
     pr.type = classifyPR(pr);
@@ -178,6 +177,7 @@ function main() {
   console.log(`  security: ${counts.security}`);
   console.log(`  feature:  ${counts.feature}`);
   console.log(`  bugfix:   ${counts.bugfix}`);
+  console.log(`  chore:    ${counts.chore}`);
   console.log(`  other:    ${counts.other}`);
 }
 

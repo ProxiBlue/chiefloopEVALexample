@@ -1405,6 +1405,7 @@ function update(dt) {
             // collision.js from landedPad.prType when the ship touched down) rather
             // than a pre-computed routing flag — acceptance criterion for US-003.
             var isOtherPad = (landedPRType === 'other');
+            var isChorePad = (landedPRType === 'chore');
             var isFeaturePad = (landedPRType === 'feature');
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
@@ -1464,10 +1465,8 @@ function update(dt) {
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
             } else if (isOtherPad) {
-                // 50% chance to trigger a mini-game on other pads; otherwise
-                // normal descent so the player gets more lander gameplay.
+                // Other pads → Tech Debt Blaster (asteroids), 50% chance
                 if (Math.random() < 0.5) {
-                    otherMiniGameCount++;
                     ship.x = canvas.width / 2;
                     ship.y = canvas.height / 2;
                     ship.angle = 0;
@@ -1477,17 +1476,40 @@ function update(dt) {
                     ship.rotating = null;
                     stopThrustSound();
                     ship.fuel = FUEL_MAX;
-                    if (otherMiniGameCount % 2 !== 0) {
-                        techdebtTransitionTimer = 0;
-                        setupTechdebtWorld();
-                        gameState = STATES.TECHDEBT_TRANSITION;
-                    } else {
-                        breakoutTransitionTimer = 0;
-                        setupBreakoutWorld();
-                        gameState = STATES.BREAKOUT_TRANSITION;
-                    }
+                    techdebtTransitionTimer = 0;
+                    setupTechdebtWorld();
+                    gameState = STATES.TECHDEBT_TRANSITION;
                 } else {
-                    // Normal descent — standard next level
+                    sceneDescentStartY = ship.y;
+                    sceneDescentTargetY = canvas.height / 3;
+                    sceneDescentTimer = 0;
+                    ship.x = canvas.width / 2;
+                    ship.y = sceneDescentStartY;
+                    ship.angle = 0;
+                    ship.vx = 0;
+                    ship.vy = 0;
+                    ship.thrusting = false;
+                    ship.rotating = null;
+                    stopThrustSound();
+                    ship.fuel = FUEL_MAX;
+                    gameState = STATES.SCENE_DESCENT;
+                }
+            } else if (isChorePad) {
+                // Chore pads → Code Breaker (breakout), 50% chance
+                if (Math.random() < 0.5) {
+                    ship.x = canvas.width / 2;
+                    ship.y = canvas.height / 2;
+                    ship.angle = 0;
+                    ship.vx = 0;
+                    ship.vy = 0;
+                    ship.thrusting = false;
+                    ship.rotating = null;
+                    stopThrustSound();
+                    ship.fuel = FUEL_MAX;
+                    breakoutTransitionTimer = 0;
+                    setupBreakoutWorld();
+                    gameState = STATES.BREAKOUT_TRANSITION;
+                } else {
                     sceneDescentStartY = ship.y;
                     sceneDescentTargetY = canvas.height / 3;
                     sceneDescentTimer = 0;

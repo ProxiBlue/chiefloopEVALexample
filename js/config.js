@@ -82,25 +82,29 @@ var PR_PAD_WIDTHS = {           // pad width by PR type
     security: 1,                // narrow (hardest)
     bugfix: 2,                  // medium
     feature: 3,                 // wide (easiest)
-    other: 2                    // medium
+    chore: 2,                   // medium — breakout
+    other: 2                    // medium — asteroids
 };
 var PR_PAD_POINTS = {           // points by PR type (inverse of difficulty)
     security: 200,              // hardest = most points
     bugfix: 100,
     feature: 50,
+    chore: 75,
     other: 100
 };
 var PR_TYPE_MULTIPLIERS = {     // score multiplier by PR type
     security: 3,
     bugfix: 2,
     feature: 1,
+    chore: 1,
     other: 1
 };
 var PR_TYPE_COLORS = {          // pad color by PR type
     security: '#DC143C',        // crimson/red
     bugfix: '#FFB300',          // amber/yellow
     feature: '#00BCD4',         // cyan/blue
-    other: '#9E9E9E'            // gray
+    chore: '#AB47BC',           // purple — breakout
+    other: '#9E9E9E'            // gray — asteroids
 };
 
 // --- Ship / Fuel Constants ---

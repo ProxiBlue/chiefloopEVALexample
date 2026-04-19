@@ -1792,7 +1792,7 @@
       "labels": [],
       "mergeCommitHash": "d4f4f5ec6a6b8730a573497cc0bebce6e4c2c4bf",
       "mergedDate": "2025-12-08T23:59:59Z",
-      "type": "other"
+      "type": "chore"
     },
     {
       "number": 177,
@@ -1822,7 +1822,7 @@
       "labels": [],
       "mergeCommitHash": "df11d1281a3fc886f28baad0b625d80e1e4611f2",
       "mergedDate": "2025-12-03T15:06:38Z",
-      "type": "other"
+      "type": "chore"
     },
     {
       "number": 184,
@@ -1842,7 +1842,7 @@
       "labels": [],
       "mergeCommitHash": "52d6a2c41e0dca86205e47d0472e3827d17f4315",
       "mergedDate": "2025-11-30T23:01:07Z",
-      "type": "other"
+      "type": "chore"
     },
     {
       "number": 180,
