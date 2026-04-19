@@ -47,6 +47,7 @@ var sandbox = {
     startThrustSound: function () {},
     playTechdebtShootSound: function () {},
     playProxiblueCollectSound: function () {},
+    playProxiblueShieldDeactivateSound: function () {},
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
     resetShip: function () {},

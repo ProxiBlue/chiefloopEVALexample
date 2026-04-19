@@ -1873,6 +1873,7 @@ function update(dt) {
             if (proxiblueShieldTimer <= 0) {
                 proxiblueShieldTimer = 0;
                 proxiblueShieldActive = false;
+                playProxiblueShieldDeactivateSound();
             }
         }
 

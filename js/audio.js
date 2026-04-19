@@ -305,6 +305,31 @@ function playProxiblueCollectSound() {
     });
 }
 
+// US-013 AC#4: ProxiBlue shield deactivation — quiet descending sine tone.
+// Plays when the shield's natural timer expires (not when consumed by a hit —
+// that path has the louder US-009 absorb flash). Low volume so it reads as a
+// "power-down" cue rather than an event.
+function playProxiblueShieldDeactivateSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var duration = 0.45;
+
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660, t);
+    osc.frequency.exponentialRampToValueAtTime(165, t + duration);
+
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.08, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + duration + 0.02);
+}
+
 function playTechdebtShootSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

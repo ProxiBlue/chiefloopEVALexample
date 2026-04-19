@@ -73,6 +73,7 @@ var sandbox = {
     startThrustSound: function () {},
     playTechdebtShootSound: function () { shootSoundCalls++; },
     playProxiblueCollectSound: function () { proxiblueSoundCalls++; },
+    playProxiblueShieldDeactivateSound: function () {},
     crashShipInTechdebt: null, // loaded from update.js
     spawnExplosion: function (x, y) { spawnExplosionCalls.push({ x: x, y: y }); },
     startScreenShake: function () { startScreenShakeCalls++; },

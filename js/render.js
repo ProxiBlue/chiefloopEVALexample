@@ -1604,6 +1604,26 @@ function renderTechdebtPlaying() {
 
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
 
+    // Shield ring around the ship (US-013 AC#1). Translucent blue circle,
+    // radius ~25px, pulsing alpha driven by a sine on the shield timer so the
+    // ring breathes while active.
+    if (proxiblueShieldActive) {
+        var pulse = 0.35 + 0.25 * Math.sin(proxiblueShieldTimer * 6);
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        ctx.strokeStyle = '#4488ff';
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#4488ff';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(ship.x, ship.y, 25, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = Math.max(0, pulse - 0.2);
+        ctx.fillStyle = '#4488ff';
+        ctx.fill();
+        ctx.restore();
+    }
+
     // Blue shield-absorb flash (US-009). Full-screen blue tint fading over
     // PROXIBLUE_SHIELD_FLASH_DURATION so the player gets clear feedback that
     // the shield just absorbed an asteroid hit.
@@ -1615,6 +1635,42 @@ function renderTechdebtPlaying() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
     }
+
+    drawTechdebtShieldHUD();
+}
+
+// US-013 AC#2: HUD shield indicator — shows "🛡 ProxiBlue" label in #4488ff
+// plus a small countdown bar that depletes over PROXIBLUE_SHIELD_DURATION.
+// Rendered only while the shield is active; disappears cleanly when it expires.
+function drawTechdebtShieldHUD() {
+    if (!proxiblueShieldActive) return;
+
+    var barW = 120;
+    var barH = 8;
+    var barX = 10;
+    var barY = canvas.height - 40;
+    var labelY = barY - 6;
+    var pct = Math.max(0, Math.min(1, proxiblueShieldTimer / PROXIBLUE_SHIELD_DURATION));
+
+    ctx.save();
+
+    ctx.fillStyle = '#4488ff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('\uD83D\uDEE1 ProxiBlue', barX, labelY);
+
+    ctx.fillStyle = '#222';
+    ctx.fillRect(barX, barY, barW, barH);
+
+    ctx.fillStyle = '#4488ff';
+    ctx.fillRect(barX, barY, barW * pct, barH);
+
+    ctx.strokeStyle = '#4488ff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barX, barY, barW, barH);
+
+    ctx.restore();
 }
 
 function renderTechdebtComplete() {

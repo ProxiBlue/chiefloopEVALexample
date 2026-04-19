@@ -52,6 +52,7 @@ var sandbox = {
     startThrustSound: function () {},
     playTechdebtShootSound: function () {},
     playProxiblueCollectSound: function () {},
+    playProxiblueShieldDeactivateSound: function () {},
     spawnExplosion: function (x, y) { spawnExplosionCalls.push({ x: x, y: y }); },
     startScreenShake: function () { startScreenShakeCalls++; },
     playExplosionSound: function () { playExplosionSoundCalls++; },
