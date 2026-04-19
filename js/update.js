@@ -496,7 +496,7 @@ function update(dt) {
                 }
             }
             // Atomically set scroll state as a frozen object (ship.x preserved for smooth transition)
-            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, missilePadScroll, ship.x);
+            sceneScrollState = createSceneScrollState(snapOldTerrain, snapOldPads, snapNewTerrain, snapNewPads, securityPadScroll, bugfixPadScroll, missilePadScroll, techdebtPadScroll, ship.x);
             gameState = STATES.SCENE_SCROLL;
         }
     }
@@ -543,6 +543,7 @@ function update(dt) {
             var wasInvaderScroll = sceneScrollState.isInvaderScroll;
             var wasBugfixScroll = sceneScrollState.isBugfixScroll;
             var wasMissileScroll = sceneScrollState.isMissileScroll;
+            var wasTechdebtScroll = sceneScrollState.isTechdebtScroll;
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
                 terrain.push({ x: newT[i].x, y: newT[i].y });
@@ -600,6 +601,19 @@ function update(dt) {
                 missileTransitionTimer = 0;
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
+            } else if (wasTechdebtScroll) {
+                // `other` pad: enter tech debt blaster transition
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 2;
+                ship.angle = 0;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                stopThrustSound();
+                ship.fuel = FUEL_MAX;
+                techdebtTransitionTimer = 0;
+                gameState = STATES.TECHDEBT_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
                 sceneDescentStartY = ship.y;
@@ -627,6 +641,7 @@ function update(dt) {
                 isInvaderScroll: sceneScrollState.isInvaderScroll,
                 isBugfixScroll: sceneScrollState.isBugfixScroll,
                 isMissileScroll: sceneScrollState.isMissileScroll,
+                isTechdebtScroll: sceneScrollState.isTechdebtScroll,
                 shipStartX: sceneScrollState.shipStartX
             });
         }

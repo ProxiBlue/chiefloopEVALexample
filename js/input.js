@@ -27,6 +27,7 @@ function startNewGame() {
     securityPadScroll = false;
     bugfixPadScroll = false;
     missilePadScroll = false;
+    techdebtPadScroll = false;
     securityMiniGameCount = 0;
     GRAVITY = getLevelConfig(currentLevel).gravity;
     THRUST_POWER = GRAVITY * 2.5;
@@ -108,6 +109,7 @@ function handleKeyPress(key) {
             // Both security and non-security pads use the same liftoff + scroll transition
             securityPadScroll = (landedPRType === 'security');
             bugfixPadScroll = (landedPRType === 'bugfix');
+            techdebtPadScroll = (landedPRType === 'other');
             missilePadScroll = false;
             // Security pads alternate mini-games: odd count -> missile command, even -> invaders.
             if (securityPadScroll) {

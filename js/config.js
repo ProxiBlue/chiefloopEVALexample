@@ -120,7 +120,7 @@ var SCENE_SCROLL_BANK_ANGLE = 0.15; // radians (~8.6°) — max bank angle durin
 // null when no scroll is active; a frozen object during SCENE_SCROLL.
 var sceneScrollState = null;        // { timer, oldTerrain, oldPads, newTerrain, newPads }
 
-function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, isBugfixScroll, isMissileScroll, shipStartX) {
+function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInvaderScroll, isBugfixScroll, isMissileScroll, isTechdebtScroll, shipStartX) {
     return Object.freeze({
         timer: 0,
         oldTerrain: oldTerrain,
@@ -130,6 +130,7 @@ function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInva
         isInvaderScroll: !!isInvaderScroll,
         isBugfixScroll: !!isBugfixScroll,
         isMissileScroll: !!isMissileScroll,
+        isTechdebtScroll: !!isTechdebtScroll,
         shipStartX: shipStartX
     });
 }
@@ -138,6 +139,7 @@ function createSceneScrollState(oldTerrain, oldPads, newTerrain, newPads, isInva
 var securityPadScroll = false;                      // true when scroll is for security pad (invader interlude)
 var bugfixPadScroll = false;                        // true when scroll is for bugfix pad (bugfix interlude)
 var missilePadScroll = false;                       // true when scroll is for security pad (missile command interlude)
+var techdebtPadScroll = false;                      // true when scroll is for `other` pad (tech debt blaster interlude)
 var INVADER_SCROLL_ROTATE_DURATION = 1;             // seconds for 90-degree rotation after scroll
 var invaderScrollRotateTimer = 0;                   // elapsed time in rotation after scroll
 
