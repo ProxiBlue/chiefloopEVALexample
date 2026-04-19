@@ -22,14 +22,6 @@ canvas.addEventListener('click', function (e) {
     var rect = canvas.getBoundingClientRect();
     var cxp = e.clientX - rect.left;
     var cyp = e.clientY - rect.top;
-    // Guide link on menu screen
-    if (gameState === STATES.MENU && menuGuideLinkBox) {
-        var g = menuGuideLinkBox;
-        if (cxp >= g.x && cxp <= g.x + g.w && cyp >= g.y && cyp <= g.y + g.h) {
-            window.open('guide.html', '_blank');
-            return;
-        }
-    }
     // ProxiBlue branding on game over screen
     if (gameState === STATES.GAMEOVER && proxiblueBrandHitBox) {
         var b = proxiblueBrandHitBox;

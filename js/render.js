@@ -120,25 +120,15 @@ function renderMenu() {
     ctx.font = '20px sans-serif';
     ctx.fillText('Press SPACE to Start', cx, controlsY + 100 + extraOffset);
 
-    // Game guide link (clickable)
-    ctx.fillStyle = '#4FC3F7';
-    ctx.font = '12px monospace';
-    var guideLinkY = controlsY + 124 + extraOffset;
-    var guideLinkText = 'Game Guide \u2192 click here';
-    ctx.fillText(guideLinkText, cx, guideLinkY);
-    // Store hit-box for click handler
-    var guideTextW = ctx.measureText(guideLinkText).width;
-    menuGuideLinkBox = { x: cx - guideTextW / 2, y: guideLinkY - 10, w: guideTextW, h: 14 };
-
     // ProxiBlue branding
     ctx.fillStyle = '#556';
     ctx.font = '11px monospace';
-    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, guideLinkY + 18);
+    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, controlsY + 124 + extraOffset);
 
     // Leaderboard on start screen
     var board = getLeaderboard();
     if (board.length > 0) {
-        drawLeaderboard(cx, guideLinkY + 40, null);
+        drawLeaderboard(cx, controlsY + 146 + extraOffset, null);
     }
 }
 
