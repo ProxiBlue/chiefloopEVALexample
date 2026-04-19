@@ -230,45 +230,65 @@ function renderPlaying() {
     }
     ctx.textAlign = 'left';
 
-    // Wind indicator (only shown when wind is active)
+    // Wind indicator — centered bottom of screen with blow icon
     if (wind.maxStrength > 0) {
-        var windY = fuelBarY + 76;
-        ctx.fillStyle = '#fff';
-        ctx.font = '14px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText('Wind:', 10, windY);
+        var windCX = canvas.width / 2;
+        var windCY = canvas.height - 58;
+        var windStr = Math.abs(wind.strength);
+        var windDir = wind.strength >= 0 ? 1 : -1; // 1 = right, -1 = left
+        var windPct = wind.maxStrength > 0 ? windStr / wind.maxStrength : 0;
 
-        // Draw wind arrow — length proportional to strength, direction shows left/right
-        var arrowBaseX = 70;
-        var arrowY = windY - 5;
-        var maxArrowLen = 60;
-        var arrowLen = (wind.strength / wind.maxStrength) * maxArrowLen;
-        var absArrowLen = Math.abs(arrowLen);
+        // Strength number above icon
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'center';
+        var windColor = windPct > 0.6 ? '#f44336' : windPct > 0.3 ? '#FFC107' : '#4FC3F7';
+        ctx.fillStyle = windColor;
+        ctx.fillText(windStr.toFixed(1) + ' m/s', windCX, windCY - 14);
 
-        if (absArrowLen > 1) {
-            var arrowEndX = arrowBaseX + arrowLen;
-            // Arrow shaft
-            ctx.strokeStyle = '#4FC3F7';
-            ctx.lineWidth = 2;
+        // Wind blow icon — three wavy lines that flip direction
+        // When windDir = 1 (blowing right), waves flow right
+        // When windDir = -1 (blowing left), waves flow left
+        ctx.save();
+        ctx.translate(windCX, windCY);
+        if (windDir < 0) {
+            ctx.scale(-1, 1); // flip horizontally for left wind
+        }
+
+        var iconAlpha = 0.4 + windPct * 0.6;
+        ctx.strokeStyle = 'rgba(79, 195, 247, ' + iconAlpha + ')';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+
+        // Three wavy airflow lines at different vertical offsets
+        var waveOffsets = [-6, 0, 6];
+        var waveLen = 12 + windPct * 8; // longer waves = stronger wind
+        var waveAmp = 2 + windPct * 2;
+        for (var wi = 0; wi < waveOffsets.length; wi++) {
+            var wy = waveOffsets[wi];
+            var wx = -waveLen + wi * 3; // stagger start positions
             ctx.beginPath();
-            ctx.moveTo(arrowBaseX, arrowY);
-            ctx.lineTo(arrowEndX, arrowY);
+            ctx.moveTo(wx, wy);
+            // Two sine half-waves
+            ctx.quadraticCurveTo(wx + waveLen * 0.25, wy - waveAmp, wx + waveLen * 0.5, wy);
+            ctx.quadraticCurveTo(wx + waveLen * 0.75, wy + waveAmp, wx + waveLen, wy);
             ctx.stroke();
-            // Arrowhead
-            var headDir = arrowLen > 0 ? 1 : -1;
+            // Arrow tip at the end of each wave
             ctx.beginPath();
-            ctx.moveTo(arrowEndX, arrowY);
-            ctx.lineTo(arrowEndX - headDir * 6, arrowY - 4);
-            ctx.lineTo(arrowEndX - headDir * 6, arrowY + 4);
-            ctx.closePath();
+            ctx.moveTo(wx + waveLen, wy);
+            ctx.lineTo(wx + waveLen - 4, wy - 3);
+            ctx.moveTo(wx + waveLen, wy);
+            ctx.lineTo(wx + waveLen - 4, wy + 3);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+
+        // "CALM" label when wind is near zero
+        if (windStr < 0.1) {
             ctx.fillStyle = '#4FC3F7';
-            ctx.fill();
-        } else {
-            // Calm — show a dot
-            ctx.fillStyle = '#4FC3F7';
-            ctx.beginPath();
-            ctx.arc(arrowBaseX, arrowY, 3, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('CALM', windCX, windCY + 5);
         }
     }
 
