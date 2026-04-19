@@ -141,6 +141,7 @@ var sandbox = {
     playExplosionSound: function () { fxCalls.playExplosionSound++; },
     // Rock/pickup/boost FX (referenced inside grounded/airborne branches).
     spawnDriveSparkBurst: function () { fxCalls.spawnDriveSparkBurst++; },
+    spawnDriveDustPuff: function () {},
     playDriveRockHitSound: function () { fxCalls.playDriveRockHitSound++; },
     spawnDrivePickupSparkle: function () { fxCalls.spawnDrivePickupSparkle++; },
     playDrivePickupSound: function () { fxCalls.playDrivePickupSound++; },

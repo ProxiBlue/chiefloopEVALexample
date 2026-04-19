@@ -69,6 +69,7 @@ var sandbox = {
     // US-008 FX stubs (no-ops) — US-007 scenarios never stage a rock overlap,
     // so the stubs are just there to keep the block evaluable.
     spawnDriveSparkBurst: function () {},
+    spawnDriveDustPuff: function () {},
     playDriveRockHitSound: function () {},
     spawnExplosion: function (x, y) { fxCalls.spawnExplosion++; fxCalls.lastExplosion = { x: x, y: y }; },
     startScreenShake: function () { fxCalls.startScreenShake++; },

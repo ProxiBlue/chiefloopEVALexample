@@ -86,6 +86,7 @@ var sandbox = {
     SHIP_SIZE: 40,
     playDriveBoostSound: function () { fxCalls.playDriveBoostSound++; },
     spawnDriveSparkBurst: function () { fxCalls.spawnDriveSparkBurst++; },
+    spawnDriveDustPuff: function () {},
     spawnDrivePickupSparkle: function () { fxCalls.spawnDrivePickupSparkle++; },
     playDrivePickupSound: function () { fxCalls.playDrivePickupSound++; },
     playDriveRockHitSound: function () { fxCalls.playDriveRockHitSound++; },

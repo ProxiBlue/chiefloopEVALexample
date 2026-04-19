@@ -55,6 +55,7 @@ var sandbox = {
     // FX stubs — US-008 collision would call these on rock hit; kept as
     // no-ops because US-006 scenarios never stage a rock overlap.
     spawnDriveSparkBurst: function () {},
+    spawnDriveDustPuff: function () {},
     startScreenShake: function () {},
     playDriveRockHitSound: function () {},
     spawnExplosion: function () {},

@@ -308,6 +308,8 @@ function clearDriveState() {
     driveTransitionTimer = 0;
     driveCompleteFuelBonus = 0;
     driveCompleteTotalBonus = 0;
+    driveAirborneTrail = [];
+    driveStarParallaxOffset = 0;
 }
 
 // Build the per-round Code Breaker brick-label pool (US-014). Starts from the
@@ -850,6 +852,8 @@ function setupDriveWorld() {
     driveCompleteTimer = 0;
     driveCompleteFuelBonus = 0;
     driveCompleteTotalBonus = 0;
+    driveAirborneTrail = [];
+    driveStarParallaxOffset = 0;
     driveRoadSegments = [];
     driveObstacles = [];
     drivePickups = [];
@@ -1059,6 +1063,27 @@ function spawnDriveSparkBurst(x, y) {
             color: colors[Math.floor(Math.random() * colors.length)]
         });
     }
+}
+
+// Feature Drive US-013: small dust puff kicked up behind the buggy while
+// driving on the ground. Short-lived tan/gray particle with a slight upward
+// drift so it appears to kick out from under the wheel before settling back.
+// Intensity is controlled by emission rate in the DRIVE_PLAYING tick.
+function spawnDriveDustPuff(x, y) {
+    var colors = ['#8b7355', '#a08868', '#9c9178', '#c0b090'];
+    var angle = -Math.PI + (Math.random() * 0.6 - 0.3) - Math.PI * 0.15;
+    var speed = 20 + Math.random() * 40;
+    var life = 0.3 + Math.random() * 0.25;
+    driveParticles.push({
+        x: x + (Math.random() - 0.5) * 4,
+        y: y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: life,
+        maxLife: life,
+        size: 1 + Math.random() * 1.5,
+        color: colors[Math.floor(Math.random() * colors.length)]
+    });
 }
 
 // Feature Drive US-009: sparkle burst at pickup collection. Omnidirectional
@@ -2463,6 +2488,42 @@ function update(dt) {
         }
 
         driveDistance = driveScrollX;
+
+        // US-013 visual FX: dust, jump-arc trail, and slow-parallax starfield.
+        // Dust puffs behind the buggy while grounded — probabilistic rate
+        // scales with speed so a faster buggy kicks up a denser trail. Use
+        // screen-space coordinates (they live in the driveParticles array
+        // which is ticked below and drawn in screen space).
+        if (driveGrounded && !driveFalling && driveSpeed > 0) {
+            var dustProb = driveSpeed / 500;
+            if (Math.random() < dustProb) {
+                var dustScreenX = buggyScreenX - DRIVE_WHEEL_OFFSET_X - 4;
+                var dustScreenY = driveBuggyY + DRIVE_WHEEL_OFFSET_Y - 2;
+                spawnDriveDustPuff(dustScreenX, dustScreenY);
+            }
+            if (Math.random() < dustProb) {
+                var dustScreenX2 = buggyScreenX + DRIVE_WHEEL_OFFSET_X + 4;
+                var dustScreenY2 = driveBuggyY + DRIVE_WHEEL_OFFSET_Y - 2;
+                spawnDriveDustPuff(dustScreenX2, dustScreenY2);
+            }
+        }
+
+        // Jump-arc trail — store recent airborne {scrollX, y} so the renderer
+        // can project them back to screen space (the buggy's screen X is
+        // fixed; as scroll advances, trail dots drift leftward behind it).
+        // Clear the trail when grounded so landing doesn't leave a stale arc.
+        if (!driveGrounded && !driveFalling) {
+            driveAirborneTrail.push({ scrollX: driveScrollX, y: driveBuggyY });
+            if (driveAirborneTrail.length > 20) {
+                driveAirborneTrail.shift();
+            }
+        } else if (driveGrounded && driveAirborneTrail.length > 0) {
+            driveAirborneTrail = [];
+        }
+
+        // Starfield parallax offset — accumulates at 10% of the scroll rate so
+        // stars drift leftward much slower than terrain, selling depth.
+        driveStarParallaxOffset += driveSpeed * 0.1 * dt;
 
         // US-008: Rock collision. Only checks when grounded — airborne buggy
         // clears rocks. On hit: spawn spark burst + screen shake + play clang,

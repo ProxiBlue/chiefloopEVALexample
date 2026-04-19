@@ -90,6 +90,7 @@ var sandbox = {
     playDrivePickupSound: function () { fxCalls.playDrivePickupSound++; },
     // US-008 stubs (rock hit path — kept as no-ops since US-009 scenarios don't hit rocks).
     spawnDriveSparkBurst: function () { fxCalls.spawnDriveSparkBurst++; },
+    spawnDriveDustPuff: function () {},
     startScreenShake: function () { fxCalls.startScreenShake++; },
     playDriveRockHitSound: function () { fxCalls.playDriveRockHitSound++; },
     // US-007 pipeline stubs.

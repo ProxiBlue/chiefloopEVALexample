@@ -27,12 +27,25 @@ function updateStars(dt) {
 }
 
 function drawStars() {
+    // US-013: during DRIVE_* states, offset stars leftward by the accumulated
+    // slow-parallax scroll so the starfield appears to drift much slower than
+    // the terrain (which scrolls at driveScrollX). Offset is wrapped mod
+    // canvas.width so stars cycle back in on the right as they exit the left.
+    var parallax = 0;
+    if (typeof gameState !== 'undefined' && typeof STATES !== 'undefined' &&
+        (gameState === STATES.DRIVE_PLAYING ||
+         gameState === STATES.DRIVE_COMPLETE ||
+         gameState === STATES.DRIVE_TRANSITION)) {
+        parallax = (typeof driveStarParallaxOffset === 'number') ? driveStarParallaxOffset : 0;
+    }
     for (var i = 0; i < stars.length; i++) {
         var s = stars[i];
         var alpha = s.brightness;
+        var rawX = s.x - parallax * (0.5 + s.size * 0.2);
+        var x = ((rawX % canvas.width) + canvas.width) % canvas.width;
         ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')';
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.arc(x, s.y, s.size, 0, Math.PI * 2);
         ctx.fill();
     }
 }

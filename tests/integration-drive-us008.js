@@ -66,6 +66,7 @@ var sandbox = {
         fxCalls.spawnDriveSparkBurst++;
         fxCalls.lastSpark = { x: x, y: y };
     },
+    spawnDriveDustPuff: function () {},
     startScreenShake: function () { fxCalls.startScreenShake++; },
     playDriveRockHitSound: function () { fxCalls.playDriveRockHitSound++; },
     // US-007 pipeline stubs — kept as no-ops since US-008 scenarios don't crash.

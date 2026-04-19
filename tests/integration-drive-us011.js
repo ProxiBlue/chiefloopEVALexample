@@ -83,6 +83,7 @@ var sandbox = {
     stopThrustSound: function () { fxCalls.stopThrustSound++; },
     // Other FX functions the tick body references.
     spawnDriveSparkBurst: function () { fxCalls.spawnDriveSparkBurst++; },
+    spawnDriveDustPuff: function () {},
     startScreenShake: function () { fxCalls.startScreenShake++; },
     playDriveRockHitSound: function () { fxCalls.playDriveRockHitSound++; },
     spawnDrivePickupSparkle: function () { fxCalls.spawnDrivePickupSparkle++; },

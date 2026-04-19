@@ -2150,16 +2150,23 @@ function drawDriveWorld() {
             ctx.lineTo(sx + segW, sy);
             ctx.stroke();
         } else if (gs.type === 'boost') {
-            // Brighter ground + yellow chevron arrow pointing forward.
+            // Brighter ground + three forward-pointing chevrons (`>>>`) in
+            // yellow laid across the segment surface. Each chevron is a `>`
+            // wedge; together they form the `>>>` motif per AC.
             ctx.fillStyle = 'rgba(80, 180, 80, 0.35)';
             ctx.fillRect(sx, sy, segW, canvas.height - sy);
             ctx.strokeStyle = '#FFEB3B';
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(sx + 2, sy + 10);
-            ctx.lineTo(sx + 10, sy + 4);
-            ctx.lineTo(sx + 18, sy + 10);
-            ctx.stroke();
+            ctx.lineCap = 'round';
+            var chevY = sy + 8;
+            for (var chvi = 0; chvi < 3; chvi++) {
+                var chvX = sx + 3 + chvi * 6;
+                ctx.beginPath();
+                ctx.moveTo(chvX, chevY - 3);
+                ctx.lineTo(chvX + 3, chevY);
+                ctx.lineTo(chvX, chevY + 3);
+                ctx.stroke();
+            }
             ctx.strokeStyle = '#BDFDBA';
             ctx.lineWidth = 2;
             ctx.beginPath();
@@ -2217,24 +2224,40 @@ function drawDriveWorld() {
         ctx.restore();
     }
 
-    // Pickups — simple rotating diamonds with a small label above.
-    var spin = (typeof driveTransitionTimer === 'number' ? driveTransitionTimer : 0) * 2;
+    // Pickups — rotating diamonds colored by label (per AC): LGTM in green,
+    // approved in gold, +1 in cyan; remaining pool labels default to green.
+    // A short rotation animation uses either transitionTimer or scrollX so
+    // the pickups feel "alive" across all DRIVE_* states.
+    var spinBasis = (typeof driveTransitionTimer === 'number' ? driveTransitionTimer : 0) * 2
+        + (scrollX * 0.01);
     for (var pi = 0; pi < drivePickups.length; pi++) {
         var pu = drivePickups[pi];
         if (pu.collected) continue;
         var px = pu.x - scrollX;
         if (px < -40 || px > canvas.width + 40) continue;
+        var puColor = '#4CAF50'; // default: green
+        var labelColor = '#9cf';
+        if (pu.label === 'approved') {
+            puColor = '#FFD700'; // gold
+            labelColor = '#FFE082';
+        } else if (pu.label === '+1') {
+            puColor = '#00E5FF'; // cyan
+            labelColor = '#B2EBF2';
+        } else if (pu.label === 'LGTM') {
+            puColor = '#4CAF50'; // green (explicit per AC)
+            labelColor = '#C8E6C9';
+        }
         ctx.save();
         ctx.translate(px, pu.y);
-        ctx.rotate(spin);
-        ctx.fillStyle = '#4CAF50';
-        ctx.shadowColor = '#4CAF50';
+        ctx.rotate(spinBasis);
+        ctx.fillStyle = puColor;
+        ctx.shadowColor = puColor;
         ctx.shadowBlur = 6;
         ctx.fillRect(-pu.size / 2, -pu.size / 2, pu.size, pu.size);
         ctx.restore();
         if (pu.label) {
             ctx.save();
-            ctx.fillStyle = '#9cf';
+            ctx.fillStyle = labelColor;
             ctx.font = '9px sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
@@ -2288,6 +2311,97 @@ function drawDriveWorld() {
         ctx.fillText(bannerText, destX + padWidth / 2, destY - 18);
         ctx.restore();
     }
+}
+
+// US-013: thin top-of-screen progress bar showing distance-travelled vs total
+// road length. Rendered for every DRIVE_* state so the player always sees how
+// far they are from the destination.
+function drawDriveProgressBar() {
+    var barPadX = 20;
+    var barH = 4;
+    var barY = 8;
+    var barW = canvas.width - barPadX * 2;
+    var progress = driveRoadLength > 0
+        ? Math.max(0, Math.min(1, driveScrollX / driveRoadLength))
+        : 0;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(40, 40, 40, 0.85)';
+    ctx.fillRect(barPadX, barY, barW, barH);
+    ctx.fillStyle = '#4FC3F7';
+    ctx.fillRect(barPadX, barY, barW * progress, barH);
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(barPadX + 0.5, barY + 0.5, barW - 1, barH - 1);
+    ctx.restore();
+}
+
+// US-013: drive-phase HUD replacing the lander's altitude/velocity panel.
+// Shows speed, fuel bar, score, pickups collected, and distance percentage.
+// Positioned top-left to mirror renderPlaying's HUD footprint.
+function drawDriveHUD() {
+    var hudX = 10;
+    var hudY = 22;
+    var pct = driveRoadLength > 0
+        ? Math.min(100, Math.max(0, Math.round((driveScrollX / driveRoadLength) * 100)))
+        : 0;
+    var fuelPct = (typeof ship !== 'undefined' && ship && typeof FUEL_MAX !== 'undefined')
+        ? ship.fuel / FUEL_MAX
+        : 0;
+
+    ctx.save();
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Speed:    ' + Math.round(driveSpeed) + ' px/s', hudX, hudY);
+    ctx.fillText('Score:    ' + (typeof score !== 'undefined' ? score : driveScore), hudX, hudY + 20);
+    ctx.fillStyle = '#9cf';
+    ctx.fillText('Pickups:  ' + drivePickupsCollected, hudX, hudY + 40);
+    ctx.fillStyle = '#4FC3F7';
+    ctx.fillText('Distance: ' + pct + '%', hudX, hudY + 60);
+
+    // Fuel bar mirrors renderPlaying geometry (120×14 below the text stack)
+    var fuelBarX = hudX;
+    var fuelBarY = hudY + 72;
+    var fuelBarW = 120;
+    var fuelBarH = 14;
+    ctx.fillStyle = '#333';
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+    var fuelColor = fuelPct > 0.5 ? '#4CAF50' : (fuelPct > 0.25 ? '#FFC107' : '#f44336');
+    ctx.fillStyle = fuelColor;
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * fuelPct, fuelBarH);
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+    ctx.restore();
+}
+
+// US-013: faint dotted trail marking recent airborne positions so the jump
+// arc is visible behind the buggy. Trail points were stored in world-space
+// (`scrollX` + `y`) so subtracting the current scroll re-projects them to
+// screen-space — they naturally drift leftward as scroll advances.
+function drawDriveAirborneTrail() {
+    if (!driveAirborneTrail || driveAirborneTrail.length < 2) return;
+    var buggyScreenX = canvas.width * 0.25;
+    ctx.save();
+    for (var ti = 0; ti < driveAirborneTrail.length; ti++) {
+        var pt = driveAirborneTrail[ti];
+        var age = (driveAirborneTrail.length - 1 - ti) / driveAirborneTrail.length;
+        var alpha = (1 - age) * 0.5;
+        if (alpha <= 0.02) continue;
+        var dotX = buggyScreenX - (driveScrollX - pt.scrollX);
+        var dotY = pt.y + DRIVE_WHEEL_OFFSET_Y * 0.5;
+        if (dotX < -10 || dotX > canvas.width + 10) continue;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#F37121';
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.restore();
 }
 
 // DRIVE_TRANSITION — intro beat between landing and driving. Camera sits at
@@ -2352,6 +2466,9 @@ function renderDriveTransition() {
         ctx.fillText('DEPLOY FEATURE!', canvas.width / 2, 40);
         ctx.restore();
     }
+
+    drawDriveProgressBar();
+    drawDriveHUD();
 }
 
 // DRIVE_PLAYING — active driving phase. World scrolls per driveScrollX; buggy
@@ -2364,6 +2481,10 @@ function renderDrivePlaying() {
     var buggyScreenX = canvas.width * 0.25;
     var buggyScreenY = driveBuggyY;
     var tilt = driveBuggyTilt || 0;
+
+    // Jump-arc trail rendered BEFORE the ship so dots sit behind (visually
+    // underneath) the buggy silhouette rather than on top of it.
+    drawDriveAirborneTrail();
 
     drawShip(buggyScreenX, buggyScreenY, tilt, SHIP_SIZE, false, null, false);
 
@@ -2403,6 +2524,8 @@ function renderDrivePlaying() {
     ctx.restore();
 
     // US-008: spark particles live in screen space; draw above the buggy.
+    // US-013: dust puffs share the driveParticles array so a single loop
+    // draws every screen-space particle fading by its life/maxLife ratio.
     if (driveParticles && driveParticles.length) {
         ctx.save();
         for (var spi = 0; spi < driveParticles.length; spi++) {
@@ -2416,6 +2539,9 @@ function renderDrivePlaying() {
         }
         ctx.restore();
     }
+
+    drawDriveProgressBar();
+    drawDriveHUD();
 }
 
 // DRIVE_COMPLETE (US-011) — destination reached. World + buggy are drawn as in
@@ -2524,6 +2650,8 @@ function renderDriveComplete() {
     ctx.fillText('Score: ' + score, rcx, rcy + 80);
 
     ctx.restore();
+
+    drawDriveProgressBar();
 }
 
 function renderBreakoutTransition() {

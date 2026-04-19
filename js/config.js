@@ -687,3 +687,5 @@ var driveCompleteTimer = 0;               // elapsed time in DRIVE_COMPLETE stat
 var driveTransitionTimer = 0;             // elapsed time in DRIVE_TRANSITION state
 var driveCompleteFuelBonus = 0;           // fuel bonus banked on destination arrival (US-011)
 var driveCompleteTotalBonus = 0;          // completion + fuel bonus banked on arrival (US-011)
+var driveAirborneTrail = [];              // recent airborne positions {scrollX, y} for jump-arc trail (US-013)
+var driveStarParallaxOffset = 0;          // accumulated star-field parallax offset (px, slower than terrain) (US-013)
