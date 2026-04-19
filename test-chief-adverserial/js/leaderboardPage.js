@@ -44,9 +44,10 @@
      * Build the dreamlo JSON API URL for the given score count.
      */
     function buildApiUrl(count) {
-        return ONLINE_LEADERBOARD_CONFIG.baseUrl + '/' +
-            encodeURIComponent(ONLINE_LEADERBOARD_CONFIG.publicKey) +
-            '/json/' + count;
+        // Read scores via the Worker proxy (it fetches dreamlo over HTTP
+        // server-side, bypassing the browser mixed-content rule that
+        // blocks HTTPS pages from talking to dreamlo's HTTP-only free tier).
+        return ONLINE_LEADERBOARD_CONFIG.submitProxyUrl + '/scores?count=' + count;
     }
 
     /**
