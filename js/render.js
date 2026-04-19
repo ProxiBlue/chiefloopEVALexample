@@ -1495,7 +1495,7 @@ function drawTechdebtAsteroid(a) {
     }
     ctx.closePath();
 
-    if (a.isProxiBlue) {
+    if (a.isProxiblue) {
         ctx.shadowColor = '#4FC3F7';
         ctx.shadowBlur = 18;
         ctx.fillStyle = '#1976D2';
@@ -1504,14 +1504,14 @@ function drawTechdebtAsteroid(a) {
     }
     ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = a.isProxiBlue ? '#81D4FA' : '#8D6E63';
+    ctx.strokeStyle = a.isProxiblue ? '#81D4FA' : '#8D6E63';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
 
     // Label overlay — unrotated, centered on the asteroid.
     ctx.save();
-    ctx.fillStyle = a.isProxiBlue ? '#E1F5FE' : '#ECEFF1';
+    ctx.fillStyle = a.isProxiblue ? '#E1F5FE' : '#ECEFF1';
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

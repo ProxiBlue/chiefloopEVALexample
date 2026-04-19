@@ -200,8 +200,9 @@ var expectedAt0 = Math.min(
 check('asteroid count at level 0 matches formula',
     sandbox.techdebtAsteroids.length === expectedAt0,
     'got: ' + sandbox.techdebtAsteroids.length + ', expected: ' + expectedAt0);
-check('asteroidsTotal matches asteroid count',
-    sandbox.asteroidsTotal === sandbox.techdebtAsteroids.length,
+// asteroidsTotal accounts for split children (1 large + 2 mediums + 4 smalls = 7 per large).
+check('asteroidsTotal == asteroid count * 7 (large + potential children)',
+    sandbox.asteroidsTotal === sandbox.techdebtAsteroids.length * 7,
     'asteroidsTotal: ' + sandbox.asteroidsTotal + ', asteroids: ' + sandbox.techdebtAsteroids.length);
 
 var centerX = sandbox.canvas.width / 2;
@@ -217,7 +218,7 @@ for (var ai = 0; ai < sandbox.techdebtAsteroids.length; ai++) {
     var ddy = a.y - centerY;
     var dist = Math.sqrt(ddx * ddx + ddy * ddy);
     if (dist < sandbox.TECHDEBT_SAFE_SPAWN_RADIUS) allSafeDist = false;
-    if (a.isProxiBlue) {
+    if (a.isProxiblue) {
         if (a.label !== 'ProxiBlue') allValidLabel = false;
     } else {
         if (labelPool.indexOf(a.label) < 0) allValidLabel = false;
@@ -237,7 +238,7 @@ for (var trial = 0; trial < 15; trial++) {
     sandbox.setupTechdebtWorld();
     totalAst += sandbox.techdebtAsteroids.length;
     for (var ii = 0; ii < sandbox.techdebtAsteroids.length; ii++) {
-        if (sandbox.techdebtAsteroids[ii].isProxiBlue) totalProxi++;
+        if (sandbox.techdebtAsteroids[ii].isProxiblue) totalProxi++;
     }
 }
 var proxiRate = totalProxi / Math.max(1, totalAst);

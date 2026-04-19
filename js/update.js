@@ -230,7 +230,9 @@ function setupTechdebtWorld() {
         TECHDEBT_ASTEROID_MAX,
         TECHDEBT_ASTEROID_BASE_COUNT + currentLevel * TECHDEBT_ASTEROID_PER_LEVEL
     );
-    asteroidsTotal = count;
+    // Total destroyable units per large asteroid = 1 large + 2 mediums + 4 smalls = 7.
+    // Set once at spawn time so the HUD progress bar can render against a stable denominator.
+    asteroidsTotal = count * 7;
 
     var centerX = canvas.width / 2;
     var centerY = canvas.height / 2;
@@ -269,8 +271,8 @@ function setupTechdebtWorld() {
         var speed = baseSpeed + (Math.random() * 2 - 1) * TECHDEBT_SPEED_VARIANCE;
         if (speed < 10) speed = 10;
 
-        var isProxiBlue = Math.random() < PROXIBLUE_SPAWN_CHANCE;
-        var label = isProxiBlue
+        var isProxiblue = Math.random() < PROXIBLUE_SPAWN_CHANCE;
+        var label = isProxiblue
             ? 'ProxiBlue'
             : TECHDEBT_LABEL_POOL[Math.floor(Math.random() * TECHDEBT_LABEL_POOL.length)];
 
@@ -282,9 +284,9 @@ function setupTechdebtWorld() {
             size: TECHDEBT_SIZE_LARGE,
             sizeTier: 'large',
             label: label,
-            isProxiBlue: isProxiBlue,
+            isProxiblue: isProxiblue,
             rotation: Math.random() * Math.PI * 2,
-            rotSpeed: (Math.random() - 0.5) * 1.2
+            rotationSpeed: (Math.random() * 2 - 1)
         });
     }
 }
@@ -1644,6 +1646,20 @@ function update(dt) {
             else if (b.x >= canvas.width) b.x -= canvas.width;
             if (b.y < 0) b.y += canvas.height;
             else if (b.y >= canvas.height) b.y -= canvas.height;
+        }
+
+        // --- Update asteroids: drift at constant velocity, rotate, wrap ---
+        // No acceleration, no drag — vx/vy set at spawn never change here.
+        // Same toroidal wrap semantics as ship/bullets (>= so x === width wraps to 0).
+        for (var ai = 0; ai < techdebtAsteroids.length; ai++) {
+            var a = techdebtAsteroids[ai];
+            a.x += a.vx * dt;
+            a.y += a.vy * dt;
+            a.rotation += a.rotationSpeed * dt;
+            if (a.x < 0) a.x += canvas.width;
+            else if (a.x >= canvas.width) a.x -= canvas.width;
+            if (a.y < 0) a.y += canvas.height;
+            else if (a.y >= canvas.height) a.y -= canvas.height;
         }
     }
 
