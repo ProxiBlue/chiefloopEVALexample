@@ -413,6 +413,17 @@ var PROXIBLUE_COLOR = '#1976D2';          // canonical ProxiBlue blue — shield
 // --- Tech Debt Spawn Geometry ---
 var TECHDEBT_SAFE_SPAWN_RADIUS = 120;     // minimum px from canvas center an asteroid may spawn (keeps safe distance from ship)
 
+// --- Hidden Aliens in Asteroids ---
+var TECHDEBT_ALIEN_CHANCE = 0.15;         // chance a large asteroid contains a hidden alien
+var TECHDEBT_ALIEN_SPEED = 120;           // alien escape speed in px/s
+var TECHDEBT_ALIEN_SHOOT_INTERVAL = 1.5;  // seconds between alien shots
+var TECHDEBT_ALIEN_BULLET_SPEED = 200;    // alien bullet speed in px/s
+var TECHDEBT_ALIEN_SIZE = 16;             // alien sprite size in px
+var TECHDEBT_ALIEN_POINTS = 75;           // points for destroying an escaped alien
+var TECHDEBT_ALIEN_LIFETIME = 8;          // seconds before alien escapes off-screen
+var techdebtAliens = [];                  // active escaped aliens
+var techdebtAlienBullets = [];            // active alien bullets
+
 // --- Tech Debt Asteroid Label Pool ---
 // Pulled at spawn time for each non-ProxiBlue asteroid. Purely cosmetic flavour
 // ripped straight from everyday tech-debt vocabulary.

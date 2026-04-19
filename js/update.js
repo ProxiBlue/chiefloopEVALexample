@@ -230,6 +230,8 @@ function clearTechdebtState() {
     techdebtAsteroids = [];
     techdebtBullets = [];
     techdebtParticles = [];
+    techdebtAliens = [];
+    techdebtAlienBullets = [];
     asteroidsDestroyed = 0;
     asteroidsTotal = 0;
     techdebtCompleteTimer = 0;
@@ -445,6 +447,7 @@ function setupTechdebtWorld() {
 
         // ProxiBlue power-ups always spawn at MEDIUM size (US-012 AC#2) — not
         // too easy, not too hard to hit. Normal tech-debt asteroids are LARGE.
+        var hasAlien = !isProxiblue && Math.random() < TECHDEBT_ALIEN_CHANCE;
         techdebtAsteroids.push({
             x: px,
             y: py,
@@ -454,6 +457,7 @@ function setupTechdebtWorld() {
             sizeTier: isProxiblue ? 'medium' : 'large',
             label: label,
             isProxiblue: isProxiblue,
+            hasAlien: hasAlien,
             rotation: Math.random() * Math.PI * 2,
             rotationSpeed: (Math.random() * 2 - 1),
             shape: shapeArr
@@ -673,7 +677,7 @@ function splitTechdebtAsteroid(parent) {
     // Unit vector perpendicular to the parent's velocity.
     var perpx = -parent.vy / pmag;
     var perpy = parent.vx / pmag;
-    var childSpeed = pmag * 1.2; // children slightly faster than parent
+    var childSpeed = nextTier === 'small' ? pmag * 2.0 : pmag * 1.5;
     for (var s = -1; s <= 1; s += 2) {
         // Direction = small forward bias + perpendicular split + jitter.
         var jitter = (Math.random() - 0.5) * 0.4;
@@ -3042,6 +3046,18 @@ function update(dt) {
                     score += pts;
                     asteroidsDestroyed++;
                     spawnTechdebtAsteroidParticles(ast.x, ast.y, '#888');
+                    // Spawn hidden alien if asteroid contained one
+                    if (ast.hasAlien) {
+                        var escAngle = Math.random() * Math.PI * 2;
+                        techdebtAliens.push({
+                            x: ast.x,
+                            y: ast.y,
+                            vx: Math.cos(escAngle) * TECHDEBT_ALIEN_SPEED,
+                            vy: Math.sin(escAngle) * TECHDEBT_ALIEN_SPEED,
+                            shootTimer: TECHDEBT_ALIEN_SHOOT_INTERVAL * 0.5,
+                            life: TECHDEBT_ALIEN_LIFETIME
+                        });
+                    }
                     techdebtAsteroids.splice(aIdx, 1);
                     splitTechdebtAsteroid(ast);
                     techdebtBullets.splice(bIdx, 1);
@@ -3123,11 +3139,81 @@ function update(dt) {
             if (proxiblueShieldFlashTimer < 0) proxiblueShieldFlashTimer = 0;
         }
 
-        // --- Win condition (US-010) ---
-        // When the last asteroid is destroyed, enter TECHDEBT_COMPLETE and
-        // apply the fuel-remaining bonus. Guard on gameState === TECHDEBT_PLAYING
-        // so this can't double-apply in a single tick if the block re-enters.
-        if (gameState === STATES.TECHDEBT_PLAYING && techdebtAsteroids.length === 0) {
+        // --- Hidden alien update ---
+        for (var alIdx = techdebtAliens.length - 1; alIdx >= 0; alIdx--) {
+            var alien = techdebtAliens[alIdx];
+            alien.x += alien.vx * dt;
+            alien.y += alien.vy * dt;
+            alien.life -= dt;
+            alien.shootTimer -= dt;
+            // Wrap around screen edges
+            if (alien.x < 0) alien.x += canvas.width;
+            else if (alien.x >= canvas.width) alien.x -= canvas.width;
+            if (alien.y < 0) alien.y += canvas.height;
+            else if (alien.y >= canvas.height) alien.y -= canvas.height;
+            // Shoot at player
+            if (alien.shootTimer <= 0) {
+                alien.shootTimer = TECHDEBT_ALIEN_SHOOT_INTERVAL;
+                var adx = ship.x - alien.x;
+                var ady = ship.y - alien.y;
+                var adist = Math.sqrt(adx * adx + ady * ady) || 1;
+                techdebtAlienBullets.push({
+                    x: alien.x,
+                    y: alien.y,
+                    vx: (adx / adist) * TECHDEBT_ALIEN_BULLET_SPEED,
+                    vy: (ady / adist) * TECHDEBT_ALIEN_BULLET_SPEED,
+                    life: 4
+                });
+            }
+            // Remove if lifetime expired
+            if (alien.life <= 0) {
+                techdebtAliens.splice(alIdx, 1);
+                continue;
+            }
+            // Check if player bullet hits alien
+            for (var abIdx = techdebtBullets.length - 1; abIdx >= 0; abIdx--) {
+                var ab = techdebtBullets[abIdx];
+                var abdx = ab.x - alien.x;
+                var abdy = ab.y - alien.y;
+                if (abdx * abdx + abdy * abdy <= TECHDEBT_ALIEN_SIZE * TECHDEBT_ALIEN_SIZE) {
+                    techdebtScore += TECHDEBT_ALIEN_POINTS;
+                    score += TECHDEBT_ALIEN_POINTS;
+                    spawnTechdebtAsteroidParticles(alien.x, alien.y, '#4CAF50');
+                    if (typeof playAlienDestroySound === 'function') playAlienDestroySound();
+                    techdebtAliens.splice(alIdx, 1);
+                    techdebtBullets.splice(abIdx, 1);
+                    break;
+                }
+            }
+        }
+        // --- Alien bullet update ---
+        for (var abIdx2 = techdebtAlienBullets.length - 1; abIdx2 >= 0; abIdx2--) {
+            var aBullet = techdebtAlienBullets[abIdx2];
+            aBullet.x += aBullet.vx * dt;
+            aBullet.y += aBullet.vy * dt;
+            aBullet.life -= dt;
+            if (aBullet.life <= 0) {
+                techdebtAlienBullets.splice(abIdx2, 1);
+                continue;
+            }
+            // Hit player check
+            var ahdx = aBullet.x - ship.x;
+            var ahdy = aBullet.y - ship.y;
+            if (ahdx * ahdx + ahdy * ahdy <= TECHDEBT_SHIP_RADIUS * TECHDEBT_SHIP_RADIUS) {
+                if (proxiblueShieldActive) {
+                    proxiblueShieldActive = false;
+                    proxiblueShieldTimer = 0;
+                    proxiblueShieldFlashTimer = PROXIBLUE_SHIELD_FLASH_DURATION;
+                } else {
+                    crashShipInTechdebt('Hit by alien fire');
+                }
+                techdebtAlienBullets.splice(abIdx2, 1);
+            }
+        }
+
+        // --- Win condition ---
+        // All asteroids AND aliens must be cleared
+        if (gameState === STATES.TECHDEBT_PLAYING && techdebtAsteroids.length === 0 && techdebtAliens.length === 0) {
             gameState = STATES.TECHDEBT_COMPLETE;
             techdebtCompleteTimer = 0;
             var fuelBonus = Math.round((ship.fuel / FUEL_MAX) * 200);

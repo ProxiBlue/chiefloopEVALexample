@@ -1635,6 +1635,36 @@ function renderTechdebtPlaying() {
         ctx.restore();
     }
 
+    // Hidden aliens that escaped from destroyed asteroids
+    for (var alI = 0; alI < techdebtAliens.length; alI++) {
+        var al = techdebtAliens[alI];
+        ctx.save();
+        ctx.translate(al.x, al.y);
+        // Simple alien sprite — small triangle with antennae
+        ctx.fillStyle = '#4CAF50';
+        ctx.beginPath();
+        ctx.moveTo(0, -TECHDEBT_ALIEN_SIZE / 2);
+        ctx.lineTo(-TECHDEBT_ALIEN_SIZE / 2, TECHDEBT_ALIEN_SIZE / 2);
+        ctx.lineTo(TECHDEBT_ALIEN_SIZE / 2, TECHDEBT_ALIEN_SIZE / 2);
+        ctx.closePath();
+        ctx.fill();
+        // Eyes
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(-3, 0, 2, 0, Math.PI * 2);
+        ctx.arc(3, 0, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+    // Alien bullets — small red dots
+    for (var abI = 0; abI < techdebtAlienBullets.length; abI++) {
+        var abul = techdebtAlienBullets[abI];
+        ctx.fillStyle = '#f44336';
+        ctx.beginPath();
+        ctx.arc(abul.x, abul.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, ship.retroThrusting || false);
 
     // Shield ring around the ship (US-013 AC#1). Translucent blue circle,
