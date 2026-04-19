@@ -4,6 +4,7 @@
 // Hit-box for ProxiBlue branding on the Game Over screen; set on each render
 // frame while the leaderboard is visible, read by the canvas click handler.
 var proxiblueBrandHitBox = null;
+var menuGuideLinkBox = null;
 
 function renderMenu() {
     var cx = canvas.width / 2;
@@ -105,33 +106,39 @@ function renderMenu() {
     ctx.fillText('Right / D  =  Rotate Right', cx, controlsY + 48);
     ctx.fillText('R  =  Restart', cx, controlsY + 72);
 
-    // Game guide link
-    ctx.fillStyle = '#4FC3F7';
-    ctx.font = '12px monospace';
-    ctx.fillText('Game Guide: guide.html', cx, controlsY + 94);
-
-    // ProxiBlue branding — subtle, unobtrusive
-    ctx.fillStyle = '#667';
-    ctx.font = '12px monospace';
-    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, controlsY + 112);
-
     // Fallback notice (when data has no commits or no PRs)
+    var extraOffset = 0;
     if (repoFallbackNotice) {
         ctx.fillStyle = '#FFB300';
         ctx.font = '14px monospace';
-        ctx.fillText(repoFallbackNotice, cx, controlsY + 110);
+        ctx.fillText(repoFallbackNotice, cx, controlsY + 96);
+        extraOffset = 24;
     }
 
     // "Press Space to Start" prompt
     ctx.fillStyle = '#888';
     ctx.font = '20px sans-serif';
-    var startPromptY = repoFallbackNotice ? controlsY + 140 : controlsY + 120;
-    ctx.fillText('Press SPACE to Start', cx, startPromptY);
+    ctx.fillText('Press SPACE to Start', cx, controlsY + 100 + extraOffset);
+
+    // Game guide link (clickable)
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = '12px monospace';
+    var guideLinkY = controlsY + 124 + extraOffset;
+    var guideLinkText = 'Game Guide \u2192 click here';
+    ctx.fillText(guideLinkText, cx, guideLinkY);
+    // Store hit-box for click handler
+    var guideTextW = ctx.measureText(guideLinkText).width;
+    menuGuideLinkBox = { x: cx - guideTextW / 2, y: guideLinkY - 10, w: guideTextW, h: 14 };
+
+    // ProxiBlue branding
+    ctx.fillStyle = '#556';
+    ctx.font = '11px monospace';
+    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, guideLinkY + 18);
 
     // Leaderboard on start screen
     var board = getLeaderboard();
     if (board.length > 0) {
-        drawLeaderboard(cx, controlsY + 150, null);
+        drawLeaderboard(cx, guideLinkY + 40, null);
     }
 }
 
