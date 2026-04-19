@@ -2401,6 +2401,21 @@ function renderDrivePlaying() {
     ctx.lineTo(wheelRX + cx, wheelY + sy);
     ctx.stroke();
     ctx.restore();
+
+    // US-008: spark particles live in screen space; draw above the buggy.
+    if (driveParticles && driveParticles.length) {
+        ctx.save();
+        for (var spi = 0; spi < driveParticles.length; spi++) {
+            var sp = driveParticles[spi];
+            var a = Math.max(0, sp.life / sp.maxLife);
+            ctx.globalAlpha = a;
+            ctx.fillStyle = sp.color;
+            ctx.beginPath();
+            ctx.arc(sp.x, sp.y, Math.max(0.5, sp.size * a), 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
 }
 
 function renderBreakoutTransition() {

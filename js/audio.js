@@ -723,6 +723,28 @@ function playBreakoutVictorySound() {
     });
 }
 
+// Feature Drive US-008: Rock hit — metallic clang. Short noise burst with a
+// bandpass filter centred at ~800Hz per PRD §14.
+function playDriveRockHitSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var noiseBuffer = createNoiseBuffer(ctx, 0.15);
+    var noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(800, t);
+    bp.Q.setValueAtTime(4, t);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    noise.connect(bp);
+    bp.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + 0.15);
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

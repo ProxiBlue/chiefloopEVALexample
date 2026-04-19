@@ -644,6 +644,7 @@ var DRIVE_ROCK_SIZE = 15;                 // rock obstacle size in px
 var DRIVE_OBSTACLE_DENSITY_BASE = 0.03;   // obstacles per px of road at level 1
 var DRIVE_OBSTACLE_DENSITY_PER_LEVEL = 0.005; // extra density per level
 var DRIVE_OBSTACLE_DENSITY_MAX = 0.08;    // density cap
+var DRIVE_ROCK_FUEL_COST = 10;            // fuel lost per rock collision (US-008)
 
 // --- Feature Drive Pickup Configuration ---
 var DRIVE_PICKUP_SIZE = 14;               // pickup sprite size in px

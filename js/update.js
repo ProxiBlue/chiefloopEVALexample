@@ -1002,6 +1002,28 @@ function setupDriveWorld() {
     }
 }
 
+// Feature Drive US-008: short yellow/orange spark burst on rock impact. (x,y)
+// is a screen-space point (the buggy's on-screen position) — spark particles
+// live in screen space and fade over ~0.25-0.5s.
+function spawnDriveSparkBurst(x, y) {
+    var colors = ['#FFEB3B', '#FFC107', '#FF9800', '#FFFFFF'];
+    for (var i = 0; i < 14; i++) {
+        var angle = -Math.PI + Math.random() * Math.PI; // upward hemisphere
+        var speed = 80 + Math.random() * 180;
+        var life = 0.25 + Math.random() * 0.25;
+        driveParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 2,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+}
+
 // Red/orange debris burst for a destroyed building or battery (AC#2). Emits a
 // fan of particles with downward gravity so they settle like rubble.
 function spawnMissileDestructionBurst(x, y) {
@@ -2319,6 +2341,49 @@ function update(dt) {
         }
 
         driveDistance = driveScrollX;
+
+        // US-008: Rock collision. Only checks when grounded — airborne buggy
+        // clears rocks. On hit: spawn spark burst + screen shake + play clang,
+        // deduct DRIVE_ROCK_FUEL_COST from fuel (clamped at 0), destroy the
+        // rock (splice). Hitting a rock at fuel 0 is a no-op penalty — the
+        // buggy continues driving, and fuel-zero already gates jump above so
+        // the player coasts to the finish or the next gap.
+        if (driveGrounded && !driveFalling) {
+            var buggyHalfW = SHIP_SIZE / 2;
+            var buggyTop = driveBuggyY - SHIP_SIZE / 2;
+            var buggyBottom = driveBuggyY + DRIVE_WHEEL_OFFSET_Y;
+            for (var rIdx = driveObstacles.length - 1; rIdx >= 0; rIdx--) {
+                var rk = driveObstacles[rIdx];
+                if (rk.type !== 'rock') continue;
+                var rockLeft = rk.x - rk.size / 2;
+                var rockRight = rk.x + rk.size / 2;
+                var rockTop = rk.y - rk.size;
+                var rockBottom = rk.y;
+                var buggyLeft = buggyWorldX - buggyHalfW;
+                var buggyRight = buggyWorldX + buggyHalfW;
+                if (buggyRight < rockLeft || buggyLeft > rockRight) continue;
+                if (buggyBottom < rockTop || buggyTop > rockBottom) continue;
+                driveObstacles.splice(rIdx, 1);
+                ship.fuel -= DRIVE_ROCK_FUEL_COST;
+                if (ship.fuel < 0) ship.fuel = 0;
+                spawnDriveSparkBurst(buggyScreenX, rk.y - rk.size / 2);
+                startScreenShake();
+                if (typeof playDriveRockHitSound === 'function') {
+                    playDriveRockHitSound();
+                }
+            }
+        }
+
+        // US-008: tick spark particles. Simple drift + fade; light gravity so
+        // sparks arc downward like debris. Splice when life reaches 0.
+        for (var spi = driveParticles.length - 1; spi >= 0; spi--) {
+            var sp = driveParticles[spi];
+            sp.x += sp.vx * dt;
+            sp.y += sp.vy * dt;
+            sp.vy += 160 * dt;
+            sp.life -= dt;
+            if (sp.life <= 0) driveParticles.splice(spi, 1);
+        }
 
         // US-007: once the buggy has dropped fully below the canvas bottom,
         // spawn the crash FX and route through the shared CRASHED flow.

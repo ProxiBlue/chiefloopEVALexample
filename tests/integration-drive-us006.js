@@ -48,6 +48,18 @@ var sandbox = {
     Infinity: Infinity,
     canvas: { width: 800, height: 600 },
     window: { addEventListener: function () {} },
+    // SHIP_SIZE normally lives in collision.js; US-008 collision block
+    // references it at module scope so the stub keeps the physics block
+    // loadable even when driveObstacles is empty.
+    SHIP_SIZE: 40,
+    // FX stubs — US-008 collision would call these on rock hit; kept as
+    // no-ops because US-006 scenarios never stage a rock overlap.
+    spawnDriveSparkBurst: function () {},
+    startScreenShake: function () {},
+    playDriveRockHitSound: function () {},
+    spawnExplosion: function () {},
+    stopThrustSound: function () {},
+    playExplosionSound: function () {},
 };
 sandbox.self = sandbox;
 sandbox.globalThis = sandbox;
