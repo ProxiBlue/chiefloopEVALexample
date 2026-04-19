@@ -127,12 +127,11 @@ function crashShipInBreakout(reason) {
     ship.vx = 0;
     ship.vy = 0;
     ship.thrusting = false;
-    landingResult = reason;
-    spawnExplosion(ship.x, ship.y);
-    startScreenShake();
+    ship.rotating = null;
     stopThrustSound();
-    playExplosionSound();
-    gameState = STATES.CRASHED;
+    breakoutCompletionBonus = 0;
+    breakoutCompleteTimer = 0;
+    gameState = STATES.BREAKOUT_COMPLETE;
 }
 
 // US-009: Handle a Code Breaker ball loss (all balls off-screen). Cancels any
@@ -265,6 +264,7 @@ function clearBreakoutState() {
     breakoutCompletionBonus = 0;
     breakoutExtraBallBonus = 0;
     breakoutExtraBalls = 0;
+    breakoutPaddleYPos = 0;
     breakoutActivePowerup = null;
     breakoutPowerupTimer = 0;
     breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
@@ -795,6 +795,8 @@ function setupDriveWorld() {
     driveBuggyVY = 0;
     driveGrounded = true;
     driveWheelRotation = 0;
+    driveBuggyTilt = 0;
+    drivePrevJumpKey = false;
     driveScore = 0;
     drivePickupsCollected = 0;
     driveDistance = 0;
@@ -2192,6 +2194,91 @@ function update(dt) {
         }
     }
 
+    // Feature Drive gameplay (US-006): buggy physics. Road auto-scrolls at
+    // DRIVE_SCROLL_SPEED_BASE; player accelerates (right/D) up to
+    // DRIVE_SCROLL_SPEED_MAX, brakes (left/A) down to a floor of 40 px/s.
+    // Jump (up/W/space, edge-triggered via drivePrevJumpKey) applies
+    // DRIVE_JUMP_VELOCITY and costs DRIVE_JUMP_FUEL_COST; disallowed when
+    // airborne or fuel=0. Gravity integrates driveBuggyVY while airborne;
+    // landing snaps Y to the segment ground and re-grounds. Wheels spin
+    // proportional to speed; cosmetic tilt derives from VY while airborne,
+    // clamped to ±10°.
+    if (gameState === STATES.DRIVE_PLAYING) {
+        var accelKey = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        var brakeKey = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
+        var jumpKey = !!(keys['ArrowUp'] || keys['w'] || keys['W'] ||
+                         keys[' '] || keys['Space']);
+
+        if (accelKey) {
+            driveSpeed += DRIVE_ACCELERATION * dt;
+        } else if (brakeKey) {
+            driveSpeed -= DRIVE_BRAKE_DECEL * dt;
+        } else {
+            if (driveSpeed < DRIVE_SCROLL_SPEED_BASE) {
+                driveSpeed = Math.min(
+                    DRIVE_SCROLL_SPEED_BASE,
+                    driveSpeed + DRIVE_ACCELERATION * dt
+                );
+            } else if (driveSpeed > DRIVE_SCROLL_SPEED_BASE) {
+                driveSpeed = Math.max(
+                    DRIVE_SCROLL_SPEED_BASE,
+                    driveSpeed - DRIVE_BRAKE_DECEL * dt
+                );
+            }
+        }
+        if (driveSpeed > DRIVE_SCROLL_SPEED_MAX) driveSpeed = DRIVE_SCROLL_SPEED_MAX;
+        if (driveSpeed < 40) driveSpeed = 40;
+
+        // Edge-triggered jump: fire only on rising edge so holding the key
+        // doesn't repeat-jump the instant we land.
+        if (jumpKey && !drivePrevJumpKey && driveGrounded && ship.fuel > 0) {
+            driveBuggyVY = DRIVE_JUMP_VELOCITY;
+            driveGrounded = false;
+            ship.fuel -= DRIVE_JUMP_FUEL_COST;
+            if (ship.fuel < 0) ship.fuel = 0;
+        }
+        drivePrevJumpKey = jumpKey;
+
+        driveScrollX += driveSpeed * dt;
+
+        var driveSegmentWidth = 20;
+        var buggyScreenX = canvas.width * 0.25;
+        var buggyWorldX = driveScrollX + buggyScreenX;
+        var segIdx = Math.floor(buggyWorldX / driveSegmentWidth);
+        if (segIdx < 0) segIdx = 0;
+        if (segIdx > driveRoadSegments.length - 1) segIdx = driveRoadSegments.length - 1;
+        var groundY = driveRoadSegments.length > 0
+            ? driveRoadSegments[segIdx].y
+            : driveBuggyY;
+
+        if (driveGrounded) {
+            driveBuggyY = groundY;
+            driveBuggyVY = 0;
+        } else {
+            driveBuggyVY += DRIVE_GRAVITY * dt;
+            driveBuggyY += driveBuggyVY * dt;
+            if (driveBuggyY >= groundY && driveBuggyVY >= 0) {
+                driveBuggyY = groundY;
+                driveBuggyVY = 0;
+                driveGrounded = true;
+            }
+        }
+
+        driveWheelRotation += driveSpeed * dt;
+
+        if (driveGrounded) {
+            driveBuggyTilt = 0;
+        } else {
+            var MAX_DRIVE_TILT = 10 * Math.PI / 180;
+            var tiltRaw = (driveBuggyVY / Math.abs(DRIVE_JUMP_VELOCITY)) * MAX_DRIVE_TILT;
+            if (tiltRaw > MAX_DRIVE_TILT) tiltRaw = MAX_DRIVE_TILT;
+            if (tiltRaw < -MAX_DRIVE_TILT) tiltRaw = -MAX_DRIVE_TILT;
+            driveBuggyTilt = tiltRaw;
+        }
+
+        driveDistance = driveScrollX;
+    }
+
     // Tech debt transition: brief intro window between landing and asteroid
     // gameplay. Ship is already centered + upright from the SCENE_SCROLL end
     // branch and the asteroid field was seeded there via setupTechdebtWorld(),
@@ -2252,6 +2339,8 @@ function update(dt) {
     if (gameState === STATES.BREAKOUT_PLAYING) {
         var paddleLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
         var paddleRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        var paddleUp = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+        var paddleDown = !!(keys['ArrowDown'] || keys['s'] || keys['S']);
         if (paddleLeft) {
             breakoutPaddleX -= BREAKOUT_PADDLE_SPEED * dt;
         }
@@ -2265,9 +2354,28 @@ function update(dt) {
             breakoutPaddleX = canvas.width - breakoutPaddleWidth;
         }
 
+        // Vertical paddle movement — limited range near bottom of screen
+        var paddleMinY = canvas.height * 0.65;
+        var paddleMaxY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2;
+        if (!breakoutPaddleYPos) breakoutPaddleYPos = paddleMaxY;
+        if (paddleUp) {
+            breakoutPaddleYPos -= BREAKOUT_PADDLE_SPEED * 0.6 * dt;
+        }
+        if (paddleDown) {
+            breakoutPaddleYPos += BREAKOUT_PADDLE_SPEED * 0.6 * dt;
+        }
+        if (breakoutPaddleYPos < paddleMinY) breakoutPaddleYPos = paddleMinY;
+        if (breakoutPaddleYPos > paddleMaxY) breakoutPaddleYPos = paddleMaxY;
+
+        // Show rotation thrusters when moving left/right (ship is flipped 180°,
+        // so left/right rotation jets visually fire in the correct direction)
+        ship.rotating = paddleLeft ? 'right' : paddleRight ? 'left' : null;
+        ship.thrusting = paddleUp;
+        ship.retroThrusting = paddleDown;
+
         // Keep the flipped M sprite aligned with the paddle hitbox.
         ship.x = breakoutPaddleX + breakoutPaddleWidth / 2;
-        ship.y = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2;
+        ship.y = breakoutPaddleYPos;
         ship.angle = Math.PI;
 
         if (breakoutBallStuck) {
@@ -2275,10 +2383,7 @@ function update(dt) {
             breakoutBallY = ship.y - SHIP_SIZE / 2 - BREAKOUT_BALL_RADIUS;
             breakoutBallVX = 0;
             breakoutBallVY = 0;
-            var wantsLaunch = !!(
-                keys['ArrowUp'] || keys['w'] || keys['W'] ||
-                keys[' '] || keys['Space']
-            );
+            var wantsLaunch = !!(keys[' '] || keys['Space']);
             if (wantsLaunch) {
                 var launchSpeed = Math.min(
                     BREAKOUT_BALL_SPEED_MAX,
@@ -2294,8 +2399,8 @@ function update(dt) {
             // US-008: power-up update runs FIRST so pills spawned by this
             // frame's brick destruction stay at their brick-centre spawn point
             // for one tick (matches existing tests and feels right visually).
-            var paddleTopPu = canvas.height - BREAKOUT_PADDLE_Y_OFFSET;
-            var paddleBottomPu = paddleTopPu + BREAKOUT_PADDLE_HEIGHT;
+            var paddleTopPu = ship.y - SHIP_SIZE / 2;
+            var paddleBottomPu = ship.y + SHIP_SIZE / 2;
             for (var puIdx = breakoutPowerups.length - 1; puIdx >= 0; puIdx--) {
                 var pu = breakoutPowerups[puIdx];
                 pu.y += pu.vy * dt;
@@ -2365,8 +2470,8 @@ function update(dt) {
             // Bounce angle follows the standard Breakout formula:
             //   hitPosNorm in [-1, 1]; vX = hitPosNorm * speed * sin(maxAngle);
             //   vY = -sqrt(speed² - vX²) so magnitude is preserved.
-            var paddleTop = canvas.height - BREAKOUT_PADDLE_Y_OFFSET;
-            var paddleBottom = paddleTop + BREAKOUT_PADDLE_HEIGHT;
+            var paddleTop = ship.y - SHIP_SIZE / 2;
+            var paddleBottom = ship.y + SHIP_SIZE / 2;
             if (breakoutBallVY > 0 &&
                 breakoutBallY + BREAKOUT_BALL_RADIUS >= paddleTop &&
                 breakoutBallY - BREAKOUT_BALL_RADIUS <= paddleBottom &&

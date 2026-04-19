@@ -1965,8 +1965,8 @@ function drawBreakoutWorld() {
     // US-012: faint glow below the paddle adds visual polish. Radial gradient
     // centred on the paddle's bottom edge, fading outward — sits behind the
     // paddle sprite so the M reads cleanly on top.
-    var glowCenterX = breakoutPaddleX + breakoutPaddleWidth / 2;
-    var glowY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET + BREAKOUT_PADDLE_HEIGHT / 2;
+    var glowCenterX = ship.x;
+    var glowY = ship.y + SHIP_SIZE / 2;
     var glowRadius = breakoutPaddleWidth;
     ctx.save();
     var paddleGlow = ctx.createRadialGradient(
@@ -1984,7 +1984,7 @@ function drawBreakoutWorld() {
     // tracks the live `breakoutPaddleWidth` (may be scaled by the Wide
     // power-up in US-008) so the sprite matches the hitbox exactly.
     var paddleDrawSize = breakoutPaddleWidth / LOGO_DRAW_RATIO;
-    drawShip(ship.x, ship.y, ship.angle, paddleDrawSize, false, null, false);
+    drawShip(ship.x, ship.y, ship.angle, paddleDrawSize, ship.thrusting, ship.rotating, ship.retroThrusting || false);
 
     // US-012: ball trails (primary + extras) — fireball swaps to a flame palette.
     var fireOn = (breakoutActivePowerup === 'fire');
@@ -2328,6 +2328,55 @@ function renderDriveTransition() {
     }
 }
 
+// DRIVE_PLAYING — active driving phase. World scrolls per driveScrollX; buggy
+// sits at canvas.width * 0.25 with its Y driven by physics. Wheels are fully
+// deployed (full DRIVE_WHEEL_RADIUS) and spin per driveWheelRotation. While
+// airborne, the ship tilts per driveBuggyTilt (clamped ±10° in update).
+function renderDrivePlaying() {
+    drawDriveWorld();
+
+    var buggyScreenX = canvas.width * 0.25;
+    var buggyScreenY = driveBuggyY;
+    var tilt = driveBuggyTilt || 0;
+
+    drawShip(buggyScreenX, buggyScreenY, tilt, SHIP_SIZE, false, null, false);
+
+    var wheelRadius = DRIVE_WHEEL_RADIUS;
+    var wheelLX = buggyScreenX - DRIVE_WHEEL_OFFSET_X;
+    var wheelRX = buggyScreenX + DRIVE_WHEEL_OFFSET_X;
+    var wheelY = buggyScreenY + DRIVE_WHEEL_OFFSET_Y;
+
+    ctx.save();
+    ctx.fillStyle = '#888';
+    ctx.beginPath();
+    ctx.arc(wheelLX, wheelY, wheelRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(wheelRX, wheelY, wheelRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.arc(wheelLX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(wheelRX, wheelY, Math.max(1, wheelRadius * 0.35), 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    var spokeAng = driveWheelRotation;
+    var cx = Math.cos(spokeAng) * wheelRadius;
+    var sy = Math.sin(spokeAng) * wheelRadius;
+    ctx.beginPath();
+    ctx.moveTo(wheelLX - cx, wheelY - sy);
+    ctx.lineTo(wheelLX + cx, wheelY + sy);
+    ctx.moveTo(wheelRX - cx, wheelY - sy);
+    ctx.lineTo(wheelRX + cx, wheelY + sy);
+    ctx.stroke();
+    ctx.restore();
+}
+
 function renderBreakoutTransition() {
     drawBreakoutWorld();
     drawBreakoutHUD();
@@ -2617,6 +2666,9 @@ function render() {
             break;
         case STATES.DRIVE_TRANSITION:
             renderDriveTransition();
+            break;
+        case STATES.DRIVE_PLAYING:
+            renderDrivePlaying();
             break;
         case STATES.CRASHED:
             renderCrashed();

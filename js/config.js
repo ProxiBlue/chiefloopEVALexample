@@ -563,6 +563,7 @@ var breakoutBallY = 0;                    // active ball Y position
 var breakoutBallVX = 0;                   // active ball X velocity (px/s)
 var breakoutBallVY = 0;                   // active ball Y velocity (px/s)
 var breakoutPaddleX = 0;                  // paddle left-edge X position
+var breakoutPaddleYPos = 0;               // paddle Y position (vertical movement)
 var breakoutBallStuck = true;             // ball rides on paddle until Up/W/Space launches it
 var breakoutExtraBalls = 0;               // bonus balls accumulated from power-ups
 var breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH; // live paddle width (scaled by Wide power-up)
@@ -644,6 +645,8 @@ var driveBuggyY = 0;                      // buggy vertical position
 var driveBuggyVY = 0;                     // buggy vertical velocity (px/s)
 var driveGrounded = true;                 // whether buggy is on ground
 var driveWheelRotation = 0;               // visual wheel spin angle (radians)
+var driveBuggyTilt = 0;                   // cosmetic buggy tilt while airborne (radians)
+var drivePrevJumpKey = false;             // previous-frame jump-key state (edge detect)
 
 // --- Feature Drive State Arrays ---
 var driveRoadSegments = [];               // road segment definitions
