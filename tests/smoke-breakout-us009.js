@@ -101,12 +101,23 @@ var crashSrc = extractFunction('function crashShipInBreakout(');
 var loseSrc = extractFunction('function loseBreakoutBall(');
 var activateSrc = extractFunction('function activateBreakoutPowerup(');
 var particlesSrc = extractFunction('function spawnBreakoutBrickParticles(');
+var lossParticlesSrc = extractFunction('function spawnBreakoutBallLossParticles(');
 var clearSrc = extractFunction('function clearBreakoutState(');
 check('update.js: crashShipInBreakout defined', !!crashSrc);
 check('update.js: loseBreakoutBall defined', !!loseSrc);
 check('update.js: activateBreakoutPowerup defined', !!activateSrc);
 check('update.js: spawnBreakoutBrickParticles defined', !!particlesSrc);
 vm.runInContext(particlesSrc, sandbox, { filename: 'spawnBreakoutBrickParticles' });
+// US-012 added a spawnBreakoutBallLossParticles() call to the BREAKOUT_PLAYING
+// bottom-out path (downward shower on ball loss). Load it into the sandbox so
+// the replayed body doesn't ReferenceError; it's a pure particle writer and
+// does not affect US-009's assertions.
+if (lossParticlesSrc) {
+    vm.runInContext(lossParticlesSrc, sandbox,
+        { filename: 'spawnBreakoutBallLossParticles' });
+} else {
+    sandbox.spawnBreakoutBallLossParticles = function () {};
+}
 vm.runInContext(activateSrc, sandbox, { filename: 'activateBreakoutPowerup' });
 // US-011 added a clearBreakoutState() call in the BREAKOUT_PLAYING CRASHED
 // tail. Load it so the replayed PLAYING body doesn't ReferenceError when the

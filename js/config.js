@@ -474,8 +474,8 @@ var BREAKOUT_BRICK_HP_3_CHANCE = 0.1;     // 10% of bricks are 3-hit; higher lev
 
 // --- Code Breaker Brick Colours (by current HP) ---
 var BREAKOUT_BRICK_COLOR_HP1 = '#4CAF50'; // green — 1 hit remaining
-var BREAKOUT_BRICK_COLOR_HP2 = '#FFB300'; // amber — 2 hits remaining
-var BREAKOUT_BRICK_COLOR_HP3 = '#DC143C'; // crimson — 3 hits remaining
+var BREAKOUT_BRICK_COLOR_HP2 = '#FFC107'; // yellow — 2 hits remaining
+var BREAKOUT_BRICK_COLOR_HP3 = '#F44336'; // red — 3 hits remaining
 
 // --- Code Breaker Brick Label Pool (PRD section 8) ---
 // Randomly assigned per brick for flavour. Cosmetic only.
@@ -564,7 +564,11 @@ var breakoutExtraBalls = 0;               // bonus balls accumulated from power-
 var breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH; // live paddle width (scaled by Wide power-up)
 var breakoutActivePowerup = null;         // 'wide' | 'fire' | null — only timed effects live here
 var breakoutPowerupTimer = 0;             // seconds remaining on active timed power-up
-var breakoutBalls = [];                   // additional balls from Multi-Ball (each: {x,y,vx,vy})
+var breakoutBalls = [];                   // additional balls from Multi-Ball (each: {x,y,vx,vy,trail})
+
+// --- Code Breaker Ball Trail (US-012) ---
+var BREAKOUT_BALL_TRAIL_LEN = 4;          // recent positions retained for the trail render
+var breakoutBallTrail = [];               // FIFO of {x,y} for the primary ball's trail
 
 // --- Code Breaker State Arrays ---
 var breakoutBricks = [];                  // active bricks on the field

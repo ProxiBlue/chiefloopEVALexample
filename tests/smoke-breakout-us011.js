@@ -136,6 +136,15 @@ check('update.js: activateBreakoutPowerup defined', !!activateSrc);
 check('update.js: spawnBreakoutBrickParticles defined', !!particlesSrc);
 
 vm.runInContext(particlesSrc, sandbox, { filename: 'spawnBreakoutBrickParticles' });
+// US-012: PLAYING bottom-out now spawns a downward particle shower. Load the
+// helper (or stub if missing) so the replayed body doesn't ReferenceError.
+var lossParticlesSrc = extractFunction('function spawnBreakoutBallLossParticles(');
+if (lossParticlesSrc) {
+    vm.runInContext(lossParticlesSrc, sandbox,
+        { filename: 'spawnBreakoutBallLossParticles' });
+} else {
+    sandbox.spawnBreakoutBallLossParticles = function () {};
+}
 vm.runInContext(activateSrc, sandbox, { filename: 'activateBreakoutPowerup' });
 vm.runInContext(clearSrc, sandbox, { filename: 'clearBreakoutState' });
 vm.runInContext(crashSrc, sandbox, { filename: 'crashShipInBreakout' });

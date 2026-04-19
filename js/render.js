@@ -1821,28 +1821,130 @@ function renderTechdebtComplete() {
     ctx.fillText('Returning to mission...', cx, cy + 80);
 }
 
+// US-012: render a short trail behind a Code Breaker ball at decreasing
+// opacity. During Fireball the trail swaps to a red/orange flame palette. The
+// newest position (index 0) is brightest; oldest fades to invisible.
+function drawBreakoutBallTrail(trail, fireActive) {
+    if (!trail || trail.length === 0) return;
+    ctx.save();
+    for (var ti = trail.length - 1; ti >= 0; ti--) {
+        var t = trail[ti];
+        var fade = 1 - (ti + 1) / (BREAKOUT_BALL_TRAIL_LEN + 1);
+        ctx.globalAlpha = Math.max(0, fade * 0.7);
+        if (fireActive) {
+            // Alternate flame colours for a 2-tone flicker.
+            ctx.fillStyle = (ti % 2 === 0) ? '#FF6F00' : '#FFC107';
+        } else {
+            ctx.fillStyle = '#fff';
+        }
+        var r = BREAKOUT_BALL_RADIUS * (1 - ti * 0.15);
+        if (r < 1) r = 1;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+}
+
+// US-012: Code Breaker HUD — replaces the lander's altitude/velocity panel
+// while any BREAKOUT_* state is active. Shows bricks remaining, extra balls,
+// the active power-up + a timer bar for timed effects, and the global score.
+function drawBreakoutHUD() {
+    ctx.save();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+
+    var bricksLeft = breakoutBricks.length;
+    var x = 10;
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px monospace';
+    ctx.fillText('Bricks: ' + bricksLeft, x, 25);
+    ctx.fillText('Extra Balls: ' + breakoutExtraBalls, x, 45);
+
+    if (breakoutActivePowerup) {
+        var puColor;
+        var puDuration = 0;
+        var puLabel;
+        if (breakoutActivePowerup === 'fire') {
+            puColor = '#F44336';
+            puDuration = BREAKOUT_POWERUP_FIRE_DURATION;
+            puLabel = 'FIREBALL';
+        } else if (breakoutActivePowerup === 'wide') {
+            puColor = '#4CAF50';
+            puDuration = BREAKOUT_POWERUP_WIDE_DURATION;
+            puLabel = 'WIDE PADDLE';
+        } else {
+            puColor = '#ccc';
+            puLabel = breakoutActivePowerup.toUpperCase();
+        }
+        ctx.fillStyle = puColor;
+        ctx.fillText('Power: ' + puLabel, x, 65);
+
+        if (puDuration > 0) {
+            var barW = 120, barH = 8;
+            var barY = 72;
+            var fill = Math.max(0, Math.min(1, breakoutPowerupTimer / puDuration));
+            ctx.fillStyle = '#333';
+            ctx.fillRect(x, barY, barW, barH);
+            ctx.fillStyle = puColor;
+            ctx.fillRect(x, barY, barW * fill, barH);
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, barY, barW, barH);
+        }
+    }
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '14px monospace';
+    ctx.fillText('Score: ' + score, x, 100);
+    ctx.restore();
+}
+
 // Shared Code Breaker world draw: bricks (gated by per-row revealAt so the
 // cascade naturally plays during BREAKOUT_TRANSITION and all rows are visible
 // during BREAKOUT_PLAYING), the flipped M paddle, and the stationary ball.
 // Terrain is intentionally not drawn — background is pure starfield (already
 // drawn by render() before this fn runs).
 function drawBreakoutWorld() {
-    // Bricks
+    // Bricks (US-012: rounded rect per AC; crack overlay when hp < maxHp).
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    var brickRadius = 4;
     for (var i = 0; i < breakoutBricks.length; i++) {
         var b = breakoutBricks[i];
         if (b.revealAt > breakoutTransitionTimer) continue;
         ctx.fillStyle = b.color;
-        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.beginPath();
+        ctx.moveTo(b.x + brickRadius, b.y);
+        ctx.lineTo(b.x + b.w - brickRadius, b.y);
+        ctx.quadraticCurveTo(b.x + b.w, b.y, b.x + b.w, b.y + brickRadius);
+        ctx.lineTo(b.x + b.w, b.y + b.h - brickRadius);
+        ctx.quadraticCurveTo(b.x + b.w, b.y + b.h, b.x + b.w - brickRadius, b.y + b.h);
+        ctx.lineTo(b.x + brickRadius, b.y + b.h);
+        ctx.quadraticCurveTo(b.x, b.y + b.h, b.x, b.y + b.h - brickRadius);
+        ctx.lineTo(b.x, b.y + brickRadius);
+        ctx.quadraticCurveTo(b.x, b.y, b.x + brickRadius, b.y);
+        ctx.closePath();
+        ctx.fill();
         // Flash overlay on bricks that took non-lethal damage (US-007).
         if (b.flashTimer > 0) {
             ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.8, b.flashTimer / 0.12) + ')';
-            ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fill();
+        }
+        // US-012: diagonal crack overlay on damaged (hp < maxHp) bricks.
+        if (b.hp < b.maxHp) {
+            ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(b.x + 4, b.y + b.h - 4);
+            ctx.lineTo(b.x + b.w - 4, b.y + 4);
+            ctx.stroke();
         }
         ctx.fillStyle = 'rgba(0,0,0,0.85)';
-        ctx.font = '10px monospace';
+        ctx.font = '8px monospace';
         ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h / 2);
     }
     ctx.restore();
@@ -1860,15 +1962,40 @@ function drawBreakoutWorld() {
         ctx.restore();
     }
 
+    // US-012: faint glow below the paddle adds visual polish. Radial gradient
+    // centred on the paddle's bottom edge, fading outward — sits behind the
+    // paddle sprite so the M reads cleanly on top.
+    var glowCenterX = breakoutPaddleX + breakoutPaddleWidth / 2;
+    var glowY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET + BREAKOUT_PADDLE_HEIGHT / 2;
+    var glowRadius = breakoutPaddleWidth;
+    ctx.save();
+    var paddleGlow = ctx.createRadialGradient(
+        glowCenterX, glowY, 2,
+        glowCenterX, glowY, glowRadius
+    );
+    paddleGlow.addColorStop(0, 'rgba(242, 99, 34, 0.35)');
+    paddleGlow.addColorStop(1, 'rgba(242, 99, 34, 0)');
+    ctx.fillStyle = paddleGlow;
+    ctx.fillRect(glowCenterX - glowRadius, glowY - 8,
+                 glowRadius * 2, glowRadius + 12);
+    ctx.restore();
+
     // Paddle = M ship drawn at its current (animated) angle + position. Size
     // tracks the live `breakoutPaddleWidth` (may be scaled by the Wide
     // power-up in US-008) so the sprite matches the hitbox exactly.
     var paddleDrawSize = breakoutPaddleWidth / LOGO_DRAW_RATIO;
     drawShip(ship.x, ship.y, ship.angle, paddleDrawSize, false, null, false);
 
+    // US-012: ball trails (primary + extras) — fireball swaps to a flame palette.
+    var fireOn = (breakoutActivePowerup === 'fire');
+    drawBreakoutBallTrail(breakoutBallTrail, fireOn);
+    for (var eti = 0; eti < breakoutBalls.length; eti++) {
+        drawBreakoutBallTrail(breakoutBalls[eti].trail, fireOn);
+    }
+
     // Primary ball — stationary on the paddle at launch, bouncing otherwise.
     // When Fireball is active, swap to a red core so the buff is visible.
-    var ballFill = (breakoutActivePowerup === 'fire') ? '#F44336' : '#ECEFF1';
+    var ballFill = fireOn ? '#F44336' : '#fff';
     ctx.save();
     ctx.fillStyle = ballFill;
     ctx.beginPath();
@@ -1921,6 +2048,7 @@ function drawBreakoutWorld() {
 
 function renderBreakoutTransition() {
     drawBreakoutWorld();
+    drawBreakoutHUD();
 
     // Flashing "CLEAR THE TECH DEBT!" banner (~3 Hz) — matches the cadence of
     // renderTechdebtTransition / renderMissileTransition for consistency.
@@ -1937,10 +2065,22 @@ function renderBreakoutTransition() {
 }
 
 function renderBreakoutPlaying() {
-    // Gameplay-specific visuals (power-ups, HUD, particles) are added by
-    // later stories; for now the shared world draw shows the static layout
-    // so the state has a valid visual presence after BREAKOUT_TRANSITION.
     drawBreakoutWorld();
+    drawBreakoutHUD();
+}
+
+// US-012: Code Breaker return — the M ship eases back to upright before the
+// state machine advances to PLAYING. Keep the HUD visible for continuity.
+function renderBreakoutReturn() {
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+    drawBreakoutHUD();
+
+    ctx.save();
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RETURNING TO MISSION', canvas.width / 2, 60);
+    ctx.restore();
 }
 
 // US-010: "TECH DEBT CLEARED!" results overlay. Draws the cleared field
@@ -1948,6 +2088,7 @@ function renderBreakoutPlaying() {
 // sparkles, then the score breakdown per the AC. Mirrors renderTechdebtComplete.
 function renderBreakoutComplete() {
     drawBreakoutWorld();
+    drawBreakoutHUD();
     drawCelebration();
 
     var cx = canvas.width / 2;
@@ -2188,6 +2329,9 @@ function render() {
             break;
         case STATES.BREAKOUT_COMPLETE:
             renderBreakoutComplete();
+            break;
+        case STATES.BREAKOUT_RETURN:
+            renderBreakoutReturn();
             break;
         case STATES.CRASHED:
             renderCrashed();

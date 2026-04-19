@@ -252,6 +252,7 @@ function clearBreakoutState() {
     breakoutPowerups = [];
     breakoutParticles = [];
     breakoutBalls = [];
+    breakoutBallTrail = [];
     breakoutBricksDestroyed = 0;
     breakoutBricksTotal = 0;
     breakoutCompleteTimer = 0;
@@ -425,6 +426,7 @@ function setupBreakoutWorld() {
     breakoutPowerups = [];
     breakoutParticles = [];
     breakoutBalls = [];
+    breakoutBallTrail = [];
     breakoutScore = 0;
     breakoutBricksDestroyed = 0;
     breakoutBricksTotal = 0;
@@ -499,6 +501,28 @@ function spawnBreakoutBrickParticles(x, y, color) {
             maxLife: life,
             size: 1.5 + Math.random() * 2,
             color: color
+        });
+    }
+}
+
+// US-012: Downward shower spawned when a Code Breaker ball exits the bottom of
+// the canvas. Particles drift downward (vy > 0) with a small horizontal jitter
+// and fade over ~0.5-1.0s, signalling the lost ball without blocking play for
+// the remaining balls.
+function spawnBreakoutBallLossParticles(x, y) {
+    var count = 10 + Math.floor(Math.random() * 6); // 10..15
+    for (var i = 0; i < count; i++) {
+        var jitter = (Math.random() - 0.5) * 80;
+        var life = 0.5 + Math.random() * 0.5;
+        breakoutParticles.push({
+            x: x,
+            y: y,
+            vx: jitter,
+            vy: 80 + Math.random() * 140,
+            life: life,
+            maxLife: life,
+            size: 2 + Math.random() * 2,
+            color: '#ECEFF1'
         });
     }
 }
@@ -2031,6 +2055,13 @@ function update(dt) {
             breakoutBallX += breakoutBallVX * dt;
             breakoutBallY += breakoutBallVY * dt;
 
+            // US-012: record the ball's recent positions for the render trail.
+            // FIFO — newest at index 0, trim to BREAKOUT_BALL_TRAIL_LEN entries.
+            breakoutBallTrail.unshift({ x: breakoutBallX, y: breakoutBallY });
+            if (breakoutBallTrail.length > BREAKOUT_BALL_TRAIL_LEN) {
+                breakoutBallTrail.length = BREAKOUT_BALL_TRAIL_LEN;
+            }
+
             // Left / right / top wall reflections.
             if (breakoutBallX - BREAKOUT_BALL_RADIUS < 0) {
                 breakoutBallX = BREAKOUT_BALL_RADIUS;
@@ -2204,6 +2235,14 @@ function update(dt) {
                 var eb = breakoutBalls[ebIdx];
                 eb.x += eb.vx * dt;
                 eb.y += eb.vy * dt;
+                // US-012: trail for each extra ball (same render treatment as
+                // the primary). Initialise lazily since Multi-Ball spawns
+                // extras without the trail field.
+                if (!eb.trail) eb.trail = [];
+                eb.trail.unshift({ x: eb.x, y: eb.y });
+                if (eb.trail.length > BREAKOUT_BALL_TRAIL_LEN) {
+                    eb.trail.length = BREAKOUT_BALL_TRAIL_LEN;
+                }
                 if (eb.x - BREAKOUT_BALL_RADIUS < 0) {
                     eb.x = BREAKOUT_BALL_RADIUS;
                     eb.vx = -eb.vx;
@@ -2319,6 +2358,8 @@ function update(dt) {
                 // Bottom-out: drop this extra ball from the array. Primary-ball
                 // loss + lives handling belongs to US-009.
                 if (eb.y - BREAKOUT_BALL_RADIUS > canvas.height) {
+                    // US-012: downward particle shower marks the lost ball.
+                    spawnBreakoutBallLossParticles(eb.x, canvas.height);
                     breakoutBalls.splice(ebIdx, 1);
                 }
             }
@@ -2331,6 +2372,10 @@ function update(dt) {
             // primary also bottoms out here and the array is empty, no balls
             // remain on screen.
             if (breakoutBallY - BREAKOUT_BALL_RADIUS > canvas.height) {
+                // US-012: downward particle shower at the point the ball fell
+                // off-screen — fires for every bottom-out, whether another
+                // ball is promoted to primary or the round ends.
+                spawnBreakoutBallLossParticles(breakoutBallX, canvas.height);
                 if (breakoutBalls.length > 0) {
                     // A multi-ball is still on screen — promote it to primary so
                     // physics continues on a live ball and the round stays alive.
@@ -2339,7 +2384,9 @@ function update(dt) {
                     breakoutBallY = promoted.y;
                     breakoutBallVX = promoted.vx;
                     breakoutBallVY = promoted.vy;
+                    breakoutBallTrail = [];
                 } else {
+                    breakoutBallTrail = [];
                     loseBreakoutBall();
                 }
             }
