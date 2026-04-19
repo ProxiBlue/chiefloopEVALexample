@@ -134,6 +134,11 @@ function checkCollision() {
                 landedPRAuthor = landedPad.prAuthor || '';
                 landedPRType = landedPad.prType || '';
                 landedPRMergedDate = landedPad.prMergedDate || '';
+                landedPRLinesChanged = (typeof landedPad.prLinesChanged === 'number') ? landedPad.prLinesChanged : 0;
+                landedPRReviewers = Array.isArray(landedPad.prReviewers) ? landedPad.prReviewers.slice() : [];
+                landedPRApprovals = (typeof landedPad.prApprovals === 'number') ? landedPad.prApprovals : 0;
+                landedPRChecks = Array.isArray(landedPad.prChecks) ? landedPad.prChecks.slice() : [];
+                landedPRComments = Array.isArray(landedPad.prComments) ? landedPad.prComments.slice() : [];
                 // Fuel bonus: remaining fuel percentage * 100, rounded
                 landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
                 landedTotalPoints = landedPadPoints + landedFuelBonus;

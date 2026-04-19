@@ -66,6 +66,15 @@ var landedPRNumber = null;   // PR number for info panel
 var landedPRAuthor = '';      // PR author for info panel
 var landedPRType = '';        // PR type for info panel badge
 var landedPRMergedDate = '';  // PR merge date for info panel
+// Extended PR metadata — populated when the PR record provides it; used by
+// Feature Drive (US-015) for road-length scaling and obstacle/pickup labels.
+// Defaults keep falsy/empty shapes so the "no PR data" fallback path is the
+// absence of these values rather than a special flag.
+var landedPRLinesChanged = 0;  // additions+deletions; 0 when unknown
+var landedPRReviewers = [];    // array of reviewer handles (strings)
+var landedPRApprovals = 0;     // count of approvals (0 when unknown)
+var landedPRChecks = [];       // array of failed/notable CI check names
+var landedPRComments = [];     // array of reviewer comment snippets/file paths
 
 function spawnCelebration(x, y) {
     celebrationParticles = [];

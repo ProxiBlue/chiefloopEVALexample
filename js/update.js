@@ -864,6 +864,15 @@ function setupDriveWorld() {
         DRIVE_ROAD_BASE_LENGTH + currentLevel * DRIVE_ROAD_PER_LEVEL
     );
 
+    // US-015: if the landed pad has PR data (linesChanged > 0), scale the road
+    // length by `1 + linesChanged/500`, capped at 2x. Bigger PRs = longer
+    // drives. Fallback to level-based length when no PR data.
+    var _prLines = (typeof landedPRLinesChanged === 'number') ? landedPRLinesChanged : 0;
+    if (_prLines > 0) {
+        var prScale = Math.min(2, 1 + _prLines / 500);
+        driveRoadLength = Math.min(DRIVE_ROAD_MAX_LENGTH, Math.floor(driveRoadLength * prScale));
+    }
+
     var segmentWidth = 20;
     var segmentCount = Math.ceil(driveRoadLength / segmentWidth);
     var groundYCenter = canvas.height * 0.75;
@@ -982,6 +991,20 @@ function setupDriveWorld() {
         'missing test', 'type error', 'lint warning', 'circular dep',
         'memory leak', 'N+1 query'
     ];
+    // US-015: mix in PR-specific obstacle labels when available (failed check
+    // names + reviewer comment snippets). Labels are purely cosmetic.
+    var _prChecks = (typeof landedPRChecks !== 'undefined' && Array.isArray(landedPRChecks)) ? landedPRChecks : [];
+    var _prComments = (typeof landedPRComments !== 'undefined' && Array.isArray(landedPRComments)) ? landedPRComments : [];
+    for (var rci = 0; rci < _prChecks.length; rci++) {
+        if (typeof _prChecks[rci] === 'string' && _prChecks[rci]) {
+            rockLabels.push(_prChecks[rci]);
+        }
+    }
+    for (var rmi = 0; rmi < _prComments.length; rmi++) {
+        if (typeof _prComments[rmi] === 'string' && _prComments[rmi]) {
+            rockLabels.push(_prComments[rmi]);
+        }
+    }
     var obstacleDensity = Math.min(
         DRIVE_OBSTACLE_DENSITY_MAX,
         DRIVE_OBSTACLE_DENSITY_BASE + currentLevel * DRIVE_OBSTACLE_DENSITY_PER_LEVEL
@@ -1016,6 +1039,22 @@ function setupDriveWorld() {
         'LGTM', '+1', 'approved', 'ship it!', 'CI passed',
         'tests green', 'looks good', 'no comments', 'reviewed', 'merged'
     ];
+    // US-015: mix in PR reviewer names + approval status when available.
+    // E.g. `LGTM @alice`, `approved by @bob`, `2/2 approved`. Falls back to
+    // the default pool when no PR data is attached.
+    var _prReviewers = (typeof landedPRReviewers !== 'undefined' && Array.isArray(landedPRReviewers)) ? landedPRReviewers : [];
+    var _prApprovals = (typeof landedPRApprovals === 'number') ? landedPRApprovals : 0;
+    for (var pri = 0; pri < _prReviewers.length; pri++) {
+        var handle = _prReviewers[pri];
+        if (typeof handle !== 'string' || !handle) continue;
+        var at = handle.charAt(0) === '@' ? handle : ('@' + handle);
+        pickupLabels.push('LGTM ' + at);
+        pickupLabels.push('approved by ' + at);
+    }
+    if (_prApprovals > 0) {
+        var reviewerCount = _prReviewers.length > 0 ? _prReviewers.length : _prApprovals;
+        pickupLabels.push(_prApprovals + '/' + reviewerCount + ' approved');
+    }
     var pickupTarget = Math.floor(driveRoadLength * DRIVE_PICKUP_DENSITY);
     var pickupsPlaced = 0;
     var pickupAttempts = 0;
@@ -1284,7 +1323,7 @@ function update(dt) {
             var snapOldPads = [];
             for (var i = 0; i < landingPads.length; i++) {
                 var p = landingPads[i];
-                snapOldPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+                snapOldPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate, prLinesChanged: p.prLinesChanged, prReviewers: p.prReviewers, prApprovals: p.prApprovals, prChecks: p.prChecks, prComments: p.prComments });
             }
 
             var snapNewTerrain;
@@ -1311,7 +1350,7 @@ function update(dt) {
                 snapNewPads = [];
                 for (var i = 0; i < landingPads.length; i++) {
                     var p = landingPads[i];
-                    snapNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+                    snapNewPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate, prLinesChanged: p.prLinesChanged, prReviewers: p.prReviewers, prApprovals: p.prApprovals, prChecks: p.prChecks, prComments: p.prComments });
                 }
             }
             // Atomically set scroll state as a frozen object (ship.x preserved for smooth transition)
@@ -1374,7 +1413,7 @@ function update(dt) {
             landingPads = [];
             for (var i = 0; i < newP.length; i++) {
                 var p = newP[i];
-                landingPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate });
+                landingPads.push({ index: p.index, width: p.width, points: p.points, prType: p.prType, prNumber: p.prNumber, prTitle: p.prTitle, prHash: p.prHash, prAuthor: p.prAuthor, prMergedDate: p.prMergedDate, prLinesChanged: p.prLinesChanged, prReviewers: p.prReviewers, prApprovals: p.prApprovals, prChecks: p.prChecks, prComments: p.prComments });
             }
             landingPadIndex = landingPads.length > 0 ? landingPads[0].index : -1;
             // Atomically clear scroll state

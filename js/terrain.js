@@ -269,7 +269,23 @@ function generateTerrain() {
                 for (var s = padIdx; s <= padIdx + padWidth; s++) {
                     usedSegments[s] = true;
                 }
-                placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: (pr.mergeCommitHash && typeof pr.mergeCommitHash === 'string') ? pr.mergeCommitHash.substring(0, 7) : '', prAuthor: pr.author || '', prMergedDate: pr.mergedDate || '' });
+                // Extended PR fields for Feature Drive label/length shaping
+                // (US-015). All are optional on the source record: a JSON PR
+                // without e.g. `linesChanged` simply carries 0/[] through.
+                var prLinesChanged = 0;
+                if (typeof pr.linesChanged === 'number') prLinesChanged = pr.linesChanged;
+                else if (typeof pr.additions === 'number' || typeof pr.deletions === 'number') {
+                    prLinesChanged = (pr.additions || 0) + (pr.deletions || 0);
+                }
+                var prReviewers = Array.isArray(pr.reviewers) ? pr.reviewers.slice() : [];
+                var prApprovals = 0;
+                if (typeof pr.approvals === 'number') prApprovals = pr.approvals;
+                else if (Array.isArray(pr.approvedBy)) prApprovals = pr.approvedBy.length;
+                var prChecks = Array.isArray(pr.failedChecks) ? pr.failedChecks.slice()
+                    : (Array.isArray(pr.checks) ? pr.checks.slice() : []);
+                var prComments = Array.isArray(pr.reviewComments) ? pr.reviewComments.slice()
+                    : (Array.isArray(pr.comments) ? pr.comments.slice() : []);
+                placedPads.push({ index: padIdx, width: padWidth, points: padPoints, prType: prType, prNumber: pr.number, prTitle: pr.title || '', prHash: (pr.mergeCommitHash && typeof pr.mergeCommitHash === 'string') ? pr.mergeCommitHash.substring(0, 7) : '', prAuthor: pr.author || '', prMergedDate: pr.mergedDate || '', prLinesChanged: prLinesChanged, prReviewers: prReviewers, prApprovals: prApprovals, prChecks: prChecks, prComments: prComments });
             }
         }
     }
