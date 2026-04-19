@@ -1363,20 +1363,24 @@ function renderMissileComplete() {
     ctx.fillStyle = '#4CAF50';
     ctx.font = 'bold 36px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CITY DEFENDED!', cx, cy - 60);
+    ctx.fillText('CODEBASE DEFENDED!', cx, cy - 90);
 
-    ctx.fillStyle = '#FFD700';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText('Intercepted: ' + missilesIntercepted + ' / ' + missilesTotal,
-                 cx, cy - 20);
+    ctx.fillStyle = '#E0E0E0';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('Missiles intercepted: ' + missilesIntercepted + ' / ' + missilesTotal,
+                 cx, cy - 45);
+    ctx.fillText('Buildings surviving: ' + missileBuildingSurvivors + ' / ' + MISSILE_BUILDING_COUNT,
+                 cx, cy - 18);
+    ctx.fillText('Ammo bonus: +' + missileAmmoBonusPoints + ' pts',
+                 cx, cy + 9);
 
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('Bonus: +' + missileEndBonus + ' pts', cx, cy + 15);
+    ctx.fillText('Total bonus: +' + missileEndBonus + ' pts', cx, cy + 45);
 
     ctx.fillStyle = '#888';
     ctx.font = '18px sans-serif';
-    ctx.fillText('Returning to mission...', cx, cy + 55);
+    ctx.fillText('Returning to mission...', cx, cy + 80);
 }
 
 // Missile return is a one-tick pass-through (clearMissileState + level++ +

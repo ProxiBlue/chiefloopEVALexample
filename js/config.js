@@ -306,6 +306,8 @@ var missileWaveAnnounceTimer = 0;         // countdown while the "WAVE N/M" bann
 var missileCompleteTimer = 0;             // elapsed time in MISSILE_COMPLETE state
 var missileTransitionTimer = 0;           // elapsed time in MISSILE_TRANSITION state
 var missileEndBonus = 0;                  // surviving-building + unused-ammo bonus awarded on win (shown in MISSILE_COMPLETE)
+var missileBuildingSurvivors = 0;         // buildings alive at win time (shown in MISSILE_COMPLETE breakdown)
+var missileAmmoBonusPoints = 0;           // unused-ammo portion of missileEndBonus (shown in MISSILE_COMPLETE breakdown)
 
 // --- Missile Incoming Label Pool (PRD section 8) ---
 // Randomised per incoming missile for flavour — purely cosmetic.

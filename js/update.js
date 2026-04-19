@@ -140,6 +140,8 @@ function clearMissileState() {
     missileWaveAnnounceTimer = 0;
     missileCompleteTimer = 0;
     missileEndBonus = 0;
+    missileBuildingSurvivors = 0;
+    missileAmmoBonusPoints = 0;
 }
 
 // Reset all per-round bugfix state — entities, particle bursts, and counters.
@@ -204,6 +206,8 @@ function setupMissileWorld() {
     missileWaveAnnounceTimer = 0;
     missileCompleteTimer = 0;
     missileEndBonus = 0;
+    missileBuildingSurvivors = 0;
+    missileAmmoBonusPoints = 0;
     missileIncoming = [];
     missileInterceptors = [];
     missileExplosions = [];
@@ -1244,9 +1248,11 @@ function update(dt) {
                 var batC = missileBatteries[aCheck];
                 if (!batC.destroyed) remainingAmmo += batC.ammo;
             }
+            missileBuildingSurvivors = survivors;
+            missileAmmoBonusPoints = remainingAmmo * MISSILE_AMMO_BONUS_MULTIPLIER;
             missileEndBonus =
                 survivors * MISSILE_POINTS_PER_BUILDING_SURVIVING +
-                remainingAmmo * MISSILE_AMMO_BONUS_MULTIPLIER;
+                missileAmmoBonusPoints;
             missileScore += missileEndBonus;
             score += missileEndBonus;
             missileCompleteTimer = 0;
