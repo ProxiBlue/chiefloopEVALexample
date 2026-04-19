@@ -74,6 +74,9 @@ var sandbox = {
     startScreenShake: function () { fxCalls.startScreenShake++; },
     stopThrustSound: function () { fxCalls.stopThrustSound++; },
     playExplosionSound: function () { fxCalls.playExplosionSound++; },
+    // US-012 added clearDriveState() to the gap-fall CRASHED branch; stub it
+    // here so the extracted tick can complete without ReferenceError.
+    clearDriveState: function () {},
 };
 sandbox.self = sandbox;
 sandbox.globalThis = sandbox;

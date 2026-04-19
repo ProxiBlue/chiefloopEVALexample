@@ -277,6 +277,39 @@ function clearBreakoutState() {
     breakoutBallStuck = true;
 }
 
+// Reset all per-round Feature Drive state — arrays, counters, physics vars,
+// and display bonuses. Called from DRIVE_RETURN (next-level cleanup) and the
+// DRIVE_PLAYING loss path (CRASHED entry via gap fall) so the crash/gameover
+// screens don't render stale segments / obstacles / pickups / particles from
+// the dead round. setupDriveWorld() also resets most of these on entry; this
+// helper makes the cleanup explicit at exit time (mirrors clearBugfixState /
+// clearTechdebtState / clearBreakoutState).
+function clearDriveState() {
+    driveRoadSegments = [];
+    driveObstacles = [];
+    drivePickups = [];
+    driveParticles = [];
+    driveScrollX = 0;
+    driveSpeed = 0;
+    driveBuggyY = 0;
+    driveBuggyVY = 0;
+    driveGrounded = true;
+    driveWheelRotation = 0;
+    driveBuggyTilt = 0;
+    drivePrevJumpKey = false;
+    driveFalling = false;
+    driveBoostTimer = 0;
+    drivePrevSegType = null;
+    driveScore = 0;
+    drivePickupsCollected = 0;
+    driveDistance = 0;
+    driveRoadLength = 0;
+    driveCompleteTimer = 0;
+    driveTransitionTimer = 0;
+    driveCompleteFuelBonus = 0;
+    driveCompleteTotalBonus = 0;
+}
+
 // Build the per-round Code Breaker brick-label pool (US-014). Starts from the
 // default BREAKOUT_BRICK_LABEL_POOL and mixes in PR-derived flavour: filenames
 // from landedPRTitle + levelCommits messages, plus refactor-related keyword
@@ -2523,6 +2556,10 @@ function update(dt) {
             playExplosionSound();
             landingResult = 'Fell into a gap';
             gameState = STATES.CRASHED;
+            // US-012 AC#4: loss path uses the existing CRASHED flow; clear all
+            // drive state so the crash/gameover screens don't render stale
+            // segments/obstacles/pickups/particles from the dead round.
+            clearDriveState();
         }
 
         // US-011: destination arrival. Trigger the moment the buggy's world-X
@@ -2575,6 +2612,25 @@ function update(dt) {
         }
         updateCelebration(dt);
         driveCompleteTimer += dt;
+        if (driveCompleteTimer >= DRIVE_COMPLETE_DELAY) {
+            gameState = STATES.DRIVE_RETURN;
+        }
+    }
+
+    // Feature Drive return (US-012): clear all per-round drive state, advance
+    // the level, reset the ship (full fuel, upright, centered) + wind +
+    // terrain, then resume normal flight. Mirrors BUGFIX_RETURN / TECHDEBT_RETURN
+    // tail shape — the DRIVE_COMPLETE handler already finished the wheel-retract
+    // animation and the buggy slide-to-rest, so no animation runs here.
+    if (gameState === STATES.DRIVE_RETURN) {
+        clearDriveState();
+        currentLevel++;
+        GRAVITY = getLevelConfig(currentLevel).gravity;
+        THRUST_POWER = GRAVITY * 2.5;
+        resetShip();
+        resetWind();
+        generateTerrain();
+        gameState = STATES.PLAYING;
     }
 
     // Tech debt transition: brief intro window between landing and asteroid
