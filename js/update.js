@@ -1809,7 +1809,8 @@ function update(dt) {
             resetShip();
             resetWind();
             generateTerrain();
-            gameState = STATES.PLAYING;
+            sceneCountdownTimer = 0;
+            gameState = STATES.SCENE_COUNTDOWN;
         }
     }
 
@@ -2012,7 +2013,8 @@ function update(dt) {
         resetShip();
         resetWind();
         generateTerrain();
-        gameState = STATES.PLAYING;
+        sceneCountdownTimer = 0;
+        gameState = STATES.SCENE_COUNTDOWN;
     }
 
     // Missile transition: combined 90° ship rotation + terrain flatten + building
@@ -2351,7 +2353,8 @@ function update(dt) {
             resetShip();
             resetWind();
             generateTerrain();
-            gameState = STATES.PLAYING;
+            sceneCountdownTimer = 0;
+            gameState = STATES.SCENE_COUNTDOWN;
         }
     }
 
@@ -2764,7 +2767,8 @@ function update(dt) {
         resetShip();
         resetWind();
         generateTerrain();
-        gameState = STATES.PLAYING;
+        sceneCountdownTimer = 0;
+        gameState = STATES.SCENE_COUNTDOWN;
     }
 
     // Tech debt transition: brief intro window between landing and asteroid
@@ -3432,7 +3436,8 @@ function update(dt) {
             resetShip();
             resetWind();
             generateTerrain();
-            gameState = STATES.PLAYING;
+            sceneCountdownTimer = 0;
+            gameState = STATES.SCENE_COUNTDOWN;
         }
     }
 
@@ -3801,7 +3806,8 @@ function update(dt) {
         resetShip();
         resetWind();
         generateTerrain();
-        gameState = STATES.PLAYING;
+        sceneCountdownTimer = 0;
+        gameState = STATES.SCENE_COUNTDOWN;
     }
 
     if (gameState === STATES.PLAYING) {
