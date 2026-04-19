@@ -1683,6 +1683,25 @@ function update(dt) {
         }
     }
 
+    // Code Breaker transition: brief intro window between landing and breakout
+    // gameplay. Counterpart to TECHDEBT_TRANSITION above. Full breakout world
+    // setup (bricks/ball/paddle) lives in later stories; this handler only
+    // ticks the timer and advances to BREAKOUT_PLAYING so the state machine
+    // progresses off BREAKOUT_TRANSITION.
+    if (gameState === STATES.BREAKOUT_TRANSITION) {
+        breakoutTransitionTimer += dt;
+        if (breakoutTransitionTimer >= BREAKOUT_TRANSITION_DURATION) {
+            gameState = STATES.BREAKOUT_PLAYING;
+        }
+    }
+
+    // Code Breaker playing: paddle/ball/brick gameplay wired by later stories.
+    // Placeholder handler keeps the state addressable so BREAKOUT_TRANSITION
+    // has a valid next-state target.
+    if (gameState === STATES.BREAKOUT_PLAYING) {
+        // intentionally empty — gameplay wiring deferred to future stories
+    }
+
     // Tech debt playing: Asteroids-style ship physics (US-005).
     // - Left/Right (or A/D) rotate using the existing ROTATION_SPEED.
     // - Up (or W) applies thrust in the ship's facing direction; thrust
