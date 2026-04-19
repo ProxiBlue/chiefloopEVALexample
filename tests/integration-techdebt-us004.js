@@ -213,7 +213,13 @@ var allValidLabel = true;
 var labelPool = sandbox.TECHDEBT_LABEL_POOL;
 for (var ai = 0; ai < sandbox.techdebtAsteroids.length; ai++) {
     var a = sandbox.techdebtAsteroids[ai];
-    if (a.sizeTier !== 'large' || a.size !== sandbox.TECHDEBT_SIZE_LARGE) allLarge = false;
+    // US-012: ProxiBlue asteroids spawn MEDIUM. Every other asteroid starts as
+    // LARGE (US-004 spawn contract) and splits into mediums/smalls later.
+    if (a.isProxiblue) {
+        if (a.sizeTier !== 'medium' || a.size !== sandbox.TECHDEBT_SIZE_MEDIUM) allLarge = false;
+    } else {
+        if (a.sizeTier !== 'large' || a.size !== sandbox.TECHDEBT_SIZE_LARGE) allLarge = false;
+    }
     var ddx = a.x - centerX;
     var ddy = a.y - centerY;
     var dist = Math.sqrt(ddx * ddx + ddy * ddy);
@@ -224,7 +230,7 @@ for (var ai = 0; ai < sandbox.techdebtAsteroids.length; ai++) {
         if (labelPool.indexOf(a.label) < 0) allValidLabel = false;
     }
 }
-check('all asteroids start as LARGE size tier', allLarge);
+check('all non-ProxiBlue asteroids start as LARGE; ProxiBlue asteroids start as MEDIUM (US-012 AC#2)', allLarge);
 check('all asteroids at least TECHDEBT_SAFE_SPAWN_RADIUS from ship center', allSafeDist);
 check('all asteroid labels are either "ProxiBlue" or from TECHDEBT_LABEL_POOL', allValidLabel);
 

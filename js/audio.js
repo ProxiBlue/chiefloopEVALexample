@@ -277,6 +277,34 @@ function playShootSound() {
     osc.stop(t + 0.1);
 }
 
+// US-012 AC#4: ProxiBlue shield activation chime — rising sine tone, short +
+// pleasant, deliberately in a higher/"blue-ish" frequency band so it reads as
+// distinct from the landing chime (which sits at C5/E5). Two stacked sine
+// voices (880 → 1320 Hz and a harmonic octave above) create a bright lift.
+function playProxiblueCollectSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var duration = 0.35;
+
+    [
+        { startFreq: 880, endFreq: 1320, gainPeak: 0.22 },
+        { startFreq: 1760, endFreq: 2640, gainPeak: 0.10 }
+    ].forEach(function (voice) {
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(voice.startFreq, t);
+        osc.frequency.exponentialRampToValueAtTime(voice.endFreq, t + duration);
+        var gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(voice.gainPeak, t + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + duration + 0.02);
+    });
+}
+
 function playTechdebtShootSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

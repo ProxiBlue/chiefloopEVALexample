@@ -70,6 +70,7 @@ var sandbox = {
     stopThrustSound: function () { stopThrustSoundCalls++; },
     startThrustSound: function () {},
     playTechdebtShootSound: function () {},
+    playProxiblueCollectSound: function () {},
     spawnExplosion: function (x, y) { spawnExplosionCalls.push({ x: x, y: y }); },
     startScreenShake: function () { startScreenShakeCalls++; },
     playExplosionSound: function () { playExplosionSoundCalls++; },

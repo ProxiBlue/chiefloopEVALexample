@@ -314,13 +314,15 @@ function setupTechdebtWorld() {
             ? 'ProxiBlue'
             : TECHDEBT_LABEL_POOL[Math.floor(Math.random() * TECHDEBT_LABEL_POOL.length)];
 
+        // ProxiBlue power-ups always spawn at MEDIUM size (US-012 AC#2) — not
+        // too easy, not too hard to hit. Normal tech-debt asteroids are LARGE.
         techdebtAsteroids.push({
             x: px,
             y: py,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            size: TECHDEBT_SIZE_LARGE,
-            sizeTier: 'large',
+            size: isProxiblue ? TECHDEBT_SIZE_MEDIUM : TECHDEBT_SIZE_LARGE,
+            sizeTier: isProxiblue ? 'medium' : 'large',
             label: label,
             isProxiblue: isProxiblue,
             rotation: Math.random() * Math.PI * 2,
@@ -1763,21 +1765,35 @@ function update(dt) {
             else if (a.y >= canvas.height) a.y -= canvas.height;
         }
 
-        // --- Bullet vs asteroid collision (US-008) ---
+        // --- Bullet vs asteroid collision (US-008 + US-012) ---
         // Circle-vs-point check: bullet is a point, asteroid is a circle of
-        // radius `a.size`. On hit: award score + asteroidsDestroyed, spawn a
-        // particle burst, split the asteroid by tier (large→2 medium,
-        // medium→2 small, small→destroyed), and consume the bullet.
-        // ProxiBlue asteroids are skipped here — US-012 owns their pickup
-        // semantics; per AC they do NOT split.
+        // radius `a.size`. On hit:
+        //   - Normal: award score + asteroidsDestroyed, spawn a brown particle
+        //     burst, split the asteroid by tier (large→2 medium, medium→2
+        //     small, small→destroyed), and consume the bullet.
+        //   - ProxiBlue: award PROXIBLUE_POINTS, activate shield (or reset its
+        //     timer to full if already active — AC#7), spawn a blue particle
+        //     burst at collection point, play the activation chime, remove the
+        //     asteroid WITHOUT splitting, consume the bullet. ProxiBlue does
+        //     NOT increment asteroidsDestroyed — it's collected, not cleared.
         for (var bIdx = techdebtBullets.length - 1; bIdx >= 0; bIdx--) {
             var bul = techdebtBullets[bIdx];
             for (var aIdx = techdebtAsteroids.length - 1; aIdx >= 0; aIdx--) {
                 var ast = techdebtAsteroids[aIdx];
-                if (ast.isProxiblue) continue;
                 var ddx = bul.x - ast.x;
                 var ddy = bul.y - ast.y;
                 if (ddx * ddx + ddy * ddy <= ast.size * ast.size) {
+                    if (ast.isProxiblue) {
+                        techdebtScore += PROXIBLUE_POINTS;
+                        score += PROXIBLUE_POINTS;
+                        proxiblueShieldActive = true;
+                        proxiblueShieldTimer = PROXIBLUE_SHIELD_DURATION;
+                        spawnTechdebtAsteroidParticles(ast.x, ast.y, '#4488ff');
+                        playProxiblueCollectSound();
+                        techdebtAsteroids.splice(aIdx, 1);
+                        techdebtBullets.splice(bIdx, 1);
+                        break;
+                    }
                     var pts;
                     if (ast.sizeTier === 'large') pts = TECHDEBT_POINTS_LARGE;
                     else if (ast.sizeTier === 'medium') pts = TECHDEBT_POINTS_MEDIUM;
@@ -1794,19 +1810,30 @@ function update(dt) {
             }
         }
 
-        // --- Ship vs asteroid collision (US-009) ---
+        // --- Ship vs asteroid collision (US-009 + US-012) ---
         // Circle-circle: ship radius TECHDEBT_SHIP_RADIUS vs asteroid radius a.size.
-        // ProxiBlue asteroids are skipped here — US-012 owns their pickup flow.
-        // Shield branch: absorb hit, destroy (do NOT split) the asteroid and
-        // award its tier's point value, then drop the shield + play a blue flash.
-        // Unshielded branch: route through the shared CRASHED flow.
+        //   - Normal asteroid, shielded: absorb hit, destroy (no split) and
+        //     award tier points, then drop the shield + play a blue flash.
+        //   - Normal asteroid, unshielded: route through the shared CRASHED flow.
+        //   - ProxiBlue asteroid, unshielded: still crashes the ship (US-012
+        //     AC#6 — "you must shoot it, not ram it").
+        //   - ProxiBlue asteroid, shielded: pass through untouched — the
+        //     player still has to shoot it to collect. Preserves the power-up
+        //     so the shield isn't wasted ramming it.
         for (var shipAIdx = techdebtAsteroids.length - 1; shipAIdx >= 0; shipAIdx--) {
             var shipAst = techdebtAsteroids[shipAIdx];
-            if (shipAst.isProxiblue) continue;
             var sdx = ship.x - shipAst.x;
             var sdy = ship.y - shipAst.y;
             var combined = TECHDEBT_SHIP_RADIUS + shipAst.size;
             if (sdx * sdx + sdy * sdy <= combined * combined) {
+                if (shipAst.isProxiblue) {
+                    if (proxiblueShieldActive) {
+                        // Shield up: pass through, do not collect or consume.
+                        continue;
+                    }
+                    crashShipInTechdebt('ProxiBlue collision');
+                    break;
+                }
                 if (proxiblueShieldActive) {
                     var shieldPts;
                     if (shipAst.sizeTier === 'large') shieldPts = TECHDEBT_POINTS_LARGE;
@@ -1835,6 +1862,18 @@ function update(dt) {
             par.y += par.vy * dt;
             par.life -= dt;
             if (par.life <= 0) techdebtParticles.splice(pIdx, 1);
+        }
+
+        // --- Shield timer decay (US-012) ---
+        // Active shield counts down every frame. When the timer hits 0 the
+        // shield expires naturally (distinct from the US-009 absorb path,
+        // which consumes the shield on an asteroid hit).
+        if (proxiblueShieldActive) {
+            proxiblueShieldTimer -= dt;
+            if (proxiblueShieldTimer <= 0) {
+                proxiblueShieldTimer = 0;
+                proxiblueShieldActive = false;
+            }
         }
 
         // --- Shield flash decay ---

@@ -1496,7 +1496,9 @@ function drawTechdebtAsteroid(a) {
     ctx.closePath();
 
     if (a.isProxiblue) {
-        ctx.shadowColor = '#4FC3F7';
+        // US-012 AC#1: ProxiBlue power-ups use the canonical `#4488ff` blue
+        // glow so they read as a distinct power-up, not a tech-debt asteroid.
+        ctx.shadowColor = '#4488ff';
         ctx.shadowBlur = 18;
         ctx.fillStyle = '#1976D2';
     } else {
@@ -1510,8 +1512,10 @@ function drawTechdebtAsteroid(a) {
     ctx.restore();
 
     // Label overlay — unrotated, centered on the asteroid.
+    // ProxiBlue label drawn in pure white (US-012 AC#1); normal asteroids use
+    // the existing light-grey `#ECEFF1` so the tech-debt label reads as muted.
     ctx.save();
-    ctx.fillStyle = a.isProxiblue ? '#E1F5FE' : '#ECEFF1';
+    ctx.fillStyle = a.isProxiblue ? '#FFFFFF' : '#ECEFF1';
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';

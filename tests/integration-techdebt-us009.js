@@ -51,6 +51,7 @@ var sandbox = {
     stopThrustSound: function () { stopThrustSoundCalls++; },
     startThrustSound: function () {},
     playTechdebtShootSound: function () {},
+    playProxiblueCollectSound: function () {},
     spawnExplosion: function (x, y) { spawnExplosionCalls.push({ x: x, y: y }); },
     startScreenShake: function () { startScreenShakeCalls++; },
     playExplosionSound: function () { playExplosionSoundCalls++; },
@@ -337,19 +338,36 @@ check('partial score preserved after crash (not reset)',
     'score: ' + sandbox.score);
 
 // =========================================================================
-// Sanity — ProxiBlue asteroids do NOT trigger crash/shield here (defer to US-012).
+// US-012: unshielded ship ramming a ProxiBlue asteroid still crashes — the
+// player must shoot the ProxiBlue to collect it. Shielded ram passes through
+// without consuming either the shield or the ProxiBlue.
 // =========================================================================
 resetScenario();
 sandbox.techdebtAsteroids.push(makeAsteroid({
-    x: 400, y: 300, size: sandbox.TECHDEBT_SIZE_LARGE, sizeTier: 'large',
+    x: 400, y: 300, size: sandbox.TECHDEBT_SIZE_MEDIUM, sizeTier: 'medium',
     isProxiblue: true, label: 'ProxiBlue'
 }));
 tick(0.001);
-check('ProxiBlue asteroid at ship position: does NOT crash unshielded ship (US-012 owns pickup)',
-    sandbox.gameState === sandbox.STATES.TECHDEBT_PLAYING,
+check('unshielded ram on ProxiBlue still crashes the ship (AC#6)',
+    sandbox.gameState === sandbox.STATES.CRASHED,
     'gameState: ' + sandbox.gameState);
-check('ProxiBlue asteroid at ship position: asteroid stays intact',
-    sandbox.techdebtAsteroids.length === 1);
+
+resetScenario();
+sandbox.proxiblueShieldActive = true;
+sandbox.proxiblueShieldTimer = sandbox.PROXIBLUE_SHIELD_DURATION;
+sandbox.techdebtAsteroids.push(makeAsteroid({
+    x: 400, y: 300, size: sandbox.TECHDEBT_SIZE_MEDIUM, sizeTier: 'medium',
+    isProxiblue: true, label: 'ProxiBlue'
+}));
+tick(0.001);
+check('shielded ram on ProxiBlue passes through — ship survives',
+    sandbox.gameState !== sandbox.STATES.CRASHED,
+    'gameState: ' + sandbox.gameState);
+check('shielded ram on ProxiBlue leaves the ProxiBlue intact (must shoot it)',
+    sandbox.techdebtAsteroids.length === 1
+    && sandbox.techdebtAsteroids[0].isProxiblue === true);
+check('shielded ram on ProxiBlue does NOT consume the shield',
+    sandbox.proxiblueShieldActive === true);
 
 // =========================================================================
 // Flash timer decays over successive frames.

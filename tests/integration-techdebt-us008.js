@@ -44,6 +44,7 @@ var sandbox = {
     stopThrustSound: function () {},
     startThrustSound: function () {},
     playTechdebtShootSound: function () {},
+    playProxiblueCollectSound: function () {},
     crashShipInTechdebt: function () {},
     spawnExplosion: function () {},
     startScreenShake: function () {},
@@ -125,6 +126,12 @@ function resetCollisionScenario() {
     sandbox.score = 0;
     sandbox.asteroidsDestroyed = 0;
     sandbox.techdebtBulletCooldownTimer = 0;
+    // US-012: the ProxiBlue-collect test leaves the shield active — reset it
+    // so it doesn't pollute subsequent scenarios (e.g., the overlapping-
+    // asteroid test, where a shielded ship would absorb an extra asteroid).
+    sandbox.proxiblueShieldActive = false;
+    sandbox.proxiblueShieldTimer = 0;
+    sandbox.proxiblueShieldFlashTimer = 0;
     sandbox.ship = freshShip();
     // Zero fuel so the US-010 win-condition fuel bonus (Math.round((fuel/FUEL_MAX)*200))
     // evaluates to 0 — this test asserts tier point awards, not fuel bonus.
@@ -271,25 +278,24 @@ check('bullet vertically above (gap > radius) does NOT hit',
     sandbox.asteroidsDestroyed === 0);
 
 // =========================================================================
-// AC#6 — ProxiBlue asteroids do NOT split. A bullet at the same position as
-// a ProxiBlue asteroid must leave the asteroid intact AND keep the bullet
-// alive (US-008 defers all ProxiBlue handling to US-012).
+// AC#6 — ProxiBlue asteroids do NOT split. US-012 now collects them on
+// bullet hit (destroy + shield activation + PROXIBLUE_POINTS), but the
+// "does NOT split" invariant is still the US-008 contract — no child
+// asteroids should appear after the bullet kills a ProxiBlue.
 // =========================================================================
 resetCollisionScenario();
 sandbox.techdebtAsteroids.push(makeAsteroid({
-    x: 400, y: 300, size: sandbox.TECHDEBT_SIZE_LARGE, sizeTier: 'large',
+    x: 400, y: 300, size: sandbox.TECHDEBT_SIZE_MEDIUM, sizeTier: 'medium',
     isProxiblue: true, label: 'ProxiBlue'
 }));
 sandbox.techdebtBullets.push({ x: 400, y: 300, vx: 0, vy: 0, age: 0 });
 tick(0.001);
-check('ProxiBlue asteroid is NOT destroyed by bullet (no split)',
-    sandbox.techdebtAsteroids.length === 1
-    && sandbox.techdebtAsteroids[0].isProxiblue === true,
+check('ProxiBlue asteroid destroyed by bullet with NO split children (array empty)',
+    sandbox.techdebtAsteroids.length === 0,
     'remaining asteroids: ' + sandbox.techdebtAsteroids.length);
-check('ProxiBlue collision does NOT increment score / asteroidsDestroyed',
-    sandbox.techdebtScore === 0
-    && sandbox.score === 0
-    && sandbox.asteroidsDestroyed === 0);
+check('ProxiBlue collection does NOT increment asteroidsDestroyed (it\'s a collect, not a destroy)',
+    sandbox.asteroidsDestroyed === 0,
+    'asteroidsDestroyed: ' + sandbox.asteroidsDestroyed);
 
 // =========================================================================
 // One bullet should only consume ONE asteroid even if multiple overlap.
