@@ -2033,7 +2033,9 @@ function update(dt) {
         currentLevel++;
         GRAVITY = getLevelConfig(currentLevel).gravity;
         THRUST_POWER = GRAVITY * 2.5;
+        var extensionFuel = Math.max(0, ship.fuel - FUEL_MAX);
         resetShip();
+        ship.fuel = FUEL_MAX + extensionFuel;
         resetWind();
         generateTerrain();
         sceneCountdownTimer = 0;
