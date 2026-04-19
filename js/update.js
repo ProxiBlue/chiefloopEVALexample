@@ -1699,18 +1699,14 @@ function update(dt) {
 
         var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
         var wantsRetro = !!(keys['ArrowDown'] || keys['s'] || keys['S']);
-        ship.thrusting = wantsThrust && ship.fuel > 0;
-        ship.retroThrusting = wantsRetro && ship.fuel > 0;
+        ship.thrusting = wantsThrust;
+        ship.retroThrusting = wantsRetro;
         if (ship.thrusting) {
-            ship.fuel -= FUEL_BURN_RATE * dt;
-            if (ship.fuel < 0) ship.fuel = 0;
             var accel = THRUST_POWER * PIXELS_PER_METER * dt;
             ship.vx += Math.sin(ship.angle) * accel;
             ship.vy += -Math.cos(ship.angle) * accel;
             startThrustSound();
         } else if (ship.retroThrusting) {
-            ship.fuel -= FUEL_BURN_RATE * dt;
-            if (ship.fuel < 0) ship.fuel = 0;
             var retroAccel = THRUST_POWER * PIXELS_PER_METER * dt * 0.8;
             ship.vx -= Math.sin(ship.angle) * retroAccel;
             ship.vy -= -Math.cos(ship.angle) * retroAccel;
