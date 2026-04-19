@@ -125,10 +125,9 @@ function renderMenu() {
     ctx.font = '11px monospace';
     ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, controlsY + 124 + extraOffset);
 
-    // Leaderboard on start screen
-    var board = getLeaderboard();
-    if (board.length > 0) {
-        drawLeaderboard(cx, controlsY + 146 + extraOffset, null);
+    // Community leaderboard on start screen
+    if ((window.cachedOnlineScores || []).length > 0) {
+        drawCommunityLeaderboard(cx, controlsY + 146 + extraOffset);
     }
 }
 
@@ -2929,11 +2928,6 @@ function renderGameOver() {
         ctx.font = '14px sans-serif';
         ctx.fillText('Press ENTER to confirm (max 10 chars)', cx, y);
     } else {
-        // Show local leaderboard
-        y = drawLeaderboard(cx, y, gameOverName.trim() || null);
-        // Show community leaderboard below it so players can see and
-        // compete against everyone else's runs, not just their own.
-        y += 12;
         y = drawCommunityLeaderboard(cx, y);
         y += 15;
         ctx.fillStyle = '#888';

@@ -63,14 +63,13 @@ function handleKeyPress(key) {
     if (gameState === STATES.GAMEOVER && gameOverEnteringName) {
         if (key === 'Enter') {
             var name = gameOverName.trim() || 'AAA';
-            // Save to local leaderboard only if it qualifies as a local high score
-            if (isHighScore(score)) {
-                addToLeaderboard(name, score, gameOverLevel, landings);
-            }
-            // Submit to online leaderboard asynchronously (fire-and-forget).
-            // All positive scores are eligible regardless of local ranking.
+            // Submit to community leaderboard asynchronously (fire-and-forget).
+            // After submit, refresh the cache so the table updates.
             if (score > 0 && typeof submitOnlineScore === 'function') {
                 submitOnlineScore(name, score, gameOverLevel, landings);
+                if (typeof refreshCachedOnlineScores === 'function') {
+                    setTimeout(refreshCachedOnlineScores, 1500);
+                }
             }
             gameOverEnteringName = false;
             return;
