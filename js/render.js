@@ -2575,7 +2575,8 @@ function renderDrivePlaying() {
     // underneath) the buggy silhouette rather than on top of it.
     drawDriveAirborneTrail();
 
-    drawShip(buggyScreenX, buggyScreenY, tilt, SHIP_SIZE, false, null, false);
+    var buggyThrusting = !driveGrounded && driveBuggyVY < 0;
+    drawShip(buggyScreenX, buggyScreenY, tilt, SHIP_SIZE, buggyThrusting, null, false);
 
     var wheelRadius = DRIVE_WHEEL_RADIUS;
     var wheelLX = buggyScreenX - DRIVE_WHEEL_OFFSET_X;
