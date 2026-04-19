@@ -61,7 +61,7 @@ function resetWind() {
     wind.maxStrength = getLevelConfig(currentLevel).maxWind || 0;
     wind.strength = 0;
     wind.targetStrength = 0;
-    wind.gustTimer = 1 + Math.random() * 2;
+    wind.gustTimer = 6 + Math.random() * 10;
 }
 
 // --- PR-based Landing Pad Configuration ---

@@ -1457,10 +1457,10 @@ function update(dt) {
             if (wind.gustTimer <= 0) {
                 // Pick a new random target wind strength and direction
                 wind.targetStrength = (Math.random() * 2 - 1) * wind.maxStrength;
-                wind.gustTimer = 1.5 + Math.random() * 2.5;
+                wind.gustTimer = 6 + Math.random() * 10;
             }
-            // Smoothly lerp toward target
-            wind.strength += (wind.targetStrength - wind.strength) * dt * 2;
+            // Slowly lerp toward target for gradual wind shifts
+            wind.strength += (wind.targetStrength - wind.strength) * dt * 0.5;
             // Apply wind as horizontal acceleration
             ship.vx += wind.strength * PIXELS_PER_METER * dt;
         }
