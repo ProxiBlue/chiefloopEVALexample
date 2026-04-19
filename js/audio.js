@@ -9,6 +9,7 @@ var thrustRumbleGain = null;
 var thrustCrackleSource = null;
 var thrustCrackleGain = null;
 var thrustFlutterLfo = null;
+var thrustFlutterGain = null;
 var isThrustSoundPlaying = false;
 var thrustCurrentMode = null;
 
@@ -163,10 +164,10 @@ function startThrustSound(mode) {
     thrustFlutterLfo = ctx.createOscillator();
     thrustFlutterLfo.type = 'sine';
     thrustFlutterLfo.frequency.setValueAtTime(7, t);
-    var lfoGain = ctx.createGain();
-    lfoGain.gain.setValueAtTime(0.04, t);
-    thrustFlutterLfo.connect(lfoGain);
-    lfoGain.connect(thrustRumbleGain.gain);
+    thrustFlutterGain = ctx.createGain();
+    thrustFlutterGain.gain.setValueAtTime(0.04, t);
+    thrustFlutterLfo.connect(thrustFlutterGain);
+    thrustFlutterGain.connect(thrustRumbleGain.gain);
     thrustFlutterLfo.start();
 }
 
@@ -174,33 +175,32 @@ function stopThrustSound() {
     if (!isThrustSoundPlaying) return;
     isThrustSoundPlaying = false;
     thrustCurrentMode = null;
-    var ctx = audioCtx;
-    if (!ctx) return;
-    var t = ctx.currentTime;
-    var fadeOut = 0.08;
-    var gains = [thrustGain, thrustNoiseGain, thrustRumbleGain, thrustCrackleGain];
-    for (var i = 0; i < gains.length; i++) {
-        if (gains[i]) {
-            gains[i].gain.cancelScheduledValues(t);
-            gains[i].gain.setValueAtTime(gains[i].gain.value, t);
-            gains[i].gain.linearRampToValueAtTime(0, t + fadeOut);
+
+    // Immediately stop and disconnect all sources — no setTimeout delay.
+    // This prevents orphaned nodes from a start/stop/start race condition.
+    var sources = [thrustOsc, thrustNoiseSource, thrustRumbleSource, thrustCrackleSource, thrustFlutterLfo];
+    for (var i = 0; i < sources.length; i++) {
+        if (sources[i]) {
+            try { sources[i].stop(); } catch(e) {}
+            try { sources[i].disconnect(); } catch(e) {}
         }
     }
-    setTimeout(function () {
-        var sources = [thrustOsc, thrustNoiseSource, thrustRumbleSource, thrustCrackleSource, thrustFlutterLfo];
-        for (var i = 0; i < sources.length; i++) {
-            if (sources[i]) { try { sources[i].stop(); } catch(e){} }
+    var gains = [thrustGain, thrustNoiseGain, thrustRumbleGain, thrustCrackleGain, thrustFlutterGain];
+    for (var j = 0; j < gains.length; j++) {
+        if (gains[j]) {
+            try { gains[j].disconnect(); } catch(e) {}
         }
-        thrustOsc = null;
-        thrustNoiseSource = null;
-        thrustRumbleSource = null;
-        thrustCrackleSource = null;
-        thrustFlutterLfo = null;
-        thrustGain = null;
-        thrustNoiseGain = null;
-        thrustRumbleGain = null;
-        thrustCrackleGain = null;
-    }, 120);
+    }
+    thrustOsc = null;
+    thrustNoiseSource = null;
+    thrustRumbleSource = null;
+    thrustCrackleSource = null;
+    thrustFlutterLfo = null;
+    thrustFlutterGain = null;
+    thrustGain = null;
+    thrustNoiseGain = null;
+    thrustRumbleGain = null;
+    thrustCrackleGain = null;
 }
 
 function playExplosionSound() {
@@ -859,30 +859,23 @@ function startDriveEngineSound() {
 function stopDriveEngineSound() {
     if (!isDriveEngineSoundPlaying) return;
     isDriveEngineSoundPlaying = false;
-    var ctx = audioCtx;
-    if (!ctx) return;
-    var t = ctx.currentTime;
-    var fadeOut = 0.08;
-    if (driveEngineRumbleGain) {
-        driveEngineRumbleGain.gain.cancelScheduledValues(t);
-        driveEngineRumbleGain.gain.setValueAtTime(driveEngineRumbleGain.gain.value, t);
-        driveEngineRumbleGain.gain.linearRampToValueAtTime(0, t + fadeOut);
-    }
-    if (driveEngineOscGain) {
-        driveEngineOscGain.gain.cancelScheduledValues(t);
-        driveEngineOscGain.gain.setValueAtTime(driveEngineOscGain.gain.value, t);
-        driveEngineOscGain.gain.linearRampToValueAtTime(0, t + fadeOut);
-    }
-    setTimeout(function () {
-        var sources = [driveEngineRumbleSource, driveEngineOsc];
-        for (var i = 0; i < sources.length; i++) {
-            if (sources[i]) { try { sources[i].stop(); } catch (e) {} }
+    var sources = [driveEngineRumbleSource, driveEngineOsc];
+    for (var i = 0; i < sources.length; i++) {
+        if (sources[i]) {
+            try { sources[i].stop(); } catch (e) {}
+            try { sources[i].disconnect(); } catch (e) {}
         }
-        driveEngineRumbleSource = null;
-        driveEngineRumbleGain = null;
-        driveEngineOsc = null;
-        driveEngineOscGain = null;
-    }, 120);
+    }
+    var gains = [driveEngineRumbleGain, driveEngineOscGain];
+    for (var j = 0; j < gains.length; j++) {
+        if (gains[j]) {
+            try { gains[j].disconnect(); } catch (e) {}
+        }
+    }
+    driveEngineRumbleSource = null;
+    driveEngineRumbleGain = null;
+    driveEngineOsc = null;
+    driveEngineOscGain = null;
 }
 
 // Pitch scales with speed: at floor 40 px/s → ~72Hz, at max 250 px/s →

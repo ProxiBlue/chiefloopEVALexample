@@ -1288,6 +1288,10 @@ function update(dt) {
     ];
     if (thrustStates.indexOf(gameState) === -1) {
         stopThrustSound();
+        if (gameState !== STATES.DRIVE_PLAYING && gameState !== STATES.DRIVE_TRANSITION
+            && typeof stopDriveEngineSound === 'function') {
+            stopDriveEngineSound();
+        }
     }
 
     // Update explosion particles during crash
