@@ -394,9 +394,32 @@ var TECHDEBT_SHIP_DRAG = 0.98;            // per-frame drag — slight decelerat
 var TECHDEBT_SHIP_MAX_SPEED = 250;        // ship velocity cap in px/s
 
 // --- ProxiBlue Power-Up Configuration ---
-var PROXIBLUE_SPAWN_CHANCE = 0.125;       // 1 in 8 chance to spawn on asteroid destruction
+var PROXIBLUE_SPAWN_CHANCE = 0.125;       // 1 in 8 chance at spawn-time to replace a tech-debt asteroid with a ProxiBlue power-up
 var PROXIBLUE_SHIELD_DURATION = 8;        // seconds the shield stays active
 var PROXIBLUE_POINTS = 150;               // points awarded when collected
+
+// --- Tech Debt Spawn Geometry ---
+var TECHDEBT_SAFE_SPAWN_RADIUS = 120;     // minimum px from canvas center an asteroid may spawn (keeps safe distance from ship)
+
+// --- Tech Debt Asteroid Label Pool ---
+// Pulled at spawn time for each non-ProxiBlue asteroid. Purely cosmetic flavour
+// ripped straight from everyday tech-debt vocabulary.
+var TECHDEBT_LABEL_POOL = [
+    '@deprecated',
+    'TODO',
+    '// HACK',
+    'FIXME',
+    'legacy_',
+    'any',
+    'stringly-typed',
+    'node_modules',
+    '*.min.js',
+    'eval()',
+    '!important',
+    'margin: -9999px',
+    'setTimeout(0)',
+    'var x = x || {}'
+];
 
 // --- Tech Debt State Arrays ---
 var techdebtAsteroids = [];               // active asteroids on screen

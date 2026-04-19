@@ -49,6 +49,7 @@ var sandbox = {
     startThrustSound: function () {},
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
+    setupTechdebtWorld: function () {},
     resetShip: function () {},
     resetWind: function () {},
     generateTerrain: function () {},

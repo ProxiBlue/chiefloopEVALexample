@@ -1470,6 +1470,89 @@ function renderInvaderReturn() {
     ctx.fillText('Bonus: +' + invaderScore + ' pts', canvas.width / 2, 95);
 }
 
+// --- Tech Debt Blaster drawing helpers ---
+
+// Draw one tech-debt asteroid: rocky 8-sided polygon rotated by a.rotation, with
+// the asteroid's label overlaid at center (label is unrotated for readability).
+// ProxiBlue power-up variants use a cyan palette + canvas shadow glow.
+function drawTechdebtAsteroid(a) {
+    ctx.save();
+    ctx.translate(a.x, a.y);
+    ctx.rotate(a.rotation);
+
+    // Irregular 8-vertex silhouette so asteroids don't all look like discs.
+    // Shape is deterministic per-asteroid (hashed off the vertex index) so the
+    // silhouette is stable frame-to-frame as it rotates.
+    var pts = 8;
+    ctx.beginPath();
+    for (var i = 0; i < pts; i++) {
+        var ang = (i / pts) * Math.PI * 2;
+        var rr = a.size * (0.82 + 0.28 * Math.sin(i * 2.3 + 1.1));
+        var ppx = Math.cos(ang) * rr;
+        var ppy = Math.sin(ang) * rr;
+        if (i === 0) ctx.moveTo(ppx, ppy);
+        else ctx.lineTo(ppx, ppy);
+    }
+    ctx.closePath();
+
+    if (a.isProxiBlue) {
+        ctx.shadowColor = '#4FC3F7';
+        ctx.shadowBlur = 18;
+        ctx.fillStyle = '#1976D2';
+    } else {
+        ctx.fillStyle = '#5D4037';
+    }
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = a.isProxiBlue ? '#81D4FA' : '#8D6E63';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    // Label overlay — unrotated, centered on the asteroid.
+    ctx.save();
+    ctx.fillStyle = a.isProxiBlue ? '#E1F5FE' : '#ECEFF1';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(a.label, a.x, a.y);
+    ctx.restore();
+}
+
+function renderTechdebtTransition() {
+    // AC: terrain fades out and background becomes open starfield. The
+    // starfield is already drawn by render() (drawStars) before this function
+    // runs; we just fade the terrain via globalAlpha so the stars show through
+    // as the transition progresses. By the time TECHDEBT_PLAYING begins, the
+    // terrain is fully invisible and the field is pure starfield.
+    var t = Math.min(techdebtTransitionTimer / TECHDEBT_TRANSITION_DURATION, 1);
+    var terrainAlpha = 1 - t;
+    if (terrainAlpha > 0.01) {
+        ctx.save();
+        ctx.globalAlpha = terrainAlpha;
+        drawTerrain();
+        ctx.restore();
+    }
+
+    // Asteroids behind the ship so the ship reads as the focal point.
+    for (var i = 0; i < techdebtAsteroids.length; i++) {
+        drawTechdebtAsteroid(techdebtAsteroids[i]);
+    }
+
+    // Ship rendered upright at canvas center (already positioned by update).
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+
+    // AC: brief "TECH DEBT INCOMING..." text flashes during transition.
+    // ~3 Hz flash matches renderMissileTransition's cadence for consistency.
+    var flashOn = Math.floor(techdebtTransitionTimer * 6) % 2 === 0;
+    if (flashOn) {
+        ctx.fillStyle = '#F37121';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('TECH DEBT INCOMING...', canvas.width / 2, 60);
+    }
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -1635,6 +1718,9 @@ function render() {
             break;
         case STATES.MISSILE_RETURN:
             renderMissileReturn();
+            break;
+        case STATES.TECHDEBT_TRANSITION:
+            renderTechdebtTransition();
             break;
         case STATES.CRASHED:
             renderCrashed();

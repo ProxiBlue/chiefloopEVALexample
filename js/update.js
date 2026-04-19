@@ -209,6 +209,85 @@ function buildMissileIncomingLabelPool() {
     return pool;
 }
 
+// Initialize tech-debt asteroid field on entry to TECHDEBT_TRANSITION.
+// Resets per-round counters + state arrays (AC: techdebtScore, asteroidsDestroyed,
+// arrays all reset at entry), then spawns `count` LARGE asteroids at random edge
+// positions with ≥TECHDEBT_SAFE_SPAWN_RADIUS distance from canvas center. Each
+// asteroid gets a random label from TECHDEBT_LABEL_POOL; ~1 in
+// PROXIBLUE_SPAWN_CHANCE is replaced with a ProxiBlue power-up asteroid.
+function setupTechdebtWorld() {
+    techdebtAsteroids = [];
+    techdebtBullets = [];
+    techdebtParticles = [];
+    techdebtScore = 0;
+    asteroidsDestroyed = 0;
+    techdebtCompleteTimer = 0;
+    proxiblueShieldActive = false;
+    proxiblueShieldTimer = 0;
+
+    var count = Math.min(
+        TECHDEBT_ASTEROID_MAX,
+        TECHDEBT_ASTEROID_BASE_COUNT + currentLevel * TECHDEBT_ASTEROID_PER_LEVEL
+    );
+    asteroidsTotal = count;
+
+    var centerX = canvas.width / 2;
+    var centerY = canvas.height / 2;
+    var baseSpeed = TECHDEBT_SPEED_BASE + currentLevel * TECHDEBT_SPEED_PER_LEVEL;
+
+    for (var i = 0; i < count; i++) {
+        // Pick a random edge (0=top, 1=right, 2=bottom, 3=left) and a random
+        // point along it. Retry up to 8 times if the pick lands inside the safe
+        // radius (unlikely given an 800×600 canvas vs. 120px radius but be
+        // defensive against future canvas-size changes).
+        var px, py;
+        for (var tries = 0; tries < 8; tries++) {
+            var edge = Math.floor(Math.random() * 4);
+            if (edge === 0) {            // top
+                px = Math.random() * canvas.width;
+                py = TECHDEBT_SIZE_LARGE;
+            } else if (edge === 1) {     // right
+                px = canvas.width - TECHDEBT_SIZE_LARGE;
+                py = Math.random() * canvas.height;
+            } else if (edge === 2) {     // bottom
+                px = Math.random() * canvas.width;
+                py = canvas.height - TECHDEBT_SIZE_LARGE;
+            } else {                     // left
+                px = TECHDEBT_SIZE_LARGE;
+                py = Math.random() * canvas.height;
+            }
+            var sdx = px - centerX;
+            var sdy = py - centerY;
+            if (Math.sqrt(sdx * sdx + sdy * sdy) >= TECHDEBT_SAFE_SPAWN_RADIUS) break;
+        }
+
+        // Give the asteroid a gentle drift. Direction biased inward but
+        // jittered so the field doesn't look like a homing missile swarm.
+        var inwardAngle = Math.atan2(centerY - py, centerX - px);
+        var angle = inwardAngle + (Math.random() - 0.5) * Math.PI;
+        var speed = baseSpeed + (Math.random() * 2 - 1) * TECHDEBT_SPEED_VARIANCE;
+        if (speed < 10) speed = 10;
+
+        var isProxiBlue = Math.random() < PROXIBLUE_SPAWN_CHANCE;
+        var label = isProxiBlue
+            ? 'ProxiBlue'
+            : TECHDEBT_LABEL_POOL[Math.floor(Math.random() * TECHDEBT_LABEL_POOL.length)];
+
+        techdebtAsteroids.push({
+            x: px,
+            y: py,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: TECHDEBT_SIZE_LARGE,
+            sizeTier: 'large',
+            label: label,
+            isProxiBlue: isProxiBlue,
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 1.2
+        });
+    }
+}
+
 // Initialize missile-command battlefield state on entry to MISSILE_TRANSITION.
 // Resets all counters + arrays (AC#8), snapshots terrain for the flatten
 // animation (AC#2), positions the crosshair at center (AC#6), and seeds
@@ -605,7 +684,9 @@ function update(dt) {
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
             } else if (isOtherPad) {
-                // `other` pad: enter tech debt blaster transition
+                // `other` pad: enter tech debt blaster transition. Ship is
+                // repositioned to canvas center, upright, zero velocity; fuel
+                // refilled; transition timer zeroed; asteroid field seeded.
                 ship.x = canvas.width / 2;
                 ship.y = canvas.height / 2;
                 ship.angle = 0;
@@ -616,6 +697,7 @@ function update(dt) {
                 stopThrustSound();
                 ship.fuel = FUEL_MAX;
                 techdebtTransitionTimer = 0;
+                setupTechdebtWorld();
                 gameState = STATES.TECHDEBT_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
@@ -1452,6 +1534,19 @@ function update(dt) {
             resetWind();
             generateTerrain();
             gameState = STATES.PLAYING;
+        }
+    }
+
+    // Tech debt transition: brief intro window between landing and asteroid
+    // gameplay. Ship is already centered + upright from the SCENE_SCROLL end
+    // branch and the asteroid field was seeded there via setupTechdebtWorld(),
+    // so all this block does is tick the timer and advance to TECHDEBT_PLAYING
+    // when it elapses. The terrain fade-out + "TECH DEBT INCOMING..." flash
+    // are purely render concerns (see renderTechdebtTransition in render.js).
+    if (gameState === STATES.TECHDEBT_TRANSITION) {
+        techdebtTransitionTimer += dt;
+        if (techdebtTransitionTimer >= TECHDEBT_TRANSITION_DURATION) {
+            gameState = STATES.TECHDEBT_PLAYING;
         }
     }
 
