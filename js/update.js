@@ -2676,8 +2676,12 @@ function update(dt) {
             drivePickups.splice(puIdx, 1);
             driveScore += DRIVE_PICKUP_POINTS;
             score += DRIVE_PICKUP_POINTS;
+            // Drive pickups do NOT grant extension fuel (PRD FR-8: extension
+            // only from bugfix). Cap at FUEL_MAX, but preserve any existing
+            // extension fuel that may have carried in (don't strip it).
+            var drivePickupFuelCap = Math.max(FUEL_MAX, ship.fuel);
             ship.fuel += DRIVE_PICKUP_FUEL_RESTORE;
-            if (ship.fuel > FUEL_MAX + FUEL_EXTENSION_MAX) ship.fuel = FUEL_MAX + FUEL_EXTENSION_MAX;
+            if (ship.fuel > drivePickupFuelCap) ship.fuel = drivePickupFuelCap;
             drivePickupsCollected++;
             var puScreenX = pup.x - driveScrollX;
             spawnDrivePickupSparkle(puScreenX, pup.y);
