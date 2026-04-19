@@ -268,8 +268,8 @@ var MISSILE_INTERCEPTOR_SPEED = 350;      // interceptor travel speed in px/s
 var MISSILE_INTERCEPTOR_BLAST_RADIUS = 40; // blast radius of interceptor detonation in pixels
 
 // --- Missile Incoming Configuration ---
-var MISSILE_INCOMING_BASE_COUNT = 4;      // base count of incoming missiles
-var MISSILE_INCOMING_PER_LEVEL = 1;       // extra incoming missiles per level
+var MISSILE_INCOMING_BASE_COUNT = 6;      // base count of incoming missiles
+var MISSILE_INCOMING_PER_LEVEL = 2;       // extra incoming missiles per level
 var MISSILE_INCOMING_MAX = 12;            // hard cap on incoming missiles per round
 var MISSILE_INCOMING_BASE_SPEED = 40;     // base descent speed in px/s
 var MISSILE_INCOMING_SPEED_PER_LEVEL = 8; // additional speed per level in px/s
