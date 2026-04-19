@@ -77,7 +77,7 @@ function handleKeyPress(key) {
         } else if (key === 'Backspace') {
             gameOverName = gameOverName.slice(0, -1);
             return;
-        } else if (key.length === 1 && gameOverName.length < 10) {
+        } else if (key.length === 1 && gameOverName.length < 10 && !/[<>"'&|]/.test(key)) {
             gameOverName += key;
             return;
         }

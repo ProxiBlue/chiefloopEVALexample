@@ -25,6 +25,12 @@ function loadRepoData(repoFile) {
     unplacedPRs = [];
     levelDateRange = '';
     levelCommits = [];
+    // Path traversal protection
+    if (!repoFile || /[\/\\]|\.\./.test(repoFile)) {
+        repoDataError = 'Invalid data file name';
+        repoDataLoading = false;
+        return;
+    }
     fetch('data/' + repoFile)
         .then(function (res) {
             if (!res.ok) {

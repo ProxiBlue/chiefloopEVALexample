@@ -12,6 +12,8 @@ This game is the proving ground — a complex, multi-system project designed to 
 
 The mini-games — Lunar Lander, Asteroids, Missile Command, Space Invaders, Breakout, Moon Buggy — are all classics from the Atari 2600, my first ever game console. That console is part of what got me interested in coding in the first place. Building these games with AI felt like coming full circle.
 
+Some aspects of each mini-game were refined outside the Chief loop after the initial build — gameplay tuning, physics adjustments, visual polish, and security hardening. These refinements were fed back as PRD updates so the non-adversarial comparison test has the same information on changes and tweaks. Security hardening (CSP headers, input validation, JSONP removal) was also done manually outside the loop.
+
 ## How Repository Data Drives Gameplay
 
 The game uses real pull request and commit data from a GitHub repository, pre-fetched and cached to a local JSON data file (not fetched in real-time). This data shapes every aspect of the gameplay experience:
