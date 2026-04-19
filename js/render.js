@@ -1599,6 +1599,18 @@ function renderTechdebtPlaying() {
     }
 
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
+
+    // Blue shield-absorb flash (US-009). Full-screen blue tint fading over
+    // PROXIBLUE_SHIELD_FLASH_DURATION so the player gets clear feedback that
+    // the shield just absorbed an asteroid hit.
+    if (proxiblueShieldFlashTimer > 0) {
+        var flashAlpha = Math.min(1, proxiblueShieldFlashTimer / PROXIBLUE_SHIELD_FLASH_DURATION) * 0.5;
+        ctx.save();
+        ctx.globalAlpha = flashAlpha;
+        ctx.fillStyle = PROXIBLUE_COLOR;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
 }
 
 function renderCrashed() {

@@ -392,11 +392,14 @@ var TECHDEBT_BULLET_COOLDOWN = 0.18;      // seconds between shots
 // --- Tech Debt Ship Configuration ---
 var TECHDEBT_SHIP_DRAG = 0.98;            // per-frame drag — slight deceleration for control feel
 var TECHDEBT_SHIP_MAX_SPEED = 250;        // ship velocity cap in px/s
+var TECHDEBT_SHIP_RADIUS = 15;            // ship collision radius in px (circle-circle vs asteroids, AC US-009)
 
 // --- ProxiBlue Power-Up Configuration ---
 var PROXIBLUE_SPAWN_CHANCE = 0.125;       // 1 in 8 chance at spawn-time to replace a tech-debt asteroid with a ProxiBlue power-up
 var PROXIBLUE_SHIELD_DURATION = 8;        // seconds the shield stays active
 var PROXIBLUE_POINTS = 150;               // points awarded when collected
+var PROXIBLUE_SHIELD_FLASH_DURATION = 0.3; // seconds a blue shield-absorb flash stays on screen (US-009)
+var PROXIBLUE_COLOR = '#1976D2';          // canonical ProxiBlue blue — shield flash + shield ring + ProxiBlue asteroid fill
 
 // --- Tech Debt Spawn Geometry ---
 var TECHDEBT_SAFE_SPAWN_RADIUS = 120;     // minimum px from canvas center an asteroid may spawn (keeps safe distance from ship)
@@ -437,3 +440,4 @@ var techdebtBulletCooldownTimer = 0;      // seconds remaining before the ship c
 // --- ProxiBlue Shield State ---
 var proxiblueShieldActive = false;        // true while shield power-up is protecting ship
 var proxiblueShieldTimer = 0;             // seconds remaining on active shield
+var proxiblueShieldFlashTimer = 0;        // seconds remaining on the blue shield-absorb flash effect (US-009)

@@ -119,6 +119,22 @@ function crashShipInMissile(reason) {
     gameState = STATES.CRASHED;
 }
 
+// Route the ship to STATES.CRASHED from the tech-debt mini-game (US-009 lose path).
+// Mirrors crashShipInBugfix/crashShipInMissile so the crash FX pipeline stays
+// identical to other mini-games. Partial techdebtScore already accumulated into
+// `score` during the round stays — we don't subtract it here.
+function crashShipInTechdebt(reason) {
+    ship.vx = 0;
+    ship.vy = 0;
+    ship.thrusting = false;
+    landingResult = reason;
+    spawnExplosion(ship.x, ship.y);
+    startScreenShake();
+    stopThrustSound();
+    playExplosionSound();
+    gameState = STATES.CRASHED;
+}
+
 // Reset all per-round missile-command state — entities, particle bursts, wave
 // counters, and UI timers. Called on (a) crash from MISSILE_PLAYING (loss-path
 // cleanup) and (b) MISSILE_RETURN transition (next-level fresh state).
@@ -225,6 +241,7 @@ function setupTechdebtWorld() {
     techdebtBulletCooldownTimer = 0;
     proxiblueShieldActive = false;
     proxiblueShieldTimer = 0;
+    proxiblueShieldFlashTimer = 0;
 
     var count = Math.min(
         TECHDEBT_ASTEROID_MAX,
@@ -1756,6 +1773,40 @@ function update(dt) {
             }
         }
 
+        // --- Ship vs asteroid collision (US-009) ---
+        // Circle-circle: ship radius TECHDEBT_SHIP_RADIUS vs asteroid radius a.size.
+        // ProxiBlue asteroids are skipped here — US-012 owns their pickup flow.
+        // Shield branch: absorb hit, destroy (do NOT split) the asteroid and
+        // award its tier's point value, then drop the shield + play a blue flash.
+        // Unshielded branch: route through the shared CRASHED flow.
+        for (var shipAIdx = techdebtAsteroids.length - 1; shipAIdx >= 0; shipAIdx--) {
+            var shipAst = techdebtAsteroids[shipAIdx];
+            if (shipAst.isProxiblue) continue;
+            var sdx = ship.x - shipAst.x;
+            var sdy = ship.y - shipAst.y;
+            var combined = TECHDEBT_SHIP_RADIUS + shipAst.size;
+            if (sdx * sdx + sdy * sdy <= combined * combined) {
+                if (proxiblueShieldActive) {
+                    var shieldPts;
+                    if (shipAst.sizeTier === 'large') shieldPts = TECHDEBT_POINTS_LARGE;
+                    else if (shipAst.sizeTier === 'medium') shieldPts = TECHDEBT_POINTS_MEDIUM;
+                    else shieldPts = TECHDEBT_POINTS_SMALL;
+                    techdebtScore += shieldPts;
+                    score += shieldPts;
+                    asteroidsDestroyed++;
+                    spawnTechdebtAsteroidParticles(shipAst.x, shipAst.y, PROXIBLUE_COLOR);
+                    techdebtAsteroids.splice(shipAIdx, 1);
+                    proxiblueShieldActive = false;
+                    proxiblueShieldTimer = 0;
+                    proxiblueShieldFlashTimer = PROXIBLUE_SHIELD_FLASH_DURATION;
+                    break; // shield is consumed — no more hits this frame
+                } else {
+                    crashShipInTechdebt('Tech debt asteroid collision');
+                    break; // ship is dead — stop processing further asteroids
+                }
+            }
+        }
+
         // --- Update particles: drift, fade, expire ---
         for (var pIdx = techdebtParticles.length - 1; pIdx >= 0; pIdx--) {
             var par = techdebtParticles[pIdx];
@@ -1763,6 +1814,12 @@ function update(dt) {
             par.y += par.vy * dt;
             par.life -= dt;
             if (par.life <= 0) techdebtParticles.splice(pIdx, 1);
+        }
+
+        // --- Shield flash decay ---
+        if (proxiblueShieldFlashTimer > 0) {
+            proxiblueShieldFlashTimer -= dt;
+            if (proxiblueShieldFlashTimer < 0) proxiblueShieldFlashTimer = 0;
         }
     }
 
