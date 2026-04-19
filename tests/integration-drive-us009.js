@@ -201,23 +201,27 @@ check('AC#3: ship.fuel restored by DRIVE_PICKUP_FUEL_RESTORE',
     'after=' + sandbox.ship.fuel +
     ' (expected ' + (50 + sandbox.DRIVE_PICKUP_FUEL_RESTORE) + ')');
 
-// -------- AC#3: fuel restore capped at FUEL_MAX --------
+// -------- AC#3: fuel restore capped at FUEL_MAX + FUEL_EXTENSION_MAX --------
+// Per US-005, the hard cap across all fuel-modifying code is the extended
+// maximum (FUEL_MAX + FUEL_EXTENSION_MAX). Drive pickups are a non-bugfix
+// fuel source but still must not exceed the absolute cap.
+var HARD_CAP = sandbox.FUEL_MAX + sandbox.FUEL_EXTENSION_MAX;
 resetScenario();
-sandbox.ship.fuel = sandbox.FUEL_MAX; // already full
+sandbox.ship.fuel = HARD_CAP; // already at absolute cap
 sandbox.drivePickups.push(makePickup(200, 440, 'LGTM'));
 sandbox.drivePlayingTick(1 / 60);
-check('AC#3: fuel cannot exceed FUEL_MAX when already full',
-    sandbox.ship.fuel === sandbox.FUEL_MAX,
-    'fuel=' + sandbox.ship.fuel + ' FUEL_MAX=' + sandbox.FUEL_MAX);
+check('AC#3: fuel cannot exceed FUEL_MAX + FUEL_EXTENSION_MAX when already at cap',
+    sandbox.ship.fuel === HARD_CAP,
+    'fuel=' + sandbox.ship.fuel + ' HARD_CAP=' + HARD_CAP);
 
-// near-max: ensures we clamp, not just preserve
+// near-cap: ensures we clamp, not just preserve
 resetScenario();
-sandbox.ship.fuel = sandbox.FUEL_MAX - 1; // FUEL_MAX-1 + 3 would overshoot
+sandbox.ship.fuel = HARD_CAP - 1; // HARD_CAP-1 + 3 would overshoot
 sandbox.drivePickups.push(makePickup(200, 440, 'LGTM'));
 sandbox.drivePlayingTick(1 / 60);
-check('AC#3: fuel restore clamps to FUEL_MAX (not FUEL_MAX + overflow)',
-    sandbox.ship.fuel === sandbox.FUEL_MAX,
-    'fuel=' + sandbox.ship.fuel + ' FUEL_MAX=' + sandbox.FUEL_MAX);
+check('AC#3: fuel restore clamps to absolute cap (not cap + overflow)',
+    sandbox.ship.fuel === HARD_CAP,
+    'fuel=' + sandbox.ship.fuel + ' HARD_CAP=' + HARD_CAP);
 
 // -------- AC#4: sparkle particle effect plays at pickup location --------
 resetScenario();

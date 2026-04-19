@@ -726,14 +726,15 @@ check('AC#4: normal pad (no flags / no known prType) → STATES.SCENE_DESCENT (f
 })();
 
 (function () {
+    // US-005: hard cap is FUEL_MAX + FUEL_EXTENSION_MAX across all fuel-modifying code.
     resetDriveState(flatRoad(400));
-    sandbox.ship.fuel = sandbox.FUEL_MAX - 1;
+    sandbox.ship.fuel = sandbox.FUEL_MAX + sandbox.FUEL_EXTENSION_MAX - 1;
     sandbox.drivePickups = [{
         x: 220, y: 450, size: 20, label: 'LGTM', collected: false,
     }];
     sandbox.drivePlayingTick(1 / 60);
-    check('AC#10: pickup restoration caps fuel at FUEL_MAX',
-        sandbox.ship.fuel === sandbox.FUEL_MAX);
+    check('AC#10: pickup restoration caps fuel at FUEL_MAX + FUEL_EXTENSION_MAX',
+        sandbox.ship.fuel === sandbox.FUEL_MAX + sandbox.FUEL_EXTENSION_MAX);
 })();
 
 (function () {

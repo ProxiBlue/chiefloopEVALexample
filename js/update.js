@@ -2676,14 +2676,7 @@ function update(dt) {
             drivePickups.splice(puIdx, 1);
             driveScore += DRIVE_PICKUP_POINTS;
             score += DRIVE_PICKUP_POINTS;
-            // Drive pickups refill fuel only up to FUEL_MAX. Per PRD FR-8,
-            // extension fuel is a bugfix-exclusive reward, so drive pickups
-            // must neither grant nor strip extension fuel. When fuel is at or
-            // above FUEL_MAX (extension may be carried over), the pickup is a
-            // no-op on the fuel value; points and FX still fire above.
-            if (ship.fuel < FUEL_MAX) {
-                ship.fuel = Math.min(ship.fuel + DRIVE_PICKUP_FUEL_RESTORE, FUEL_MAX);
-            }
+            ship.fuel = Math.min(ship.fuel + DRIVE_PICKUP_FUEL_RESTORE, FUEL_MAX + FUEL_EXTENSION_MAX);
             drivePickupsCollected++;
             var puScreenX = pup.x - driveScrollX;
             spawnDrivePickupSparkle(puScreenX, pup.y);
