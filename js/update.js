@@ -1138,7 +1138,10 @@ function update(dt) {
                 }
                 if (hit) {
                     spawnMissileDestructionBurst(im.targetX, im.targetY);
-                    if (typeof playDestructionSound === 'function') playDestructionSound();
+                    // US-013 AC#3: deeper, lower-pitched explosion for incoming
+                    // missile impacts on buildings/batteries — distinct from the
+                    // interceptor detonation thud and the intercept pop.
+                    if (typeof playMissileImpactSound === 'function') playMissileImpactSound();
                 }
                 missileIncoming.splice(iI, 1);
             }
@@ -1166,6 +1169,8 @@ function update(dt) {
                     kind: 'interceptor'
                 });
                 spawnMissileInterceptorBurst(inter.targetX, inter.targetY);
+                // US-013 AC#2: soft thud/boom on interceptor detonation.
+                if (typeof playInterceptorDetonationSound === 'function') playInterceptorDetonationSound();
                 missileInterceptors.splice(ii, 1);
             }
         }
@@ -1201,6 +1206,8 @@ function update(dt) {
                         // later loss (AC#7: partial missileScore stays in score
                         // even on loss).
                         score += MISSILE_POINTS_PER_INTERCEPT;
+                        // US-013 AC#4: satisfying mid-frequency pop on intercept.
+                        if (typeof playMissileInterceptedSound === 'function') playMissileInterceptedSound();
                     }
                 }
             }
@@ -1227,6 +1234,13 @@ function update(dt) {
             missileWaveCurrent < missileWaveTotal &&
             missileWaveSpawnQueue.length === 0 &&
             missileIncoming.length === 0) {
+            // US-013 AC#5: wave complete chime — play once on the first tick
+            // after the wave drains. Detected by `missileInterWaveTimer === 0`
+            // BEFORE the increment; spawnMissileWave resets the timer to 0
+            // when the next wave fires, so subsequent drains chime again.
+            if (missileInterWaveTimer === 0 && typeof playWaveCompleteChime === 'function') {
+                playWaveCompleteChime();
+            }
             missileInterWaveTimer += dt;
             if (missileInterWaveTimer >= MISSILE_WAVE_DELAY) {
                 missileInterWaveTimer = 0;
@@ -1281,6 +1295,10 @@ function update(dt) {
             missileScore += missileEndBonus;
             score += missileEndBonus;
             missileCompleteTimer = 0;
+            // US-013 AC#5: chime also fires on the FINAL wave drain (the
+            // intermediate wave-progression branch above only fires for waves
+            // [1, missileWaveTotal-1]; this win branch covers wave N → win).
+            if (typeof playWaveCompleteChime === 'function') playWaveCompleteChime();
             gameState = STATES.MISSILE_COMPLETE;
         }
     }

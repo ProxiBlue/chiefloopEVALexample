@@ -172,7 +172,7 @@ function handleKeyPress(key) {
                     vy: (tdy / tdist) * MISSILE_INTERCEPTOR_SPEED,
                     totalDist: tdist
                 });
-                if (typeof playLaunchSound === 'function') playLaunchSound();
+                if (typeof playInterceptorLaunchSound === 'function') playInterceptorLaunchSound();
             }
         } else if (gameState === STATES.MISSILE_TRANSITION) {
             // Transition is an animation — swallow Space so it can't trigger
