@@ -811,9 +811,10 @@ function update(dt) {
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
             } else if (isOtherPad) {
-                // `other` pad: enter tech debt blaster transition. Ship is
-                // repositioned to canvas center, upright, zero velocity; fuel
-                // refilled; transition timer zeroed; asteroid field seeded.
+                // `other` pads alternate mini-games: odd count → Tech Debt
+                // Blaster, even count → Code Breaker. Count starts at 0, so
+                // the first landing (0 → 1, odd) routes to asteroids.
+                otherMiniGameCount++;
                 ship.x = canvas.width / 2;
                 ship.y = canvas.height / 2;
                 ship.angle = 0;
@@ -823,9 +824,14 @@ function update(dt) {
                 ship.rotating = null;
                 stopThrustSound();
                 ship.fuel = FUEL_MAX;
-                techdebtTransitionTimer = 0;
-                setupTechdebtWorld();
-                gameState = STATES.TECHDEBT_TRANSITION;
+                if (otherMiniGameCount % 2 !== 0) {
+                    techdebtTransitionTimer = 0;
+                    setupTechdebtWorld();
+                    gameState = STATES.TECHDEBT_TRANSITION;
+                } else {
+                    breakoutTransitionTimer = 0;
+                    gameState = STATES.BREAKOUT_TRANSITION;
+                }
             } else {
                 // Normal pad: begin final descent settle from current position
                 sceneDescentStartY = ship.y;
