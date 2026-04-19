@@ -338,6 +338,12 @@ var MISSILE_INCOMING_LABEL_POOL = [
     'overflow'
 ];
 
+// Per-round incoming-missile label pool. Rebuilt on each entry to the
+// missile-command mini-game from MISSILE_INCOMING_LABEL_POOL plus PR-derived
+// flavour (branch name + short commit hashes). See buildMissileIncomingLabelPool
+// in js/update.js. Purely cosmetic (US-014).
+var missileRoundLabelPool = [];
+
 // --- Security Mini-Game Cycling Counter ---
 // Increments on each security pad landing. Reset to 0 on game over / new game
 // (see startNewGame in js/input.js). Odd value -> invaders mini-game,

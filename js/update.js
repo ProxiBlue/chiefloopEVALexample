@@ -181,11 +181,32 @@ function collectMissileBuildingLabels(count) {
             if (labels.indexOf(matches[mi]) === -1) labels.push(matches[mi]);
         }
     }
-    var fallback = ['main.go', 'config.ts', 'handler.js', 'auth.py', 'index.html', 'schema.sql'];
+    var fallback = ['main.go', 'auth.ts', 'handler.js', 'config.yaml', 'schema.sql', 'index.html'];
     for (var fi = 0; labels.length < count && fi < fallback.length; fi++) {
         if (labels.indexOf(fallback[fi]) === -1) labels.push(fallback[fi]);
     }
     return labels.slice(0, count);
+}
+
+// Build the per-round missile-label pool (AC-missile). Starts from the shared
+// MISSILE_INCOMING_LABEL_POOL and mixes in PR-derived flavour: branch name
+// extracted from landedPRTitle ("Merge pull request #N from owner/branch"
+// pattern) and short (7-char) commit hashes from levelCommits. Purely cosmetic.
+function buildMissileIncomingLabelPool() {
+    var pool = MISSILE_INCOMING_LABEL_POOL.slice();
+    if (typeof landedPRTitle === 'string' && landedPRTitle) {
+        var branchMatch = landedPRTitle.match(/from\s+[\w\-.]+\/([\w\-.\/]+)/);
+        if (branchMatch && branchMatch[1]) pool.push(branchMatch[1]);
+    }
+    if (typeof levelCommits !== 'undefined' && levelCommits && levelCommits.length) {
+        for (var ci = 0; ci < levelCommits.length && ci < 8; ci++) {
+            var c = levelCommits[ci];
+            if (c && typeof c.hash === 'string' && c.hash.length >= 7) {
+                pool.push(c.hash.slice(0, 7));
+            }
+        }
+    }
+    return pool;
 }
 
 // Initialize missile-command battlefield state on entry to MISSILE_TRANSITION.
@@ -216,6 +237,7 @@ function setupMissileWorld() {
     missileBuildings = [];
     missileBatteries = [];
     missileDestructionParticles = [];
+    missileRoundLabelPool = buildMissileIncomingLabelPool();
 
     missileCrosshairX = canvas.width / 2;
     missileCrosshairY = canvas.height / 2;
@@ -351,9 +373,10 @@ function spawnMissileWave() {
         var dx = target.x - spawnX;
         var dy = target.y - spawnY;
         var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        var label = MISSILE_INCOMING_LABEL_POOL[
-            Math.floor(Math.random() * MISSILE_INCOMING_LABEL_POOL.length)
-        ];
+        var pool = (typeof missileRoundLabelPool !== 'undefined' && missileRoundLabelPool && missileRoundLabelPool.length)
+            ? missileRoundLabelPool
+            : MISSILE_INCOMING_LABEL_POOL;
+        var label = pool[Math.floor(Math.random() * pool.length)];
         missileWaveSpawnQueue.push({
             delay: delay,
             originX: spawnX,
