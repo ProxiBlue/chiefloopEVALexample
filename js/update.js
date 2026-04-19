@@ -875,9 +875,9 @@ function setupDriveWorld() {
 
     var segmentWidth = 20;
     var segmentCount = Math.ceil(driveRoadLength / segmentWidth);
-    var groundYCenter = canvas.height * 0.75;
-    var groundYMin = canvas.height * 0.60;
-    var groundYMax = canvas.height * 0.85;
+    var groundYCenter = canvas.height * 0.82;
+    var groundYMin = canvas.height * 0.75;
+    var groundYMax = canvas.height * 0.88;
     var currentY = groundYCenter;
     for (var si = 0; si < segmentCount; si++) {
         var drift = (Math.random() - 0.5) * 6;
@@ -2715,12 +2715,11 @@ function update(dt) {
                 stopDriveEngineSound();
             }
             playExplosionSound();
-            landingResult = 'Fell into a gap';
-            gameState = STATES.CRASHED;
-            // US-012 AC#4: loss path uses the existing CRASHED flow; clear all
-            // drive state so the crash/gameover screens don't render stale
-            // segments/obstacles/pickups/particles from the dead round.
             clearDriveState();
+            driveCompleteTimer = 0;
+            driveCompleteTotalBonus = 0;
+            driveCompleteFuelBonus = 0;
+            gameState = STATES.DRIVE_COMPLETE;
         }
 
         // US-011: destination arrival. Trigger the moment the buggy's world-X

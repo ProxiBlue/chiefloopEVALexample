@@ -621,7 +621,7 @@ var breakoutReturnRotationTimer = 0;      // elapsed time in BREAKOUT_RETURN fli
 var otherMiniGameCount = 0;
 
 // --- Feature Drive Mini-Game Transition ---
-var DRIVE_TRANSITION_DURATION = 1.5;      // seconds — wheels animate on, camera shifts
+var DRIVE_TRANSITION_DURATION = 2.5;      // seconds — ship descends, lands, wheels deploy
 var DRIVE_COMPLETE_DELAY = 2.0;           // seconds to show results before returning
 
 // --- Feature Drive Road Configuration ---

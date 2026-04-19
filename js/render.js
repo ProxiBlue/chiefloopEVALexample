@@ -2482,11 +2482,26 @@ function renderDriveTransition() {
     drawDriveWorld();
 
     var buggyScreenX = canvas.width * 0.25;
-    var buggyScreenY = driveBuggyY;
+    var landGroundY = driveBuggyY;
 
-    drawShip(buggyScreenX, buggyScreenY, 0, SHIP_SIZE, false, null, false);
+    // Phase 1 (0–1.0s): Ship descends from top with thrust
+    // Phase 2 (1.0–1.5s): Ship settles, thrust off
+    // Phase 3 (1.5–2.5s): Wheels deploy
+    var buggyScreenY;
+    var showThrust = false;
+    if (driveTransitionTimer < 1.0) {
+        var descT = driveTransitionTimer / 1.0;
+        var descEased = descT < 0.5 ? 2 * descT * descT : 1 - Math.pow(-2 * descT + 2, 2) / 2;
+        buggyScreenY = 40 + (landGroundY - 40) * descEased;
+        showThrust = true;
+    } else {
+        buggyScreenY = landGroundY;
+    }
 
-    var wheelT = Math.min(driveTransitionTimer / 0.5, 1);
+    drawShip(buggyScreenX, buggyScreenY, 0, SHIP_SIZE, showThrust, null, false);
+
+    var wheelPhaseStart = 1.5;
+    var wheelT = Math.max(0, Math.min((driveTransitionTimer - wheelPhaseStart) / 0.5, 1));
     var eased = 1 - Math.pow(1 - wheelT, 3);
     var wheelRadius = DRIVE_WHEEL_RADIUS * eased;
     if (wheelRadius > 0.5) {
