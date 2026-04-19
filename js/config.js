@@ -29,7 +29,11 @@ var STATES = {
     BREAKOUT_TRANSITION: 'breakout_transition',
     BREAKOUT_PLAYING: 'breakout_playing',
     BREAKOUT_COMPLETE: 'breakout_complete',
-    BREAKOUT_RETURN: 'breakout_return'
+    BREAKOUT_RETURN: 'breakout_return',
+    DRIVE_TRANSITION: 'drive_transition',
+    DRIVE_PLAYING: 'drive_playing',
+    DRIVE_COMPLETE: 'drive_complete',
+    DRIVE_RETURN: 'drive_return'
 };
 
 var gameState = STATES.MENU;
