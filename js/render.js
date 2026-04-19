@@ -239,45 +239,42 @@ function renderPlaying() {
         var windPct = wind.maxStrength > 0 ? windStr / wind.maxStrength : 0;
 
         // Strength number above icon
-        ctx.font = 'bold 13px monospace';
+        ctx.font = 'bold 16px monospace';
         ctx.textAlign = 'center';
         var windColor = windPct > 0.6 ? '#f44336' : windPct > 0.3 ? '#FFC107' : '#4FC3F7';
         ctx.fillStyle = windColor;
-        ctx.fillText(windStr.toFixed(1) + ' m/s', windCX, windCY - 14);
+        ctx.fillText(windStr.toFixed(1) + ' m/s', windCX, windCY - 28);
 
-        // Wind blow icon — three wavy lines that flip direction
-        // When windDir = 1 (blowing right), waves flow right
-        // When windDir = -1 (blowing left), waves flow left
+        // Wind blow icon — three wavy lines that flip direction (2x size)
         ctx.save();
         ctx.translate(windCX, windCY);
         if (windDir < 0) {
-            ctx.scale(-1, 1); // flip horizontally for left wind
+            ctx.scale(-1, 1);
         }
 
         var iconAlpha = 0.4 + windPct * 0.6;
         ctx.strokeStyle = 'rgba(79, 195, 247, ' + iconAlpha + ')';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.lineCap = 'round';
 
-        // Three wavy airflow lines at different vertical offsets
-        var waveOffsets = [-6, 0, 6];
-        var waveLen = 12 + windPct * 8; // longer waves = stronger wind
-        var waveAmp = 2 + windPct * 2;
+        // Three wavy airflow lines at different vertical offsets (doubled spacing)
+        var waveOffsets = [-12, 0, 12];
+        var waveLen = 24 + windPct * 16;
+        var waveAmp = 4 + windPct * 4;
         for (var wi = 0; wi < waveOffsets.length; wi++) {
             var wy = waveOffsets[wi];
-            var wx = -waveLen + wi * 3; // stagger start positions
+            var wx = -waveLen + wi * 6;
             ctx.beginPath();
             ctx.moveTo(wx, wy);
-            // Two sine half-waves
             ctx.quadraticCurveTo(wx + waveLen * 0.25, wy - waveAmp, wx + waveLen * 0.5, wy);
             ctx.quadraticCurveTo(wx + waveLen * 0.75, wy + waveAmp, wx + waveLen, wy);
             ctx.stroke();
             // Arrow tip at the end of each wave
             ctx.beginPath();
             ctx.moveTo(wx + waveLen, wy);
-            ctx.lineTo(wx + waveLen - 4, wy - 3);
+            ctx.lineTo(wx + waveLen - 8, wy - 5);
             ctx.moveTo(wx + waveLen, wy);
-            ctx.lineTo(wx + waveLen - 4, wy + 3);
+            ctx.lineTo(wx + waveLen - 8, wy + 5);
             ctx.stroke();
         }
 

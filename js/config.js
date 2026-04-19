@@ -36,8 +36,8 @@ function getLevelConfig(level) {
     var gravity = Math.min(1.6 + level * 0.2, 5.0);
     // Pad count: starts at 3, decreases by 1 every 2 levels, minimum 1
     var padCount = Math.max(1, 3 - Math.floor(level / 2));
-    // Wind: starts at 0, increases by 0.4 per level, caps at 5.0
-    var maxWind = Math.min(level * 0.4, 5.0);
+    // Wind: starts at 0, increases by 0.2 per level, caps at 3.0
+    var maxWind = Math.min(level * 0.2, 3.0);
     return { gravity: gravity, padCount: padCount, maxWind: maxWind };
 }
 var currentLevel = 0;
@@ -268,9 +268,9 @@ var MISSILE_INTERCEPTOR_SPEED = 350;      // interceptor travel speed in px/s
 var MISSILE_INTERCEPTOR_BLAST_RADIUS = 40; // blast radius of interceptor detonation in pixels
 
 // --- Missile Incoming Configuration ---
-var MISSILE_INCOMING_BASE_COUNT = 3;      // base count of incoming missiles
+var MISSILE_INCOMING_BASE_COUNT = 4;      // base count of incoming missiles
 var MISSILE_INCOMING_PER_LEVEL = 1;       // extra incoming missiles per level
-var MISSILE_INCOMING_MAX = 10;            // hard cap on incoming missiles per round
+var MISSILE_INCOMING_MAX = 12;            // hard cap on incoming missiles per round
 var MISSILE_INCOMING_BASE_SPEED = 40;     // base descent speed in px/s
 var MISSILE_INCOMING_SPEED_PER_LEVEL = 8; // additional speed per level in px/s
 var MISSILE_INCOMING_SPEED_VARIANCE = 10; // +/- speed variance per missile in px/s

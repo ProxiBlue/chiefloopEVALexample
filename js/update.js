@@ -1245,7 +1245,7 @@ function update(dt) {
                     x: inter.targetX,
                     y: inter.targetY,
                     timer: 0,
-                    duration: 0.5,
+                    duration: 1.0,
                     maxRadius: MISSILE_INTERCEPTOR_BLAST_RADIUS,
                     radius: 0,
                     kind: 'interceptor'
