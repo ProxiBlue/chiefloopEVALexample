@@ -1974,6 +1974,18 @@ function update(dt) {
         }
     }
 
+    // Feature Drive transition: brief intro window between landing on a
+    // feature pad and driving gameplay. Ship is already centered + upright
+    // from the SCENE_SCROLL end branch; this block just ticks the timer and
+    // advances to DRIVE_PLAYING when it elapses. World setup is deferred to
+    // a later story.
+    if (gameState === STATES.DRIVE_TRANSITION) {
+        driveTransitionTimer += dt;
+        if (driveTransitionTimer >= DRIVE_TRANSITION_DURATION) {
+            gameState = STATES.DRIVE_PLAYING;
+        }
+    }
+
     // Tech debt transition: brief intro window between landing and asteroid
     // gameplay. Ship is already centered + upright from the SCENE_SCROLL end
     // branch and the asteroid field was seeded there via setupTechdebtWorld(),
