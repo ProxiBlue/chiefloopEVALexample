@@ -645,6 +645,9 @@ var DRIVE_OBSTACLE_DENSITY_BASE = 0.03;   // obstacles per px of road at level 1
 var DRIVE_OBSTACLE_DENSITY_PER_LEVEL = 0.005; // extra density per level
 var DRIVE_OBSTACLE_DENSITY_MAX = 0.08;    // density cap
 var DRIVE_ROCK_FUEL_COST = 10;            // fuel lost per rock collision (US-008)
+var DRIVE_SLOW_FACTOR = 0.4;              // slow-zone max-speed reduction (40%) (US-010)
+var DRIVE_BOOST_FACTOR = 0.5;             // boost-zone speed bump (+50%) (US-010)
+var DRIVE_BOOST_DURATION = 1.0;           // seconds boost lingers after triggering (US-010)
 
 // --- Feature Drive Pickup Configuration ---
 var DRIVE_PICKUP_SIZE = 14;               // pickup sprite size in px
@@ -666,6 +669,8 @@ var driveWheelRotation = 0;               // visual wheel spin angle (radians)
 var driveBuggyTilt = 0;                   // cosmetic buggy tilt while airborne (radians)
 var drivePrevJumpKey = false;             // previous-frame jump-key state (edge detect)
 var driveFalling = false;                 // true once buggy has committed to a gap fall (US-007)
+var driveBoostTimer = 0;                  // seconds remaining on active speed boost (US-010)
+var drivePrevSegType = null;              // previous-frame segment type for edge-trigger zone detection (US-010)
 
 // --- Feature Drive State Arrays ---
 var driveRoadSegments = [];               // road segment definitions

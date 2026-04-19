@@ -766,6 +766,30 @@ function playDrivePickupSound() {
     });
 }
 
+// Feature Drive US-010: Speed-boost whoosh — short noise burst pushed
+// through a low-pass filter sweeping from high to low. Subtle (lower gain
+// than rock-hit / pickup) so repeated triggers don't dominate the mix.
+function playDriveBoostSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var dur = 0.25;
+    var noise = ctx.createBufferSource();
+    noise.buffer = createNoiseBuffer(ctx, dur);
+    var lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(1200, t);
+    lp.frequency.exponentialRampToValueAtTime(300, t + dur);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    noise.connect(lp);
+    lp.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + dur);
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;

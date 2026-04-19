@@ -809,6 +809,8 @@ function setupDriveWorld() {
     driveBuggyTilt = 0;
     drivePrevJumpKey = false;
     driveFalling = false;
+    driveBoostTimer = 0;
+    drivePrevSegType = null;
     driveScore = 0;
     drivePickupsCollected = 0;
     driveDistance = 0;
@@ -2281,24 +2283,87 @@ function update(dt) {
         var jumpKey = !!(keys['ArrowUp'] || keys['w'] || keys['W'] ||
                          keys[' '] || keys['Space']);
 
+        // US-010: detect current segment type at frame start (pre-scroll)
+        // for slow/boost zone effects. Boost is edge-triggered: entering a
+        // 'boost' segment kicks driveSpeed by +DRIVE_BOOST_FACTOR and starts
+        // a DRIVE_BOOST_DURATION timer. Slow is positional: while OVER a
+        // 'slow' segment, max speed caps at MAX*(1-DRIVE_SLOW_FACTOR) and
+        // the buggy decelerates toward that cap if currently faster. Latest
+        // zone wins — entering 'slow' cancels any active boost.
+        var preDriveSegmentWidth = 20;
+        var preBuggyScreenX = canvas.width * 0.25;
+        var preBuggyWorldX = driveScrollX + preBuggyScreenX;
+        var preSegIdx = Math.floor(preBuggyWorldX / preDriveSegmentWidth);
+        if (preSegIdx < 0) preSegIdx = 0;
+        if (preSegIdx > driveRoadSegments.length - 1) preSegIdx = driveRoadSegments.length - 1;
+        var currSegType = driveRoadSegments.length > 0
+            ? driveRoadSegments[preSegIdx].type
+            : null;
+
+        if (currSegType === 'boost' && drivePrevSegType !== 'boost') {
+            driveSpeed *= (1 + DRIVE_BOOST_FACTOR);
+            driveBoostTimer = DRIVE_BOOST_DURATION;
+            if (typeof playDriveBoostSound === 'function') {
+                playDriveBoostSound();
+            }
+        }
+        if (currSegType === 'slow' && drivePrevSegType !== 'slow') {
+            driveBoostTimer = 0;
+        }
+        drivePrevSegType = currSegType;
+
+        if (driveBoostTimer > 0) {
+            driveBoostTimer -= dt;
+            if (driveBoostTimer < 0) driveBoostTimer = 0;
+        }
+
+        // Effective max for this tick. Boost overrides slow.
+        var driveEffectiveMax = DRIVE_SCROLL_SPEED_MAX;
+        if (driveBoostTimer > 0) {
+            driveEffectiveMax = DRIVE_SCROLL_SPEED_MAX * (1 + DRIVE_BOOST_FACTOR);
+        } else if (currSegType === 'slow') {
+            driveEffectiveMax = DRIVE_SCROLL_SPEED_MAX * (1 - DRIVE_SLOW_FACTOR);
+        }
+
+        // Relax target — hold boosted speed during boost; in a slow zone,
+        // relax target is capped at the effective max so the buggy doesn't
+        // creep above its slow cap when no input is given.
+        var driveRelaxTarget;
+        if (driveBoostTimer > 0) {
+            driveRelaxTarget = DRIVE_SCROLL_SPEED_BASE * (1 + DRIVE_BOOST_FACTOR);
+        } else if (currSegType === 'slow') {
+            driveRelaxTarget = Math.min(DRIVE_SCROLL_SPEED_BASE, driveEffectiveMax);
+        } else {
+            driveRelaxTarget = DRIVE_SCROLL_SPEED_BASE;
+        }
+
         if (accelKey) {
             driveSpeed += DRIVE_ACCELERATION * dt;
         } else if (brakeKey) {
             driveSpeed -= DRIVE_BRAKE_DECEL * dt;
         } else {
-            if (driveSpeed < DRIVE_SCROLL_SPEED_BASE) {
+            if (driveSpeed < driveRelaxTarget) {
                 driveSpeed = Math.min(
-                    DRIVE_SCROLL_SPEED_BASE,
+                    driveRelaxTarget,
                     driveSpeed + DRIVE_ACCELERATION * dt
                 );
-            } else if (driveSpeed > DRIVE_SCROLL_SPEED_BASE) {
+            } else if (driveSpeed > driveRelaxTarget) {
                 driveSpeed = Math.max(
-                    DRIVE_SCROLL_SPEED_BASE,
+                    driveRelaxTarget,
                     driveSpeed - DRIVE_BRAKE_DECEL * dt
                 );
             }
         }
-        if (driveSpeed > DRIVE_SCROLL_SPEED_MAX) driveSpeed = DRIVE_SCROLL_SPEED_MAX;
+        // US-010: smooth decel toward the effective cap if currently faster
+        // (covers entering a slow zone above its cap, or boost expiring with
+        // residual speed above MAX). One-frame brake step keeps the
+        // transition perceptible rather than instant.
+        if (driveSpeed > driveEffectiveMax) {
+            driveSpeed = Math.max(
+                driveEffectiveMax,
+                driveSpeed - DRIVE_BRAKE_DECEL * dt
+            );
+        }
         if (driveSpeed < 40) driveSpeed = 40;
 
         // Edge-triggered jump: fire only on rising edge so holding the key
