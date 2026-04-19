@@ -530,10 +530,10 @@ var BREAKOUT_BRICK_LABEL_POOL = [
 
 // --- Code Breaker Ball Configuration ---
 var BREAKOUT_BALL_RADIUS = 5;             // ball radius in px
-var BREAKOUT_BALL_SPEED_BASE = 250;       // base ball speed in px/s
-var BREAKOUT_BALL_SPEED_PER_LEVEL = 15;   // additional ball speed per level in px/s
-var BREAKOUT_BALL_SPEED_MAX = 450;        // hard cap on ball speed in px/s
-var BREAKOUT_BALL_SPEED_INCREMENT = 5;    // px/s added after each brick hit to ramp tension
+var BREAKOUT_BALL_SPEED_BASE = 320;       // base ball speed in px/s
+var BREAKOUT_BALL_SPEED_PER_LEVEL = 20;   // additional ball speed per level in px/s
+var BREAKOUT_BALL_SPEED_MAX = 600;        // hard cap on ball speed in px/s
+var BREAKOUT_BALL_SPEED_INCREMENT = 8;    // px/s added after each brick hit to ramp tension
 
 // --- Code Breaker Paddle Configuration ---
 var BREAKOUT_PADDLE_WIDTH = 80;           // paddle width in px (wider than ship M char for playability)
@@ -559,8 +559,14 @@ var BREAKOUT_POWERUP_TYPES = [
     { type: 'wide',  letter: 'W', label: 'refactor()', color: '#4CAF50' },
     { type: 'multi', letter: 'M', label: 'fork()',     color: '#FF9800' },
     { type: 'fire',  letter: 'F', label: '--force',    color: '#F44336' },
-    { type: 'extra', letter: '+', label: 'git stash',  color: '#00BCD4' }
+    { type: 'extra', letter: '+', label: 'git stash',  color: '#00BCD4' },
+    { type: 'shoot', letter: 'S', label: 'npm test',   color: '#9C27B0' }
 ];
+var BREAKOUT_SHOOT_DURATION = 8;          // seconds the shoot power-up lasts
+var BREAKOUT_SHOOT_COOLDOWN = 0.3;        // seconds between shots
+var BREAKOUT_SHOOT_SPEED = 500;           // bullet speed in px/s
+var breakoutShootTimer = 0;               // cooldown timer for shooting
+var breakoutShootBullets = [];            // active paddle bullets
 
 // --- Code Breaker Scoring ---
 var BREAKOUT_POINTS_PER_BRICK = 10;       // base points per brick destroyed
@@ -658,6 +664,7 @@ var driveGrounded = true;                 // whether buggy is on ground
 var driveWheelRotation = 0;               // visual wheel spin angle (radians)
 var driveBuggyTilt = 0;                   // cosmetic buggy tilt while airborne (radians)
 var drivePrevJumpKey = false;             // previous-frame jump-key state (edge detect)
+var driveFalling = false;                 // true once buggy has committed to a gap fall (US-007)
 
 // --- Feature Drive State Arrays ---
 var driveRoadSegments = [];               // road segment definitions

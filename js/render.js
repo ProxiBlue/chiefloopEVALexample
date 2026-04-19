@@ -1992,31 +1992,27 @@ function drawBreakoutWorld() {
         ctx.restore();
     }
 
-    // US-012: faint glow below the paddle adds visual polish. Radial gradient
-    // centred on the paddle's bottom edge, fading outward — sits behind the
-    // paddle sprite so the M reads cleanly on top.
-    var glowCenterX = ship.x;
-    var glowY = ship.y + SHIP_SIZE / 2;
-    var glowRadius = breakoutPaddleWidth;
-    ctx.save();
-    var paddleGlow = ctx.createRadialGradient(
-        glowCenterX, glowY, 2,
-        glowCenterX, glowY, glowRadius
-    );
-    paddleGlow.addColorStop(0, 'rgba(242, 99, 34, 0.35)');
-    paddleGlow.addColorStop(1, 'rgba(242, 99, 34, 0)');
-    ctx.fillStyle = paddleGlow;
-    ctx.fillRect(glowCenterX - glowRadius, glowY - 8,
-                 glowRadius * 2, glowRadius + 12);
-    ctx.restore();
-
-    // Paddle = M ship drawn at its current (animated) angle + position. Size
+    // Paddle = M ship drawn upright at its current position. Size
     // tracks the live `breakoutPaddleWidth` (may be scaled by the Wide
     // power-up in US-008) so the sprite matches the hitbox exactly.
     var paddleDrawSize = breakoutPaddleWidth / LOGO_DRAW_RATIO;
     drawShip(ship.x, ship.y, ship.angle, paddleDrawSize, ship.thrusting, ship.rotating, ship.retroThrusting || false);
 
-    // US-012: ball trails (primary + extras) — fireball swaps to a flame palette.
+    // Shoot power-up bullets
+    if (breakoutShootBullets && breakoutShootBullets.length > 0) {
+        ctx.save();
+        ctx.fillStyle = '#9C27B0';
+        ctx.shadowColor = '#9C27B0';
+        ctx.shadowBlur = 4;
+        for (var sbri = 0; sbri < breakoutShootBullets.length; sbri++) {
+            var sbl = breakoutShootBullets[sbri];
+            ctx.fillRect(sbl.x - 2, sbl.y - 6, 4, 12);
+        }
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+
+    // Ball trails (primary + extras) — fireball swaps to a flame palette.
     var fireOn = (breakoutActivePowerup === 'fire');
     drawBreakoutBallTrail(breakoutBallTrail, fireOn);
     for (var eti = 0; eti < breakoutBalls.length; eti++) {

@@ -269,6 +269,8 @@ function clearBreakoutState() {
     breakoutPaddleYPos = 0;
     breakoutActivePowerup = null;
     breakoutPowerupTimer = 0;
+    breakoutShootBullets = [];
+    breakoutShootTimer = 0;
     breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
     breakoutBallVX = 0;
     breakoutBallVY = 0;
@@ -633,6 +635,11 @@ function activateBreakoutPowerup(type) {
     } else if (type === 'fire') {
         breakoutPowerupTimer = BREAKOUT_POWERUP_FIRE_DURATION;
         breakoutActivePowerup = 'fire';
+    } else if (type === 'shoot') {
+        breakoutPowerupTimer = BREAKOUT_SHOOT_DURATION;
+        breakoutActivePowerup = 'shoot';
+        breakoutShootTimer = 0;
+        breakoutShootBullets = [];
     }
 }
 
@@ -801,6 +808,7 @@ function setupDriveWorld() {
     driveWheelRotation = 0;
     driveBuggyTilt = 0;
     drivePrevJumpKey = false;
+    driveFalling = false;
     driveScore = 0;
     drivePickupsCollected = 0;
     driveDistance = 0;
@@ -1311,27 +1319,43 @@ function update(dt) {
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
             } else if (isOtherPad) {
-                // `other` pads alternate mini-games: odd count → Tech Debt
-                // Blaster, even count → Code Breaker. Count starts at 0, so
-                // the first landing (0 → 1, odd) routes to asteroids.
-                otherMiniGameCount++;
-                ship.x = canvas.width / 2;
-                ship.y = canvas.height / 2;
-                ship.angle = 0;
-                ship.vx = 0;
-                ship.vy = 0;
-                ship.thrusting = false;
-                ship.rotating = null;
-                stopThrustSound();
-                ship.fuel = FUEL_MAX;
-                if (otherMiniGameCount % 2 !== 0) {
-                    techdebtTransitionTimer = 0;
-                    setupTechdebtWorld();
-                    gameState = STATES.TECHDEBT_TRANSITION;
+                // 50% chance to trigger a mini-game on other pads; otherwise
+                // normal descent so the player gets more lander gameplay.
+                if (Math.random() < 0.5) {
+                    otherMiniGameCount++;
+                    ship.x = canvas.width / 2;
+                    ship.y = canvas.height / 2;
+                    ship.angle = 0;
+                    ship.vx = 0;
+                    ship.vy = 0;
+                    ship.thrusting = false;
+                    ship.rotating = null;
+                    stopThrustSound();
+                    ship.fuel = FUEL_MAX;
+                    if (otherMiniGameCount % 2 !== 0) {
+                        techdebtTransitionTimer = 0;
+                        setupTechdebtWorld();
+                        gameState = STATES.TECHDEBT_TRANSITION;
+                    } else {
+                        breakoutTransitionTimer = 0;
+                        setupBreakoutWorld();
+                        gameState = STATES.BREAKOUT_TRANSITION;
+                    }
                 } else {
-                    breakoutTransitionTimer = 0;
-                    setupBreakoutWorld();
-                    gameState = STATES.BREAKOUT_TRANSITION;
+                    // Normal descent — standard next level
+                    sceneDescentStartY = ship.y;
+                    sceneDescentTargetY = canvas.height / 3;
+                    sceneDescentTimer = 0;
+                    ship.x = canvas.width / 2;
+                    ship.y = sceneDescentStartY;
+                    ship.angle = 0;
+                    ship.vx = 0;
+                    ship.vy = 0;
+                    ship.thrusting = false;
+                    ship.rotating = null;
+                    stopThrustSound();
+                    ship.fuel = FUEL_MAX;
+                    gameState = STATES.SCENE_DESCENT;
                 }
             } else if (isFeaturePad) {
                 // Feature pad: enter Feature Drive transition directly (no
@@ -2255,7 +2279,21 @@ function update(dt) {
             ? driveRoadSegments[segIdx].y
             : driveBuggyY;
 
-        if (driveGrounded) {
+        // US-007: commit to a gap fall once the buggy is over a gap segment
+        // and at/below the gap's edge Y. `driveFalling` persists so scroll
+        // carrying the buggy past the gap can't re-ground it — the buggy
+        // plummets straight off the bottom of the canvas.
+        var overGap = driveRoadSegments.length > 0 &&
+                      driveRoadSegments[segIdx].type === 'gap';
+        if (overGap && !driveFalling && driveBuggyY >= groundY) {
+            driveFalling = true;
+            driveGrounded = false;
+        }
+
+        if (driveFalling) {
+            driveBuggyVY += DRIVE_GRAVITY * dt;
+            driveBuggyY += driveBuggyVY * dt;
+        } else if (driveGrounded) {
             driveBuggyY = groundY;
             driveBuggyVY = 0;
         } else {
@@ -2281,6 +2319,19 @@ function update(dt) {
         }
 
         driveDistance = driveScrollX;
+
+        // US-007: once the buggy has dropped fully below the canvas bottom,
+        // spawn the crash FX and route through the shared CRASHED flow.
+        // Partial score already banked into global `score` (via pickups /
+        // other drive rewards) stays put — we don't subtract anything here.
+        if (driveFalling && driveBuggyY > canvas.height) {
+            spawnExplosion(buggyScreenX, canvas.height - 10);
+            startScreenShake();
+            stopThrustSound();
+            playExplosionSound();
+            landingResult = 'Fell into a gap';
+            gameState = STATES.CRASHED;
+        }
     }
 
     // Tech debt transition: brief intro window between landing and asteroid
@@ -2312,7 +2363,7 @@ function update(dt) {
         var eased = flipT < 0.5
             ? 4 * flipT * flipT * flipT
             : 1 - Math.pow(-2 * flipT + 2, 3) / 2;
-        ship.angle = eased * Math.PI;
+        ship.angle = 0;
 
         // paddle top = canvas.height - Y_OFFSET; ship.y is the center of the
         // M, so lift by halfH so the flipped M's top edge lands at Y_OFFSET.
@@ -2371,16 +2422,15 @@ function update(dt) {
         if (breakoutPaddleYPos < paddleMinY) breakoutPaddleYPos = paddleMinY;
         if (breakoutPaddleYPos > paddleMaxY) breakoutPaddleYPos = paddleMaxY;
 
-        // Show rotation thrusters when moving left/right (ship is flipped 180°,
-        // so left/right rotation jets visually fire in the correct direction)
-        ship.rotating = paddleLeft ? 'right' : paddleRight ? 'left' : null;
+        // Show rotation thrusters when moving left/right
+        ship.rotating = paddleLeft ? 'left' : paddleRight ? 'right' : null;
         ship.thrusting = paddleUp;
         ship.retroThrusting = paddleDown;
 
         // Keep the flipped M sprite aligned with the paddle hitbox.
         ship.x = breakoutPaddleX + breakoutPaddleWidth / 2;
         ship.y = breakoutPaddleYPos;
-        ship.angle = Math.PI;
+        ship.angle = 0;
 
         if (breakoutBallStuck) {
             breakoutBallX = ship.x;
@@ -2424,7 +2474,7 @@ function update(dt) {
                 }
             }
 
-            // US-008: tick down the active timed power-up; revert when zero.
+            // Tick down the active timed power-up; revert when zero.
             if (breakoutActivePowerup !== null && breakoutPowerupTimer > 0) {
                 breakoutPowerupTimer -= dt;
                 if (breakoutPowerupTimer <= 0) {
@@ -2435,7 +2485,63 @@ function update(dt) {
                             breakoutPaddleX = canvas.width - breakoutPaddleWidth;
                         }
                     }
+                    if (breakoutActivePowerup === 'shoot') {
+                        breakoutShootBullets = [];
+                    }
                     breakoutActivePowerup = null;
+                }
+            }
+
+            // Shoot power-up: Space fires bullets upward from ship
+            if (breakoutActivePowerup === 'shoot') {
+                breakoutShootTimer -= dt;
+                if (breakoutShootTimer < 0) breakoutShootTimer = 0;
+                var wantsShoot = !!(keys[' '] || keys['Space']);
+                if (wantsShoot && breakoutShootTimer <= 0) {
+                    breakoutShootBullets.push({
+                        x: ship.x - 8,
+                        y: ship.y - SHIP_SIZE / 2,
+                        vy: -BREAKOUT_SHOOT_SPEED
+                    });
+                    breakoutShootBullets.push({
+                        x: ship.x + 8,
+                        y: ship.y - SHIP_SIZE / 2,
+                        vy: -BREAKOUT_SHOOT_SPEED
+                    });
+                    breakoutShootTimer = BREAKOUT_SHOOT_COOLDOWN;
+                    if (typeof playShootSound === 'function') playShootSound();
+                }
+            }
+            // Update and collide shoot bullets vs bricks
+            for (var sbIdx = breakoutShootBullets.length - 1; sbIdx >= 0; sbIdx--) {
+                var sb = breakoutShootBullets[sbIdx];
+                sb.y += sb.vy * dt;
+                if (sb.y < 0) {
+                    breakoutShootBullets.splice(sbIdx, 1);
+                    continue;
+                }
+                for (var sbi = 0; sbi < breakoutBricks.length; sbi++) {
+                    var sbrick = breakoutBricks[sbi];
+                    if (sb.x >= sbrick.x && sb.x <= sbrick.x + sbrick.w &&
+                        sb.y >= sbrick.y && sb.y <= sbrick.y + sbrick.h) {
+                        sbrick.hp -= 1;
+                        if (sbrick.hp <= 0) {
+                            var sbPts = BREAKOUT_POINTS_PER_BRICK + BREAKOUT_POINTS_BONUS_HP * sbrick.maxHp;
+                            breakoutScore += sbPts;
+                            score += sbPts;
+                            breakoutBricksDestroyed += 1;
+                            spawnBreakoutBrickParticles(sbrick.x + sbrick.w / 2, sbrick.y + sbrick.h / 2, sbrick.color);
+                            if (typeof playBreakoutBrickDestroySound === 'function') playBreakoutBrickDestroySound();
+                            breakoutBricks.splice(sbi, 1);
+                        } else {
+                            sbrick.color = sbrick.hp === 3 ? BREAKOUT_BRICK_COLOR_HP3
+                                         : sbrick.hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
+                                         : BREAKOUT_BRICK_COLOR_HP1;
+                            sbrick.flashTimer = 0.12;
+                        }
+                        breakoutShootBullets.splice(sbIdx, 1);
+                        break;
+                    }
                 }
             }
 
@@ -2883,7 +2989,7 @@ function update(dt) {
             ? 4 * tBR * tBR * tBR
             : 1 - Math.pow(-2 * tBR + 2, 3) / 2;
         // Rotate back from π (upside-down paddle) to 0 (upright nose-up ship)
-        ship.angle = Math.PI * (1 - easedBR);
+        ship.angle = 0;
 
         if (tBR >= 1) {
             clearBreakoutState();
