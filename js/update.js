@@ -712,29 +712,51 @@ function update(dt) {
 
     // Invader playing: move aliens, handle bullets, detect collisions
     if (gameState === STATES.INVADER_PLAYING) {
-        // --- Ship 4-directional movement (direct, no physics) ---
+        // --- Ship thruster-based physics (velocity + drag + inertia) ---
         var flatY = canvas.height * TERRAIN_FLAT_Y_RATIO;
         var movingUp = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
         var movingDown = !!(keys['ArrowDown'] || keys['s'] || keys['S']);
         var movingLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
         var movingRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
-        if (movingUp) {
-            ship.y -= INVADER_MOVE_SPEED * dt;
+
+        var wantsMainThrust = movingUp || movingRight;
+        var wantsRetroThrust = movingDown || movingLeft;
+
+        if (movingUp)    ship.invaderVY -= INVADER_THRUST_POWER * dt;
+        if (movingRight) ship.invaderVX += INVADER_THRUST_POWER * dt;
+        if (movingDown)  ship.invaderVY += INVADER_RETRO_POWER * dt;
+        if (movingLeft)  ship.invaderVX -= INVADER_RETRO_POWER * dt;
+
+        ship.thrusting = wantsMainThrust;
+        ship.retroThrusting = wantsRetroThrust;
+
+        if (ship.thrusting || ship.retroThrusting) {
+            startThrustSound();
+        } else {
+            stopThrustSound();
         }
-        if (movingDown) {
-            ship.y += INVADER_MOVE_SPEED * dt;
+
+        // Drag
+        ship.invaderVX *= INVADER_DRAG;
+        ship.invaderVY *= INVADER_DRAG;
+
+        // Clamp velocity magnitude
+        var speed = Math.sqrt(ship.invaderVX * ship.invaderVX + ship.invaderVY * ship.invaderVY);
+        if (speed > INVADER_MAX_SPEED) {
+            var scale = INVADER_MAX_SPEED / speed;
+            ship.invaderVX *= scale;
+            ship.invaderVY *= scale;
         }
-        if (movingLeft) {
-            ship.x -= INVADER_MOVE_SPEED * dt;
-        }
-        if (movingRight) {
-            ship.x += INVADER_MOVE_SPEED * dt;
-        }
-        // Clamp to canvas bounds
-        if (ship.y < 80) ship.y = 80;
-        if (ship.y > flatY - 40) ship.y = flatY - 40;
-        if (ship.x < SHIP_SIZE) ship.x = SHIP_SIZE;
-        if (ship.x > canvas.width - SHIP_SIZE) ship.x = canvas.width - SHIP_SIZE;
+
+        // Position update
+        ship.x += ship.invaderVX * dt;
+        ship.y += ship.invaderVY * dt;
+
+        // Clamp to canvas bounds; zero the velocity component in the direction of the bound
+        if (ship.y < 80) { ship.y = 80; ship.invaderVY = 0; }
+        if (ship.y > flatY - 40) { ship.y = flatY - 40; ship.invaderVY = 0; }
+        if (ship.x < SHIP_SIZE) { ship.x = SHIP_SIZE; ship.invaderVX = 0; }
+        if (ship.x > canvas.width - SHIP_SIZE) { ship.x = canvas.width - SHIP_SIZE; ship.invaderVX = 0; }
 
         // --- Bullet firing (Space key) ---
         bulletCooldownTimer -= dt;
