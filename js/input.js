@@ -189,6 +189,11 @@ function handleKeyPress(key) {
             } else {
                 gameOverEnteringName = false;
             }
+            // US-015 AC#10: game over resets securityMiniGameCount so the next
+            // run starts a fresh invader→missile cycle. (Also reset on
+            // startNewGame for the menu/restart paths; this entry guarantees
+            // the counter is 0 the moment GAMEOVER is reached.)
+            securityMiniGameCount = 0;
             gameState = STATES.GAMEOVER;
         } else if (gameState === STATES.GAMEOVER && !gameOverEnteringName) {
             startNewGame();
