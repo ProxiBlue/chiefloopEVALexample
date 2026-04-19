@@ -400,6 +400,8 @@ function setupBreakoutWorld() {
     breakoutBricksDestroyed = 0;
     breakoutBricksTotal = 0;
     breakoutCompleteTimer = 0;
+    breakoutCompletionBonus = 0;
+    breakoutExtraBallBonus = 0;
     breakoutExtraBalls = 0;
     breakoutBallVX = 0;
     breakoutBallVY = 0;
@@ -2312,6 +2314,50 @@ function update(dt) {
                     loseBreakoutBall();
                 }
             }
+
+            // US-010: Win condition. When every brick spawned this round has
+            // been destroyed, enter BREAKOUT_COMPLETE, award the completion
+            // bonus plus per-extra-ball bonus, and fire celebration particles.
+            // Guard on BREAKOUT_PLAYING so loseBreakoutBall()'s CRASHED route
+            // above cannot double-enter this branch in the same tick.
+            if (gameState === STATES.BREAKOUT_PLAYING &&
+                breakoutBricksTotal > 0 &&
+                breakoutBricksDestroyed >= breakoutBricksTotal) {
+                breakoutCompletionBonus = BREAKOUT_POINTS_COMPLETION;
+                breakoutExtraBallBonus =
+                    BREAKOUT_POINTS_BALLS_REMAINING * breakoutExtraBalls;
+                var totalBonus = breakoutCompletionBonus + breakoutExtraBallBonus;
+                breakoutScore += totalBonus;
+                score += totalBonus;
+                breakoutCompleteTimer = 0;
+                gameState = STATES.BREAKOUT_COMPLETE;
+                stopThrustSound();
+                spawnCelebration(
+                    breakoutPaddleX + breakoutPaddleWidth / 2,
+                    canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2
+                );
+            }
+        }
+    }
+
+    // Code Breaker complete (US-010): hold the results screen for
+    // BREAKOUT_COMPLETE_DELAY seconds. Keep brick-burst particles + the
+    // shared celebration sparkles ticking so they finish out visually.
+    // Advance to BREAKOUT_RETURN once the delay elapses (US-011 wires that
+    // state; until then the game sits here — acceptable for this story
+    // because the AC only covers up to results display).
+    if (gameState === STATES.BREAKOUT_COMPLETE) {
+        for (var bcPIdx = breakoutParticles.length - 1; bcPIdx >= 0; bcPIdx--) {
+            var bcPar = breakoutParticles[bcPIdx];
+            bcPar.x += bcPar.vx * dt;
+            bcPar.y += bcPar.vy * dt;
+            bcPar.life -= dt;
+            if (bcPar.life <= 0) breakoutParticles.splice(bcPIdx, 1);
+        }
+        updateCelebration(dt);
+        breakoutCompleteTimer += dt;
+        if (breakoutCompleteTimer >= BREAKOUT_COMPLETE_DELAY) {
+            gameState = STATES.BREAKOUT_RETURN;
         }
     }
 

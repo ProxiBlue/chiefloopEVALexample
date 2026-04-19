@@ -1943,6 +1943,58 @@ function renderBreakoutPlaying() {
     drawBreakoutWorld();
 }
 
+// US-010: "TECH DEBT CLEARED!" results overlay. Draws the cleared field
+// underneath (fading brick-burst particles + flipped paddle) plus celebration
+// sparkles, then the score breakdown per the AC. Mirrors renderTechdebtComplete.
+function renderBreakoutComplete() {
+    drawBreakoutWorld();
+    drawCelebration();
+
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+
+    ctx.save();
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.fillText('TECH DEBT CLEARED!', cx, cy - 95);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('Bricks destroyed: ' + breakoutBricksDestroyed, cx, cy - 50);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(
+        'Extra balls remaining: ' + breakoutExtraBalls +
+            ' (+' + breakoutExtraBallBonus + ' pts)',
+        cx, cy - 20
+    );
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(
+        'Completion bonus: +' + breakoutCompletionBonus + ' pts',
+        cx, cy + 10
+    );
+
+    var totalBonus = breakoutCompletionBonus + breakoutExtraBallBonus;
+    ctx.fillStyle = '#FFEB3B';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillText('Total bonus: +' + totalBonus + ' pts', cx, cy + 45);
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText('Score: ' + score, cx, cy + 80);
+
+    ctx.fillStyle = '#888';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('Returning to mission...', cx, cy + 115);
+
+    ctx.restore();
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -2133,6 +2185,9 @@ function render() {
             break;
         case STATES.BREAKOUT_PLAYING:
             renderBreakoutPlaying();
+            break;
+        case STATES.BREAKOUT_COMPLETE:
+            renderBreakoutComplete();
             break;
         case STATES.CRASHED:
             renderCrashed();

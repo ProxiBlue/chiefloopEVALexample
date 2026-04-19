@@ -577,6 +577,8 @@ var breakoutBricksDestroyed = 0;          // count of bricks destroyed this roun
 var breakoutBricksTotal = 0;              // total bricks spawned this round
 var breakoutCompleteTimer = 0;            // elapsed time in BREAKOUT_COMPLETE state
 var breakoutTransitionTimer = 0;          // elapsed time in BREAKOUT_TRANSITION state
+var breakoutCompletionBonus = 0;          // BREAKOUT_POINTS_COMPLETION awarded on win (US-010)
+var breakoutExtraBallBonus = 0;           // per-extra-ball points banked on win (US-010)
 
 // --- Other Pad Mini-Game Cycling Counter ---
 // Increments on each `other` pad landing. Reset to 0 on game over / new game
