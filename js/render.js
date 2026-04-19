@@ -1537,16 +1537,31 @@ function drawTechdebtAsteroid(a) {
     ctx.stroke();
     ctx.restore();
 
-    // Label overlay — unrotated, centered on the asteroid.
-    // ProxiBlue label drawn in pure white (US-012 AC#1); normal asteroids use
-    // the existing light-grey `#ECEFF1` so the tech-debt label reads as muted.
-    ctx.save();
-    ctx.fillStyle = a.isProxiblue ? '#FFFFFF' : '#ECEFF1';
-    ctx.font = 'bold 11px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(a.label, a.x, a.y);
-    ctx.restore();
+    // Label orbiting around the asteroid like a sign, spinning slowly
+    if (a.label && a.size >= TECHDEBT_SIZE_SMALL) {
+        ctx.save();
+        ctx.translate(a.x, a.y);
+        var labelRadius = a.size + 8;
+        var fontSize = a.size >= TECHDEBT_SIZE_LARGE ? 11 : 9;
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        ctx.fillStyle = a.isProxiblue ? '#FFFFFF' : '#ECEFF1';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var chars = a.label.split('');
+        var arcSpan = Math.min(chars.length * 0.2, Math.PI * 1.2);
+        var startAngle = a.rotation * 0.3 - arcSpan / 2;
+        for (var ci = 0; ci < chars.length; ci++) {
+            var charAngle = startAngle + (ci / Math.max(chars.length - 1, 1)) * arcSpan;
+            var cx2 = Math.cos(charAngle) * labelRadius;
+            var cy2 = Math.sin(charAngle) * labelRadius;
+            ctx.save();
+            ctx.translate(cx2, cy2);
+            ctx.rotate(charAngle + Math.PI / 2);
+            ctx.fillText(chars[ci], 0, 0);
+            ctx.restore();
+        }
+        ctx.restore();
+    }
 }
 
 function renderTechdebtTransition() {
