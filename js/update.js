@@ -291,6 +291,69 @@ function setupTechdebtWorld() {
     }
 }
 
+// Spawn a brief 4-8 particle burst at (x,y) using the given colour. Particles
+// drift outward in random directions and fade over ~0.25-0.6s. Used for the
+// hit feedback when bullets destroy or split tech-debt asteroids (US-008 AC#4).
+function spawnTechdebtAsteroidParticles(x, y, color) {
+    var count = 4 + Math.floor(Math.random() * 5); // 4..8 inclusive
+    for (var i = 0; i < count; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 60 + Math.random() * 140;
+        var life = 0.25 + Math.random() * 0.35;
+        techdebtParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 2,
+            color: color
+        });
+    }
+}
+
+// Spawn the two child asteroids when a large/medium is destroyed (US-008 AC).
+// Children fly off perpendicular to the parent's velocity (one each side) so
+// the split reads visually. Smalls have no children — caller skips this fn for
+// `small` tier. ProxiBlue asteroids never split (AC + US-012), caller filters.
+function splitTechdebtAsteroid(parent) {
+    var nextTier, nextSize;
+    if (parent.sizeTier === 'large') {
+        nextTier = 'medium';
+        nextSize = TECHDEBT_SIZE_MEDIUM;
+    } else if (parent.sizeTier === 'medium') {
+        nextTier = 'small';
+        nextSize = TECHDEBT_SIZE_SMALL;
+    } else {
+        return; // small tier — destroyed, no children
+    }
+    var pmag = Math.sqrt(parent.vx * parent.vx + parent.vy * parent.vy) || 1;
+    // Unit vector perpendicular to the parent's velocity.
+    var perpx = -parent.vy / pmag;
+    var perpy = parent.vx / pmag;
+    var childSpeed = pmag * 1.2; // children slightly faster than parent
+    for (var s = -1; s <= 1; s += 2) {
+        // Direction = small forward bias + perpendicular split + jitter.
+        var jitter = (Math.random() - 0.5) * 0.4;
+        var dirx = (parent.vx / pmag) * 0.4 + perpx * s + jitter;
+        var diry = (parent.vy / pmag) * 0.4 + perpy * s + jitter;
+        var dmag = Math.sqrt(dirx * dirx + diry * diry) || 1;
+        techdebtAsteroids.push({
+            x: parent.x,
+            y: parent.y,
+            vx: (dirx / dmag) * childSpeed,
+            vy: (diry / dmag) * childSpeed,
+            size: nextSize,
+            sizeTier: nextTier,
+            label: parent.label,
+            isProxiblue: false,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() * 2 - 1)
+        });
+    }
+}
+
 // Initialize missile-command battlefield state on entry to MISSILE_TRANSITION.
 // Resets all counters + arrays (AC#8), snapshots terrain for the flatten
 // animation (AC#2), positions the crosshair at center (AC#6), and seeds
@@ -1660,6 +1723,46 @@ function update(dt) {
             else if (a.x >= canvas.width) a.x -= canvas.width;
             if (a.y < 0) a.y += canvas.height;
             else if (a.y >= canvas.height) a.y -= canvas.height;
+        }
+
+        // --- Bullet vs asteroid collision (US-008) ---
+        // Circle-vs-point check: bullet is a point, asteroid is a circle of
+        // radius `a.size`. On hit: award score + asteroidsDestroyed, spawn a
+        // particle burst, split the asteroid by tier (large→2 medium,
+        // medium→2 small, small→destroyed), and consume the bullet.
+        // ProxiBlue asteroids are skipped here — US-012 owns their pickup
+        // semantics; per AC they do NOT split.
+        for (var bIdx = techdebtBullets.length - 1; bIdx >= 0; bIdx--) {
+            var bul = techdebtBullets[bIdx];
+            for (var aIdx = techdebtAsteroids.length - 1; aIdx >= 0; aIdx--) {
+                var ast = techdebtAsteroids[aIdx];
+                if (ast.isProxiblue) continue;
+                var ddx = bul.x - ast.x;
+                var ddy = bul.y - ast.y;
+                if (ddx * ddx + ddy * ddy <= ast.size * ast.size) {
+                    var pts;
+                    if (ast.sizeTier === 'large') pts = TECHDEBT_POINTS_LARGE;
+                    else if (ast.sizeTier === 'medium') pts = TECHDEBT_POINTS_MEDIUM;
+                    else pts = TECHDEBT_POINTS_SMALL;
+                    techdebtScore += pts;
+                    score += pts;
+                    asteroidsDestroyed++;
+                    spawnTechdebtAsteroidParticles(ast.x, ast.y, '#5D4037');
+                    techdebtAsteroids.splice(aIdx, 1);
+                    splitTechdebtAsteroid(ast);
+                    techdebtBullets.splice(bIdx, 1);
+                    break; // one bullet, one asteroid
+                }
+            }
+        }
+
+        // --- Update particles: drift, fade, expire ---
+        for (var pIdx = techdebtParticles.length - 1; pIdx >= 0; pIdx--) {
+            var par = techdebtParticles[pIdx];
+            par.x += par.vx * dt;
+            par.y += par.vy * dt;
+            par.life -= dt;
+            if (par.life <= 0) techdebtParticles.splice(pIdx, 1);
         }
     }
 

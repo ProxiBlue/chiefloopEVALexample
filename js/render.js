@@ -1581,6 +1581,23 @@ function renderTechdebtPlaying() {
         ctx.restore();
     }
 
+    // Hit-burst particles from destroyed/split asteroids (US-008). Fade with
+    // remaining life so the burst looks like dust scattering then settling.
+    if (techdebtParticles.length > 0) {
+        ctx.save();
+        for (var pi = 0; pi < techdebtParticles.length; pi++) {
+            var p = techdebtParticles[pi];
+            var alpha = Math.max(0, p.life / p.maxLife);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
 }
 
