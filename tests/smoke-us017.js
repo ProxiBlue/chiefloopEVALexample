@@ -460,17 +460,95 @@ check('AC#5 unshielded ram → CRASHED',
     sandbox.gameState === sandbox.STATES.CRASHED);
 
 // ============================================================
-// AC#6: ProxiBlue branding on menu + game over (static source audit).
+// AC#6: ProxiBlue branding on menu + game over.
+// Extracts the real renderMenu + renderGameOver bodies from render.js and
+// actually executes them against a recording mock ctx so we assert the
+// branding string was passed to ctx.fillText during the render pass — not
+// just that it exists as a source literal.
 // ============================================================
-check('AC#6 menu: renderMenu contains "Crafted with ☕ by ProxiBlue" branding',
-    renderSrc.indexOf('Crafted with \\u2615 by ProxiBlue') >= 0 ||
-    renderSrc.indexOf('Crafted with \u2615 by ProxiBlue') >= 0);
-check('AC#6 game over: renderGameOver contains "Powered by ProxiBlue" branding',
-    renderSrc.indexOf('Powered by ProxiBlue') >= 0);
-check('AC#6 game over: branding text includes github.com/ProxiBlue link',
-    renderSrc.indexOf('github.com/ProxiBlue') >= 0);
-check('AC#6 game over: proxiblueBrandHitBox declared for clickable hit-test',
-    renderSrc.indexOf('proxiblueBrandHitBox') >= 0);
+var renderMenuBody = extractBraceBody(renderSrc, 'function renderMenu(');
+var renderGameOverBody = extractBraceBody(renderSrc, 'function renderGameOver(');
+check('render.js: renderMenu body extracted',
+    typeof renderMenuBody === 'string' && renderMenuBody.length > 0);
+check('render.js: renderGameOver body extracted',
+    typeof renderGameOverBody === 'string' && renderGameOverBody.length > 0);
+
+// Install a recording mock ctx + render-side stubs in the existing sandbox.
+var brandFillTextCalls = [];
+var brandMockCtx = {
+    save: function () {}, restore: function () {}, translate: function () {}, rotate: function () {},
+    beginPath: function () {}, closePath: function () {}, moveTo: function () {}, lineTo: function () {},
+    fill: function () {}, stroke: function () {}, arc: function () {}, fillRect: function () {},
+    strokeRect: function () {},
+    set strokeStyle(v) {}, set fillStyle(v) {}, set shadowColor(v) {},
+    set globalAlpha(v) {}, set lineWidth(v) {}, set shadowBlur(v) {},
+    set font(v) {}, set textAlign(v) {}, set textBaseline(v) {},
+    fillText: function (text, x, y) { brandFillTextCalls.push({ text: text, x: x, y: y }); },
+    measureText: function (text) { return { width: String(text).length * 7 }; }
+};
+sandbox.ctx = brandMockCtx;
+sandbox.drawShip = function () {};
+// Do NOT override getLeaderboard / drawLeaderboard — they live in leaderboard.js
+// which was loaded at sandbox init and is reused by AC#10. Clearing storage keeps
+// them callable but returning empty results during renderMenu / renderGameOver.
+localStorageBacking = {};
+sandbox.selectedRepoName = '';
+sandbox.repoSelectorActive = false;
+sandbox.repoLoadError = false;
+sandbox.repoDataError = null;
+sandbox.reposLoaded = true;
+sandbox.repoDataLoading = false;
+sandbox.availableRepos = [];
+sandbox.selectedRepoIndex = 0;
+sandbox.repoFallbackNotice = null;
+sandbox.proxiblueBrandHitBox = null;
+
+// --- Render the menu screen ---
+brandFillTextCalls.length = 0;
+var renderMenuScript = new vm.Script('(function () {\n' + renderMenuBody + '\n}).call(this);', { filename: 'renderMenu-body' });
+renderMenuScript.runInContext(sandbox);
+var menuTexts = brandFillTextCalls.map(function (c) { return c.text; });
+check('AC#6 menu RENDERED: ctx.fillText includes "Crafted with \u2615 by ProxiBlue"',
+    menuTexts.indexOf('Crafted with \u2615 by ProxiBlue') >= 0,
+    'menu fillText calls = ' + JSON.stringify(menuTexts));
+check('AC#6 menu RENDERED: coffee-cup codepoint U+2615 reaches ctx.fillText',
+    menuTexts.some(function (t) { return t && t.indexOf('\u2615') >= 0 && t.indexOf('ProxiBlue') >= 0; }));
+
+// --- Render the game-over screen (leaderboard branch) ---
+brandFillTextCalls.length = 0;
+sandbox.score = 1000;
+sandbox.gameOverLevel = 4;
+sandbox.gameOverEnteringName = false;
+sandbox.gameOverName = 'ABC';
+sandbox.gameState = sandbox.STATES.GAMEOVER;
+sandbox.proxiblueBrandHitBox = null;
+var renderGameOverScript = new vm.Script('(function () {\n' + renderGameOverBody + '\n}).call(this);', { filename: 'renderGameOver-body' });
+renderGameOverScript.runInContext(sandbox);
+var gameOverTexts = brandFillTextCalls.map(function (c) { return c.text; });
+check('AC#6 game over RENDERED: ctx.fillText includes "Powered by ProxiBlue \u2014 github.com/ProxiBlue"',
+    gameOverTexts.indexOf('Powered by ProxiBlue \u2014 github.com/ProxiBlue') >= 0,
+    'gameOver fillText calls = ' + JSON.stringify(gameOverTexts));
+check('AC#6 game over RENDERED: em-dash codepoint U+2014 reaches ctx.fillText',
+    gameOverTexts.some(function (t) { return t && t.indexOf('\u2014') >= 0 && t.indexOf('github.com/ProxiBlue') >= 0; }));
+check('AC#6 game over RENDERED: GAME OVER banner also fires (sanity — full render ran)',
+    gameOverTexts.indexOf('GAME OVER') >= 0);
+check('AC#6 game over RENDERED: proxiblueBrandHitBox populated after leaderboard-branch render',
+    sandbox.proxiblueBrandHitBox &&
+    typeof sandbox.proxiblueBrandHitBox.x === 'number' &&
+    typeof sandbox.proxiblueBrandHitBox.w === 'number' &&
+    sandbox.proxiblueBrandHitBox.w > 0);
+
+// --- Render the game-over screen (name-entry branch) — verify hitbox is reset to null ---
+brandFillTextCalls.length = 0;
+sandbox.gameOverEnteringName = true;
+sandbox.gameOverName = '';
+sandbox.proxiblueBrandHitBox = { x: 1, y: 1, w: 1, h: 1 };  // stale value
+renderGameOverScript.runInContext(sandbox);
+check('AC#6 game over RENDERED (name-entry): proxiblueBrandHitBox reset to null (no click target while entering name)',
+    sandbox.proxiblueBrandHitBox === null);
+
+// Source-level audits retained — catches regressions where click-handler or URL
+// would be moved/renamed without the render side changing.
 check('AC#6 input: canvas click handler opens ProxiBlue URL on hit-test',
     inputSrc.indexOf("'https://github.com/ProxiBlue/chiefloopEVALexample") >= 0 &&
     inputSrc.indexOf('proxiblueBrandHitBox') >= 0);
