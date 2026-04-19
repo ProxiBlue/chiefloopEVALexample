@@ -288,6 +288,28 @@ function spawnMissileDestructionBurst(x, y) {
     }
 }
 
+// Cyan/white burst for an interceptor detonation (AC#7). Reuses the same
+// particle array + renderer as the destruction burst — only the color palette
+// and radial-360° dispersal differ.
+function spawnMissileInterceptorBurst(x, y) {
+    var colors = ['#ffffff', '#b3e5fc', '#81d4fa', '#00e5ff', '#00bcd4', '#26c6da'];
+    for (var i = 0; i < 22; i++) {
+        var angle = Math.random() * Math.PI * 2; // full sphere
+        var speed = 80 + Math.random() * 160;
+        var life = 0.35 + Math.random() * 0.45;
+        missileDestructionParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 2.5,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+}
+
 // Spawn a single wave of incoming missiles. Each missile gets a random spawn X
 // along the top of the screen, a random live building or battery as its target
 // (locked at spawn), a per-missile speed around the level-scaled base, and a
@@ -1143,6 +1165,7 @@ function update(dt) {
                     radius: 0,
                     kind: 'interceptor'
                 });
+                spawnMissileInterceptorBurst(inter.targetX, inter.targetY);
                 missileInterceptors.splice(ii, 1);
             }
         }

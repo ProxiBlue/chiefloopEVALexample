@@ -1106,10 +1106,11 @@ function drawMissileBuilding(b) {
     var left = b.x - b.width / 2;
 
     // Destroyed buildings render as a low jagged rubble silhouette (AC#2).
+    // Rubble uses #444 per AC.
     if (b.destroyed) {
         var rubbleH = 8;
         var rubbleTop = b.baseY - rubbleH;
-        ctx.fillStyle = '#37474F';
+        ctx.fillStyle = '#444';
         ctx.beginPath();
         ctx.moveTo(left, b.baseY);
         ctx.lineTo(left, rubbleTop + 2);
@@ -1121,71 +1122,74 @@ function drawMissileBuilding(b) {
         ctx.lineTo(left + b.width, b.baseY);
         ctx.closePath();
         ctx.fill();
-        ctx.strokeStyle = '#1B1B1B';
+        ctx.strokeStyle = '#222';
         ctx.lineWidth = 1;
         ctx.stroke();
         return;
     }
 
+    // Healthy silhouette: bright green (#00cc88) rectangle. AC#2.
     var top = b.baseY - b.height;
-    ctx.fillStyle = '#546E7A';
+    ctx.fillStyle = '#00cc88';
     ctx.fillRect(left, top, b.width, b.height);
-    ctx.strokeStyle = '#263238';
+    ctx.strokeStyle = '#00794d';
     ctx.lineWidth = 1;
     ctx.strokeRect(left + 0.5, top + 0.5, b.width - 1, b.height - 1);
 
-    ctx.fillStyle = '#FFEB3B';
-    var winW = 4, winH = 4, stepX = 8, stepY = 8;
-    for (var wy = top + 6; wy + winH < b.baseY - 2; wy += stepY) {
-        for (var wx = left + 4; wx + winW < left + b.width - 4; wx += stepX) {
-            ctx.fillRect(wx, wy, winW, winH);
-        }
-    }
-
-    if (b.label && b.height > 14) {
+    if (b.label) {
         ctx.fillStyle = '#ECEFF1';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillText(b.label, b.x, top - 4);
     }
 }
 
 function drawMissileBattery(bat) {
-    var bodyW = 30, bodyH = 18;
-    var bodyX = bat.x - bodyW / 2;
-    var bodyY = bat.y - bodyH;
+    // AC#3: triangular/dome silhouette. Bright green active, dark grey destroyed.
+    // Ammo count displayed above when active.
+    var bodyW = 32;
+    var bodyH = 18;
+    var apexY = bat.y - bodyH;
+    var leftX = bat.x - bodyW / 2;
+    var rightX = bat.x + bodyW / 2;
 
-    // Destroyed battery: charred stub, no launcher, no ammo readout (AC#3).
     if (bat.destroyed) {
-        ctx.fillStyle = '#3E2723';
-        ctx.fillRect(bodyX, bodyY + bodyH * 0.55, bodyW, bodyH * 0.45);
-        ctx.strokeStyle = '#1B0000';
+        ctx.fillStyle = '#444';
+        ctx.beginPath();
+        ctx.moveTo(leftX, bat.y);
+        ctx.lineTo(leftX + bodyW * 0.3, bat.y - 4);
+        ctx.lineTo(bat.x - 2, bat.y - 2);
+        ctx.lineTo(bat.x + 3, bat.y - 5);
+        ctx.lineTo(rightX - bodyW * 0.25, bat.y - 3);
+        ctx.lineTo(rightX, bat.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#222';
         ctx.lineWidth = 1;
-        ctx.strokeRect(bodyX + 0.5, bodyY + bodyH * 0.55 + 0.5, bodyW - 1, bodyH * 0.45 - 1);
-        // A couple of debris nubs on top
-        ctx.fillStyle = '#5D4037';
-        ctx.fillRect(bodyX + 4, bodyY + bodyH * 0.45, 5, 4);
-        ctx.fillRect(bodyX + bodyW - 9, bodyY + bodyH * 0.50, 4, 4);
+        ctx.stroke();
         return;
     }
 
-    ctx.fillStyle = '#4CAF50';
-    ctx.fillRect(bodyX, bodyY, bodyW, bodyH);
-    ctx.strokeStyle = '#1B5E20';
+    // Dome: filled triangle with rounded top.
+    ctx.fillStyle = '#00cc88';
+    ctx.strokeStyle = '#00794d';
     ctx.lineWidth = 1;
-    ctx.strokeRect(bodyX + 0.5, bodyY + 0.5, bodyW - 1, bodyH - 1);
-
-    ctx.strokeStyle = '#2E7D32';
-    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(bat.x, bodyY + bodyH / 2);
-    ctx.lineTo(bat.x, bodyY - 10);
+    ctx.moveTo(leftX, bat.y);
+    ctx.lineTo(leftX + 4, apexY + 6);
+    ctx.quadraticCurveTo(bat.x, apexY - 4, rightX - 4, apexY + 6);
+    ctx.lineTo(rightX, bat.y);
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#fff';
-    ctx.font = '11px monospace';
+    // Ammo count above the dome.
+    ctx.fillStyle = '#ECEFF1';
+    ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(String(bat.ammo), bat.x, bodyY - 14);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(String(bat.ammo), bat.x, apexY - 4);
 }
 
 function drawMissileCrosshair() {
@@ -1238,14 +1242,15 @@ function drawMissileIncoming(inc) {
     ctx.lineTo(inc.x, inc.y);
     ctx.stroke();
 
-    ctx.fillStyle = '#FFCDD2';
+    // Bright red head (AC#5).
+    ctx.fillStyle = '#ff2200';
     ctx.beginPath();
     ctx.arc(inc.x, inc.y, 3, 0, Math.PI * 2);
     ctx.fill();
 
     if (inc.label) {
         ctx.save();
-        ctx.fillStyle = '#FF8A80';
+        ctx.fillStyle = '#ff8a80';
         ctx.font = '10px monospace';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'bottom';
@@ -1258,17 +1263,33 @@ function drawMissileExplosion(exp) {
     if (exp.radius <= 0) return;
     var p = exp.timer / exp.duration;
     ctx.save();
-    ctx.globalAlpha = 0.85 * (1 - p);
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1.0 * (1 - p);
-    ctx.strokeStyle = '#00ff66';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
-    ctx.stroke();
+    // AC#6: interceptor detonation → translucent cyan/white expanding-shrinking
+    // circle. AC#7 impact (building/battery struck) → red/orange tint.
+    if (exp.kind === 'impact') {
+        ctx.globalAlpha = 0.7 * (1 - p);
+        ctx.fillStyle = '#ff8a00';
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0 * (1 - p);
+        ctx.strokeStyle = '#ff3300';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        ctx.globalAlpha = 0.6 * (1 - p);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0 * (1 - p);
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
     ctx.restore();
 }
 
@@ -1325,17 +1346,28 @@ function renderMissileTransition() {
 function renderMissilePlaying() {
     drawMissileWorld();
 
-    ctx.fillStyle = '#F44336';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('MISSILE COMMAND', canvas.width / 2, 30);
+    // AC#9 HUD: wave indicator, missiles remaining in wave, buildings
+    // surviving, ammo total across batteries, score. Replaces altitude/velocity.
+    var buildingsAlive = 0;
+    for (var bi = 0; bi < missileBuildings.length; bi++) {
+        if (!missileBuildings[bi].destroyed) buildingsAlive++;
+    }
+    var ammoTotal = 0;
+    for (var ai = 0; ai < missileBatteries.length; ai++) {
+        if (!missileBatteries[ai].destroyed) ammoTotal += missileBatteries[ai].ammo;
+    }
+    var missilesLeftInWave = missileIncoming.length +
+        (typeof missileWaveSpawnQueue !== 'undefined' ? missileWaveSpawnQueue.length : 0);
 
     ctx.fillStyle = '#ECEFF1';
     ctx.font = '14px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText('Intercepted: ' + missilesIntercepted, 20, 24);
-    ctx.fillText('Score: ' + missileScore, 20, 44);
-    ctx.fillText('Wave: ' + missileWaveCurrent + ' / ' + missileWaveTotal, 20, 64);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText('WAVE ' + missileWaveCurrent + ' / ' + missileWaveTotal, 20, 24);
+    ctx.fillText('Missiles left: ' + missilesLeftInWave, 20, 44);
+    ctx.fillText('Buildings: ' + buildingsAlive + ' / ' + MISSILE_BUILDING_COUNT, 20, 64);
+    ctx.fillText('Ammo: ' + ammoTotal, 20, 84);
+    ctx.fillText('Score: ' + missileScore, 20, 104);
 
     ctx.textAlign = 'right';
     ctx.fillText('Arrows to aim · Space to fire', canvas.width - 20, 24);
