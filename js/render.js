@@ -1092,6 +1092,7 @@ function drawBugfixWorld() {
     drawBombs();
     drawBombParticles();
     drawBugExplosions();
+    drawFuelFloats();
 
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
 }

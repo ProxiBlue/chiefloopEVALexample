@@ -336,6 +336,48 @@ function updateBugExplosions(dt) {
     }
 }
 
+// --- Fuel-Gain Floating Text (US-006) ---
+// Floats a "+N FUEL" label upward at the death position and fades out over
+// FUEL_FLOAT_LIFE. The `extending` flag appends an up-arrow when the fuel
+// add pushed the tank past FUEL_MAX (entering extension territory).
+var FUEL_FLOAT_LIFE = 0.8;         // seconds — total lifetime / fade duration
+var FUEL_FLOAT_RISE_SPEED = 30;    // px/s — upward drift
+
+function spawnFuelFloat(x, y, amount, extending) {
+    fuelFloatTexts.push({
+        x: x,
+        y: y,
+        text: '+' + amount + ' FUEL' + (extending ? ' \u2B06' : ''),
+        life: FUEL_FLOAT_LIFE,
+        maxLife: FUEL_FLOAT_LIFE
+    });
+}
+
+function updateFuelFloats(dt) {
+    for (var i = fuelFloatTexts.length - 1; i >= 0; i--) {
+        var t = fuelFloatTexts[i];
+        t.y -= FUEL_FLOAT_RISE_SPEED * dt;
+        t.life -= dt;
+        if (t.life <= 0) {
+            fuelFloatTexts.splice(i, 1);
+        }
+    }
+}
+
+function drawFuelFloats() {
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    for (var i = 0; i < fuelFloatTexts.length; i++) {
+        var t = fuelFloatTexts[i];
+        var alpha = Math.max(0, t.life / t.maxLife);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#00ccff';
+        ctx.fillText(t.text, t.x, t.y);
+    }
+    ctx.globalAlpha = 1;
+}
+
 // --- Screen Shake ---
 var screenShake = 0;
 var SCREEN_SHAKE_DURATION = 0.3;

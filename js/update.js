@@ -61,6 +61,7 @@ function spawnBugWave() {
     bombs = [];
     bombParticles = [];
     bugExplosions = [];
+    fuelFloatTexts = [];
     bugfixScore = 0;
     bugsKilled = 0;
     bugfixFuelBonus = 0;
@@ -216,6 +217,7 @@ function clearBugfixState() {
     bombs = [];
     bombParticles = [];
     bugExplosions = [];
+    fuelFloatTexts = [];
     bugsKilled = 0;
     bugsTotal = 0;
     bugfixFuelBonus = 0;
@@ -1970,7 +1972,12 @@ function update(dt) {
                         bugfixScore += victim.points;
                         score += victim.points;
                         bugsKilled++;
+                        var fuelBefore = ship.fuel;
                         ship.fuel = Math.min(ship.fuel + BUGFIX_FUEL_PER_KILL, FUEL_MAX + FUEL_EXTENSION_MAX);
+                        var fuelGain = ship.fuel - fuelBefore;
+                        if (fuelGain > 0) {
+                            spawnFuelFloat(victim.x, victim.y, fuelGain, ship.fuel > FUEL_MAX);
+                        }
                         spawnBugExplosion(victim.x, victim.y);
                         bugs.splice(gj, 1);
                     }
@@ -1989,6 +1996,7 @@ function update(dt) {
         updateBombParticles(dt);
         // Update bug-death explosion particles
         updateBugExplosions(dt);
+        updateFuelFloats(dt);
 
         // Win condition: all bugs cleared → enter BUGFIX_COMPLETE with fuel-remaining bonus.
         // Per AC: random per-game choice between BUGFIX_FUEL_BONUS_LOW / _HIGH as multiplier on (fuel / FUEL_MAX).
@@ -2019,6 +2027,7 @@ function update(dt) {
     if (gameState === STATES.BUGFIX_COMPLETE) {
         updateBombParticles(dt);
         updateBugExplosions(dt);
+        updateFuelFloats(dt);
         bugfixCompleteTimer += dt;
         if (bugfixCompleteTimer >= BUGFIX_COMPLETE_DELAY) {
             gameState = STATES.BUGFIX_RETURN;

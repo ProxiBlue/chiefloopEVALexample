@@ -260,6 +260,7 @@ var bugs = [];                            // active bugs on screen
 var bombs = [];                           // active bombs in flight
 var bombParticles = [];                   // visual particles from bomb explosions
 var bugExplosions = [];                   // particle groups from destroyed bugs
+var fuelFloatTexts = [];                  // floating "+N FUEL" texts from bug-kill fuel gains
 
 // --- Bugfix Per-Game Counters ---
 var bugfixScore = 0;                      // bonus points earned during bugfix phase
