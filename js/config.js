@@ -21,7 +21,11 @@ var STATES = {
     MISSILE_TRANSITION: 'missile_transition',
     MISSILE_PLAYING: 'missile_playing',
     MISSILE_COMPLETE: 'missile_complete',
-    MISSILE_RETURN: 'missile_return'
+    MISSILE_RETURN: 'missile_return',
+    TECHDEBT_TRANSITION: 'techdebt_transition',
+    TECHDEBT_PLAYING: 'techdebt_playing',
+    TECHDEBT_COMPLETE: 'techdebt_complete',
+    TECHDEBT_RETURN: 'techdebt_return'
 };
 
 var gameState = STATES.MENU;
