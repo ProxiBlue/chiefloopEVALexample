@@ -194,6 +194,7 @@ function handleKeyPress(key) {
             // startNewGame for the menu/restart paths; this entry guarantees
             // the counter is 0 the moment GAMEOVER is reached.)
             securityMiniGameCount = 0;
+            stopThrustSound();
             gameState = STATES.GAMEOVER;
         } else if (gameState === STATES.GAMEOVER && !gameOverEnteringName) {
             startNewGame();
