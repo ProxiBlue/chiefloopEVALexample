@@ -246,4 +246,18 @@ var RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // sliding window duration in ms (5 mi
                 return [];
             });
     };
+
+    // Cache the most recent community top-N for in-game render so the
+    // game-over screen can show community scores synchronously without
+    // re-fetching every frame.
+    window.cachedOnlineScores = [];
+    window.refreshCachedOnlineScores = function refreshCachedOnlineScores() {
+        return window.fetchOnlineScores(10).then(function (scores) {
+            window.cachedOnlineScores = scores || [];
+            return window.cachedOnlineScores;
+        });
+    };
+
+    // Warm the cache once on load so the first game-over screen has data.
+    window.refreshCachedOnlineScores();
 })();

@@ -72,6 +72,37 @@ function drawLeaderboard(cx, startY, highlight) {
     return y;
 }
 
+function drawCommunityLeaderboard(cx, startY) {
+    var board = (window.cachedOnlineScores || []).slice(0, 10);
+
+    ctx.fillStyle = '#88c';
+    ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('--- COMMUNITY TOP 10 ---', cx, startY);
+
+    var y = startY + 24;
+    ctx.font = '14px monospace';
+
+    if (board.length === 0) {
+        ctx.fillStyle = '#666';
+        ctx.fillText('(loading…)', cx, y);
+        return y + 20;
+    }
+
+    for (var i = 0; i < board.length; i++) {
+        var entry = board[i];
+        var rank = (i + 1) + '.';
+        var padding = i < 9 ? '  ' : ' ';
+        var line = rank + padding + entry.name;
+        while (line.length < 18) line += ' ';
+        line += entry.score;
+        ctx.fillStyle = i === 0 ? '#FFD700' : '#aaa';
+        ctx.fillText(line, cx, y);
+        y += 20;
+    }
+    return y;
+}
+
 // Backward compat: migrate old single high score to leaderboard
 function migrateOldHighScore() {
     try {

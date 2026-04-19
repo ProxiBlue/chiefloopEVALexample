@@ -2929,8 +2929,12 @@ function renderGameOver() {
         ctx.font = '14px sans-serif';
         ctx.fillText('Press ENTER to confirm (max 10 chars)', cx, y);
     } else {
-        // Show leaderboard
+        // Show local leaderboard
         y = drawLeaderboard(cx, y, gameOverName.trim() || null);
+        // Show community leaderboard below it so players can see and
+        // compete against everyone else's runs, not just their own.
+        y += 12;
+        y = drawCommunityLeaderboard(cx, y);
         y += 15;
         ctx.fillStyle = '#888';
         ctx.font = '20px sans-serif';

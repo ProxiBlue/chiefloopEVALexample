@@ -213,6 +213,12 @@ function handleKeyPress(key) {
             otherMiniGameCount = 0;
             stopThrustSound();
             gameState = STATES.GAMEOVER;
+            // Refresh community leaderboard cache so the game-over screen
+            // shows current top scores. Async — first paint may show the
+            // previous cache, then update silently when the fetch resolves.
+            if (typeof refreshCachedOnlineScores === 'function') {
+                refreshCachedOnlineScores();
+            }
         } else if (gameState === STATES.GAMEOVER && !gameOverEnteringName) {
             startNewGame();
         }
