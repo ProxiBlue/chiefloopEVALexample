@@ -574,6 +574,7 @@ var breakoutBallTrail = [];               // FIFO of {x,y} for the primary ball'
 var breakoutBricks = [];                  // active bricks on the field
 var breakoutPowerups = [];                // falling power-ups
 var breakoutParticles = [];               // visual particles from destroyed bricks
+var breakoutBrickLabelPool = [];          // per-round label pool: default + PR-derived (US-014)
 
 // --- Code Breaker Per-Game Counters ---
 var breakoutScore = 0;                    // bonus points earned during breakout phase

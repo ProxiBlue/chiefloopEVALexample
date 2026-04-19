@@ -256,6 +256,7 @@ function clearBreakoutState() {
     breakoutParticles = [];
     breakoutBalls = [];
     breakoutBallTrail = [];
+    breakoutBrickLabelPool = [];
     breakoutBricksDestroyed = 0;
     breakoutBricksTotal = 0;
     breakoutCompleteTimer = 0;
@@ -270,6 +271,46 @@ function clearBreakoutState() {
     breakoutBallVX = 0;
     breakoutBallVY = 0;
     breakoutBallStuck = true;
+}
+
+// Build the per-round Code Breaker brick-label pool (US-014). Starts from the
+// default BREAKOUT_BRICK_LABEL_POOL and mixes in PR-derived flavour: filenames
+// from landedPRTitle + levelCommits messages, plus refactor-related keyword
+// phrases from the PR title (e.g. "remove jQuery", "update deps"). When no PR
+// data is available, returns the default pool unchanged. Purely cosmetic.
+function buildBreakoutBrickLabelPool() {
+    var pool = BREAKOUT_BRICK_LABEL_POOL.slice();
+    var fileRe = /[\w\-]+\.[a-zA-Z]{1,5}/g;
+    var kwRe = /\b(?:refactor|remove|update|delete|migrate|upgrade|cleanup|deprecate|replace|rewrite)\s+[\w\-+.#]+/gi;
+    if (typeof landedPRTitle === 'string' && landedPRTitle) {
+        var fm = landedPRTitle.match(fileRe);
+        if (fm) {
+            for (var i = 0; i < fm.length; i++) {
+                if (pool.indexOf(fm[i]) === -1) pool.push(fm[i]);
+            }
+        }
+        var km = landedPRTitle.match(kwRe);
+        if (km) {
+            for (var j = 0; j < km.length; j++) {
+                var kw = km[j].toLowerCase();
+                if (pool.indexOf(kw) === -1) pool.push(kw);
+            }
+        }
+    }
+    if (typeof levelCommits !== 'undefined' && levelCommits && levelCommits.length) {
+        for (var ci = 0; ci < levelCommits.length && ci < 12; ci++) {
+            var c = levelCommits[ci];
+            if (c && typeof c.message === 'string' && c.message) {
+                var cfm = c.message.match(fileRe);
+                if (cfm) {
+                    for (var k = 0; k < cfm.length; k++) {
+                        if (pool.indexOf(cfm[k]) === -1) pool.push(cfm[k]);
+                    }
+                }
+            }
+        }
+    }
+    return pool;
 }
 
 // Best-effort filename extraction for missile-command building labels.
@@ -450,6 +491,8 @@ function setupBreakoutWorld() {
     breakoutBallX = paddleCenterX;
     breakoutBallY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - BREAKOUT_PADDLE_HEIGHT - BREAKOUT_BALL_RADIUS;
 
+    breakoutBrickLabelPool = buildBreakoutBrickLabelPool();
+
     var rows = Math.min(
         BREAKOUT_ROWS_MAX,
         Math.floor(BREAKOUT_ROWS_BASE + Math.floor(currentLevel / 2) * BREAKOUT_ROWS_PER_LEVEL)
@@ -466,8 +509,8 @@ function setupBreakoutWorld() {
             var color = hp === 3 ? BREAKOUT_BRICK_COLOR_HP3
                       : hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
                       : BREAKOUT_BRICK_COLOR_HP1;
-            var label = BREAKOUT_BRICK_LABEL_POOL[
-                Math.floor(Math.random() * BREAKOUT_BRICK_LABEL_POOL.length)
+            var label = breakoutBrickLabelPool[
+                Math.floor(Math.random() * breakoutBrickLabelPool.length)
             ];
             breakoutBricks.push({
                 x: col * (brickW + gap) + gap / 2,
