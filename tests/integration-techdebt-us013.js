@@ -96,7 +96,8 @@ var sandbox = {
     generateTerrain: function () {},
     getLevelConfig: function () { return { gravity: 0.05 }; },
     drawTerrain: function () {}, drawStars: function () {}, drawShip: function () {},
-    drawCelebration: function () {}
+    drawCelebration: function () {},
+    drawTechdebtHUD: function () {}
 };
 sandbox.self = sandbox;
 sandbox.globalThis = sandbox;

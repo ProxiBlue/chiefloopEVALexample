@@ -189,13 +189,13 @@ check('hit spawned 4-8 particles',
     sandbox.techdebtParticles.length >= 4
     && sandbox.techdebtParticles.length <= 8,
     'particles: ' + sandbox.techdebtParticles.length);
-// Asteroid colour for non-ProxiBlue is '#5D4037' (brown — see render.js
-// drawTechdebtAsteroid). Particles must use this colour.
-var allBrown = true;
+// Asteroid colour for non-ProxiBlue is '#888' grey (US-014 AC#2 — see
+// render.js drawTechdebtAsteroid). Particles must use this colour.
+var allGrey = true;
 for (var pi = 0; pi < sandbox.techdebtParticles.length; pi++) {
-    if (sandbox.techdebtParticles[pi].color !== '#5D4037') allBrown = false;
+    if (sandbox.techdebtParticles[pi].color !== '#888') allGrey = false;
 }
-check('particles use the asteroid colour (#5D4037)', allBrown);
+check('particles use the asteroid colour (#888)', allGrey);
 
 // =========================================================================
 // AC#2 (medium) — a medium hit spawns 2 small.

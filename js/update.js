@@ -314,6 +314,16 @@ function setupTechdebtWorld() {
             ? 'ProxiBlue'
             : TECHDEBT_LABEL_POOL[Math.floor(Math.random() * TECHDEBT_LABEL_POOL.length)];
 
+        // Per-asteroid random silhouette (US-014 AC#2 — "jagged circles, 8-10
+        // vertices with random radial offsets, classic Asteroids look"). Stored
+        // at spawn so the shape is stable frame-to-frame while rotating, but
+        // distinct across the field.
+        var shapeN = 8 + Math.floor(Math.random() * 3); // 8..10
+        var shapeArr = [];
+        for (var sv = 0; sv < shapeN; sv++) {
+            shapeArr.push(0.7 + Math.random() * 0.5); // 0.7..1.2 radial multiplier
+        }
+
         // ProxiBlue power-ups always spawn at MEDIUM size (US-012 AC#2) — not
         // too easy, not too hard to hit. Normal tech-debt asteroids are LARGE.
         techdebtAsteroids.push({
@@ -326,7 +336,8 @@ function setupTechdebtWorld() {
             label: label,
             isProxiblue: isProxiblue,
             rotation: Math.random() * Math.PI * 2,
-            rotationSpeed: (Math.random() * 2 - 1)
+            rotationSpeed: (Math.random() * 2 - 1),
+            shape: shapeArr
         });
     }
 }
@@ -379,6 +390,13 @@ function splitTechdebtAsteroid(parent) {
         var dirx = (parent.vx / pmag) * 0.4 + perpx * s + jitter;
         var diry = (parent.vy / pmag) * 0.4 + perpy * s + jitter;
         var dmag = Math.sqrt(dirx * dirx + diry * diry) || 1;
+        // Per-asteroid silhouette (US-014 AC#2) — inlined for the same reason
+        // as in setupTechdebtWorld: 8-10 random radial offsets.
+        var childShapeN = 8 + Math.floor(Math.random() * 3);
+        var childShape = [];
+        for (var csv = 0; csv < childShapeN; csv++) {
+            childShape.push(0.7 + Math.random() * 0.5);
+        }
         techdebtAsteroids.push({
             x: parent.x,
             y: parent.y,
@@ -389,7 +407,8 @@ function splitTechdebtAsteroid(parent) {
             label: parent.label,
             isProxiblue: false,
             rotation: Math.random() * Math.PI * 2,
-            rotationSpeed: (Math.random() * 2 - 1)
+            rotationSpeed: (Math.random() * 2 - 1),
+            shape: childShape
         });
     }
 }
@@ -1801,7 +1820,7 @@ function update(dt) {
                     techdebtScore += pts;
                     score += pts;
                     asteroidsDestroyed++;
-                    spawnTechdebtAsteroidParticles(ast.x, ast.y, '#5D4037');
+                    spawnTechdebtAsteroidParticles(ast.x, ast.y, '#888');
                     techdebtAsteroids.splice(aIdx, 1);
                     splitTechdebtAsteroid(ast);
                     techdebtBullets.splice(bIdx, 1);

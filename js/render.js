@@ -1480,14 +1480,23 @@ function drawTechdebtAsteroid(a) {
     ctx.translate(a.x, a.y);
     ctx.rotate(a.rotation);
 
-    // Irregular 8-vertex silhouette so asteroids don't all look like discs.
-    // Shape is deterministic per-asteroid (hashed off the vertex index) so the
-    // silhouette is stable frame-to-frame as it rotates.
-    var pts = 8;
+    // US-014 AC#2: jagged silhouette with 8-10 vertices and random radial
+    // offsets (stored per-asteroid on `a.shape` at spawn so the shape is
+    // stable frame-to-frame while being distinct across the field). Fallback
+    // to a deterministic 8-vertex shape if shape data is missing (defensive
+    // against test fixtures that construct asteroids directly).
+    var shape = a.shape;
+    if (!shape || !shape.length) {
+        shape = [];
+        for (var si = 0; si < 8; si++) {
+            shape.push(0.82 + 0.28 * Math.abs(Math.sin(si * 2.3 + 1.1)));
+        }
+    }
+    var pts = shape.length;
     ctx.beginPath();
     for (var i = 0; i < pts; i++) {
         var ang = (i / pts) * Math.PI * 2;
-        var rr = a.size * (0.82 + 0.28 * Math.sin(i * 2.3 + 1.1));
+        var rr = a.size * shape[i];
         var ppx = Math.cos(ang) * rr;
         var ppy = Math.sin(ang) * rr;
         if (i === 0) ctx.moveTo(ppx, ppy);
@@ -1496,17 +1505,25 @@ function drawTechdebtAsteroid(a) {
     ctx.closePath();
 
     if (a.isProxiblue) {
-        // US-012 AC#1: ProxiBlue power-ups use the canonical `#4488ff` blue
-        // glow so they read as a distinct power-up, not a tech-debt asteroid.
+        // US-014 AC#4: ProxiBlue asteroids rendered in `#4488ff` with a
+        // glow/pulse effect. Pulse the shadowBlur over time so the asteroid
+        // visibly breathes, making it easy for the player to spot as a
+        // collectible power-up. Drive the pulse from performance.now() so
+        // every ProxiBlue pulses in sync without per-entity timer state.
+        var pulseT = (typeof performance !== 'undefined' && performance.now)
+            ? performance.now() * 0.001
+            : Date.now() * 0.001;
+        var pulse = 0.5 + 0.5 * Math.sin(pulseT * 4); // 0..1
         ctx.shadowColor = '#4488ff';
-        ctx.shadowBlur = 18;
-        ctx.fillStyle = '#1976D2';
+        ctx.shadowBlur = 14 + pulse * 14; // 14..28 px
+        ctx.fillStyle = '#4488ff';
     } else {
-        ctx.fillStyle = '#5D4037';
+        // US-014 AC#2: normal asteroids are `#888` grey (classic Asteroids look).
+        ctx.fillStyle = '#888';
     }
     ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = a.isProxiblue ? '#81D4FA' : '#8D6E63';
+    ctx.strokeStyle = a.isProxiblue ? '#81D4FA' : '#aaa';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.restore();
@@ -1524,19 +1541,8 @@ function drawTechdebtAsteroid(a) {
 }
 
 function renderTechdebtTransition() {
-    // AC: terrain fades out and background becomes open starfield. The
-    // starfield is already drawn by render() (drawStars) before this function
-    // runs; we just fade the terrain via globalAlpha so the stars show through
-    // as the transition progresses. By the time TECHDEBT_PLAYING begins, the
-    // terrain is fully invisible and the field is pure starfield.
-    var t = Math.min(techdebtTransitionTimer / TECHDEBT_TRANSITION_DURATION, 1);
-    var terrainAlpha = 1 - t;
-    if (terrainAlpha > 0.01) {
-        ctx.save();
-        ctx.globalAlpha = terrainAlpha;
-        drawTerrain();
-        ctx.restore();
-    }
+    // US-014 AC#7/#8: background is pure starfield (already drawn by render()
+    // before this function runs) — no terrain drawn during TECHDEBT_* states.
 
     // Asteroids behind the ship so the ship reads as the focal point.
     for (var i = 0; i < techdebtAsteroids.length; i++) {
@@ -1545,6 +1551,9 @@ function renderTechdebtTransition() {
 
     // Ship rendered upright at canvas center (already positioned by update).
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+
+    // HUD panel (asteroids remaining, fuel, score, shield status).
+    drawTechdebtHUD();
 
     // AC: brief "TECH DEBT INCOMING..." text flashes during transition.
     // ~3 Hz flash matches renderMissileTransition's cadence for consistency.
@@ -1637,6 +1646,68 @@ function renderTechdebtPlaying() {
     }
 
     drawTechdebtShieldHUD();
+    drawTechdebtHUD();
+}
+
+// US-014 AC#9: tech-debt HUD panel — replaces the lander's altitude/velocity
+// panel with mini-game-specific info: asteroids remaining, fuel, score, and
+// shield status. Rendered at top-left across all TECHDEBT_* states for
+// visual continuity with the existing HUD placement.
+function drawTechdebtHUD() {
+    var fuelPct = ship.fuel / FUEL_MAX;
+    var asteroidsRemaining = techdebtAsteroids.length;
+
+    ctx.save();
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+
+    // Asteroids remaining
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Asteroids: ' + asteroidsRemaining, 10, 25);
+
+    // Score (global score incl. tech-debt contributions)
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('Score: ' + score, 10, 45);
+
+    // Shield status (replaces the altitude/velocity readout; detailed
+    // countdown bar lives in drawTechdebtShieldHUD at the bottom-left).
+    if (proxiblueShieldActive) {
+        ctx.fillStyle = '#4488ff';
+        ctx.fillText('Shield: ACTIVE ' + proxiblueShieldTimer.toFixed(1) + 's', 10, 65);
+    } else {
+        ctx.fillStyle = '#888';
+        ctx.fillText('Shield: OFF', 10, 65);
+    }
+
+    // Fuel bar (same visual language as the lander HUD for consistency).
+    var fuelBarW = 120;
+    var fuelBarH = 14;
+    var fuelBarX = 10;
+    var fuelBarY = 78;
+
+    ctx.fillStyle = '#333';
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+    var fuelColor;
+    if (fuelPct > 0.5) {
+        fuelColor = '#4CAF50';
+    } else if (fuelPct > 0.25) {
+        fuelColor = '#FFC107';
+    } else {
+        fuelColor = '#f44336';
+    }
+    ctx.fillStyle = fuelColor;
+    ctx.fillRect(fuelBarX, fuelBarY, fuelBarW * Math.max(0, Math.min(1, fuelPct)), fuelBarH);
+
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + 8, fuelBarY + 12);
+
+    ctx.restore();
 }
 
 // US-013 AC#2: HUD shield indicator — shows "🛡 ProxiBlue" label in #4488ff
@@ -1696,26 +1767,34 @@ function renderTechdebtComplete() {
     // Reuse the shared celebration particle system (spawned on entry in update.js).
     drawCelebration();
 
-    // Results overlay
+    // Keep the HUD panel visible on the results screen so the player can see
+    // their final fuel/score state alongside the breakdown overlay.
+    drawTechdebtHUD();
+
+    // Results overlay (US-014 AC#10 — "TECH DEBT CLEARED!" + score breakdown).
     var cx = canvas.width / 2;
     var cy = canvas.height / 2;
 
     ctx.fillStyle = '#4CAF50';
     ctx.font = 'bold 36px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('TECH DEBT CLEARED!', cx, cy - 60);
+    ctx.fillText('TECH DEBT CLEARED!', cx, cy - 75);
 
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('Asteroids Destroyed: ' + asteroidsDestroyed, cx, cy - 15);
+    ctx.fillText('Asteroids Destroyed: ' + asteroidsDestroyed, cx, cy - 30);
 
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('Fuel Bonus: +' + techdebtFuelBonus + ' pts', cx, cy + 25);
+    ctx.fillText('Fuel Bonus: +' + techdebtFuelBonus + ' pts', cx, cy + 5);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('Score: ' + score, cx, cy + 40);
 
     ctx.fillStyle = '#888';
     ctx.font = '18px sans-serif';
-    ctx.fillText('Returning to mission...', cx, cy + 65);
+    ctx.fillText('Returning to mission...', cx, cy + 80);
 }
 
 function renderCrashed() {
