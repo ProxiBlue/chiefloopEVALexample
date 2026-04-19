@@ -106,6 +106,7 @@ var PR_TYPE_COLORS = {          // pad color by PR type
 // --- Ship / Fuel Constants ---
 var FUEL_MAX = 100;         // fuel units per level
 var FUEL_BURN_RATE = 10;    // fuel units consumed per second while thrusting
+var FUEL_EXTENSION_MAX = 50; // max extra fuel above FUEL_MAX (absolute cap = FUEL_MAX + FUEL_EXTENSION_MAX = 150)
 
 // --- Scene Liftoff Animation (after normal landing) ---
 var SCENE_LIFTOFF_RISE_SPEED = 120; // pixels per second during vertical rise
@@ -244,6 +245,7 @@ var BUGFIX_BUG_POINTS_LOW = 50;           // points for low-value bug (yellow)
 var BUGFIX_BUG_POINTS_HIGH = 100;         // points for high-value bug (red)
 var BUGFIX_FUEL_BONUS_LOW = 100;          // fuel bonus (low tier)
 var BUGFIX_FUEL_BONUS_HIGH = 200;         // fuel bonus (high tier)
+var BUGFIX_FUEL_PER_KILL = 5;             // fuel units restored per bug killed (extension-tank mechanic)
 
 // --- Bugfix Bug Colours ---
 var BUGFIX_BUG_COLOR_LOW = '#FFEB3B';     // yellow — low-value bug
