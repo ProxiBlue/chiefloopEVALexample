@@ -2399,7 +2399,9 @@ function drawDriveHUD() {
     var fuelBarY = hudY + 72;
     var fuelBarW = 120;
     var fuelBarH = 14;
-    var fuelExtW = fuelBarW * (FUEL_EXTENSION_MAX / FUEL_MAX);
+    var fuelExtW = (typeof FUEL_EXTENSION_MAX !== 'undefined' && typeof FUEL_MAX !== 'undefined')
+        ? fuelBarW * (FUEL_EXTENSION_MAX / FUEL_MAX)
+        : 0;
     var basePct = Math.max(0, Math.min(1, fuelPct));
     ctx.fillStyle = '#333';
     ctx.fillRect(fuelBarX, fuelBarY, fuelBarW, fuelBarH);
