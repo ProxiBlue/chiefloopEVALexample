@@ -2530,7 +2530,7 @@ function update(dt) {
         // plummets straight off the bottom of the canvas.
         var overGap = driveRoadSegments.length > 0 &&
                       driveRoadSegments[segIdx].type === 'gap';
-        if (overGap && !driveFalling && driveBuggyY >= groundY) {
+        if (overGap && !driveFalling && driveBuggyY + DRIVE_WHEEL_OFFSET_Y >= groundY) {
             driveFalling = true;
             driveGrounded = false;
             // US-014 AC#7: descending tone as the buggy commits to the fall.
@@ -2545,13 +2545,13 @@ function update(dt) {
             driveBuggyVY += DRIVE_GRAVITY * dt;
             driveBuggyY += driveBuggyVY * dt;
         } else if (driveGrounded) {
-            driveBuggyY = groundY;
+            driveBuggyY = groundY - DRIVE_WHEEL_OFFSET_Y;
             driveBuggyVY = 0;
         } else {
             driveBuggyVY += DRIVE_GRAVITY * dt;
             driveBuggyY += driveBuggyVY * dt;
-            if (driveBuggyY >= groundY && driveBuggyVY >= 0) {
-                driveBuggyY = groundY;
+            if (driveBuggyY + DRIVE_WHEEL_OFFSET_Y >= groundY && driveBuggyVY >= 0) {
+                driveBuggyY = groundY - DRIVE_WHEEL_OFFSET_Y;
                 driveBuggyVY = 0;
                 driveGrounded = true;
                 // US-014 AC#3: soft thud on landing after a jump.
@@ -2676,12 +2676,14 @@ function update(dt) {
             drivePickups.splice(puIdx, 1);
             driveScore += DRIVE_PICKUP_POINTS;
             score += DRIVE_PICKUP_POINTS;
-            // Drive pickups do NOT grant extension fuel (PRD FR-8: extension
-            // only from bugfix). Cap at FUEL_MAX, but preserve any existing
-            // extension fuel that may have carried in (don't strip it).
-            var drivePickupFuelCap = Math.max(FUEL_MAX, ship.fuel);
-            ship.fuel += DRIVE_PICKUP_FUEL_RESTORE;
-            if (ship.fuel > drivePickupFuelCap) ship.fuel = drivePickupFuelCap;
+            // Drive pickups refill fuel only up to FUEL_MAX. Per PRD FR-8,
+            // extension fuel is a bugfix-exclusive reward, so drive pickups
+            // must neither grant nor strip extension fuel. When fuel is at or
+            // above FUEL_MAX (extension may be carried over), the pickup is a
+            // no-op on the fuel value; points and FX still fire above.
+            if (ship.fuel < FUEL_MAX) {
+                ship.fuel = Math.min(ship.fuel + DRIVE_PICKUP_FUEL_RESTORE, FUEL_MAX);
+            }
             drivePickupsCollected++;
             var puScreenX = pup.x - driveScrollX;
             spawnDrivePickupSparkle(puScreenX, pup.y);
