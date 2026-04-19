@@ -26,6 +26,8 @@
  *   security: "security", "cve", "vulnerability", "vuln"
  *   bugfix:   "fix", "bugfix", "hotfix", "bug"
  *   feature:  "feat", "feature", "enhancement", "add ", "added ", "adds ", "new "
+ *   other:    "refactor", "chore", "cleanup", "deprecat", "remove", "delete",
+ *             "drop", "upgrade", "update dep", "bump"
  * ──────────────────────────────────────────────────
  *
  * Usage:
@@ -54,6 +56,21 @@ const TITLE_RULES = [
   {
     type: "feature",
     patterns: ["feat", "feature", "enhancement", "add ", "added ", "adds ", "new "],
+  },
+  {
+    type: "other",
+    patterns: [
+      "refactor",
+      "chore",
+      "cleanup",
+      "deprecat",
+      "remove",
+      "delete",
+      "drop",
+      "upgrade",
+      "update dep",
+      "bump",
+    ],
   },
 ];
 
