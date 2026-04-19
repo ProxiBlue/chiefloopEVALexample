@@ -1836,11 +1836,29 @@ function drawBreakoutWorld() {
         if (b.revealAt > breakoutTransitionTimer) continue;
         ctx.fillStyle = b.color;
         ctx.fillRect(b.x, b.y, b.w, b.h);
+        // Flash overlay on bricks that took non-lethal damage (US-007).
+        if (b.flashTimer > 0) {
+            ctx.fillStyle = 'rgba(255,255,255,' + Math.min(0.8, b.flashTimer / 0.12) + ')';
+            ctx.fillRect(b.x, b.y, b.w, b.h);
+        }
         ctx.fillStyle = 'rgba(0,0,0,0.85)';
         ctx.font = '10px monospace';
         ctx.fillText(b.label, b.x + b.w / 2, b.y + b.h / 2);
     }
     ctx.restore();
+
+    // Brick-burst particles (US-007): faded per remaining life.
+    if (breakoutParticles.length > 0) {
+        ctx.save();
+        for (var pi = 0; pi < breakoutParticles.length; pi++) {
+            var p = breakoutParticles[pi];
+            ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
 
     // Paddle = M ship drawn at its current (animated) angle + position. Size
     // is derived from BREAKOUT_PADDLE_WIDTH so the rendered M exactly matches

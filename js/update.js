@@ -403,6 +403,28 @@ function setupBreakoutWorld() {
     breakoutBricksTotal = breakoutBricks.length;
 }
 
+// Spawn a 6-10 particle burst at (x,y) in the brick's colour when a brick is
+// destroyed in Code Breaker (US-007). Particles drift outward and fade over
+// ~0.3-0.7s. Follows the same shape as spawnTechdebtAsteroidParticles below.
+function spawnBreakoutBrickParticles(x, y, color) {
+    var count = 6 + Math.floor(Math.random() * 5); // 6..10 inclusive
+    for (var i = 0; i < count; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 60 + Math.random() * 140;
+        var life = 0.3 + Math.random() * 0.4;
+        breakoutParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 2,
+            color: color
+        });
+    }
+}
+
 // Spawn a brief 4-8 particle burst at (x,y) using the given colour. Particles
 // drift outward in random directions and fade over ~0.25-0.6s. Used for the
 // hit feedback when bullets destroy or split tech-debt asteroids (US-008 AC#4).
@@ -1870,6 +1892,113 @@ function update(dt) {
                     Math.max(0, ballSpeed * ballSpeed - breakoutBallVX * breakoutBallVX)
                 );
                 breakoutBallY = paddleTop - BREAKOUT_BALL_RADIUS;
+            }
+
+            // Brick collisions (US-007): AABB ball-vs-brick, first-hit only.
+            // Face resolved by smaller axis overlap; direction gate prevents a
+            // second flip on the next tick if the ball is already travelling
+            // away (mirrors the paddle-collision pattern from US-006).
+            var ballLeft = breakoutBallX - BREAKOUT_BALL_RADIUS;
+            var ballRight = breakoutBallX + BREAKOUT_BALL_RADIUS;
+            var ballTop = breakoutBallY - BREAKOUT_BALL_RADIUS;
+            var ballBottom = breakoutBallY + BREAKOUT_BALL_RADIUS;
+            for (var bi = 0; bi < breakoutBricks.length; bi++) {
+                var brick = breakoutBricks[bi];
+                if (brick.revealAt > breakoutTransitionTimer) continue;
+                var bLeft = brick.x;
+                var bRight = brick.x + brick.w;
+                var bTop = brick.y;
+                var bBottom = brick.y + brick.h;
+                if (ballRight < bLeft || ballLeft > bRight ||
+                    ballBottom < bTop || ballTop > bBottom) continue;
+
+                var overlapX = Math.min(ballRight, bRight) - Math.max(ballLeft, bLeft);
+                var overlapY = Math.min(ballBottom, bBottom) - Math.max(ballTop, bTop);
+                if (overlapX < overlapY) {
+                    // Hit a left/right face — reflect VX.
+                    if (breakoutBallX < (bLeft + bRight) / 2) {
+                        if (breakoutBallVX > 0) breakoutBallVX = -breakoutBallVX;
+                        breakoutBallX = bLeft - BREAKOUT_BALL_RADIUS;
+                    } else {
+                        if (breakoutBallVX < 0) breakoutBallVX = -breakoutBallVX;
+                        breakoutBallX = bRight + BREAKOUT_BALL_RADIUS;
+                    }
+                } else {
+                    // Hit a top/bottom face — reflect VY.
+                    if (breakoutBallY < (bTop + bBottom) / 2) {
+                        if (breakoutBallVY > 0) breakoutBallVY = -breakoutBallVY;
+                        breakoutBallY = bTop - BREAKOUT_BALL_RADIUS;
+                    } else {
+                        if (breakoutBallVY < 0) breakoutBallVY = -breakoutBallVY;
+                        breakoutBallY = bBottom + BREAKOUT_BALL_RADIUS;
+                    }
+                }
+
+                brick.hp -= 1;
+                if (brick.hp <= 0) {
+                    var awarded = BREAKOUT_POINTS_PER_BRICK +
+                                  BREAKOUT_POINTS_BONUS_HP * brick.maxHp;
+                    breakoutScore += awarded;
+                    score += awarded;
+                    breakoutBricksDestroyed += 1;
+                    spawnBreakoutBrickParticles(
+                        brick.x + brick.w / 2,
+                        brick.y + brick.h / 2,
+                        brick.color
+                    );
+                    if (Math.random() < BREAKOUT_POWERUP_CHANCE) {
+                        breakoutPowerups.push({
+                            x: brick.x + brick.w / 2,
+                            y: brick.y + brick.h / 2,
+                            vy: BREAKOUT_POWERUP_FALL_SPEED,
+                            size: BREAKOUT_POWERUP_SIZE,
+                            type: 'random'
+                        });
+                    }
+                    breakoutBricks.splice(bi, 1);
+
+                    // Ball speed ramps per brick destroyed (capped).
+                    var curSpeed = Math.sqrt(
+                        breakoutBallVX * breakoutBallVX +
+                        breakoutBallVY * breakoutBallVY
+                    );
+                    if (curSpeed > 0) {
+                        var newSpeed = Math.min(
+                            BREAKOUT_BALL_SPEED_MAX,
+                            curSpeed + BREAKOUT_BALL_SPEED_INCREMENT
+                        );
+                        var scale = newSpeed / curSpeed;
+                        breakoutBallVX *= scale;
+                        breakoutBallVY *= scale;
+                    }
+                } else {
+                    brick.color = brick.hp === 3 ? BREAKOUT_BRICK_COLOR_HP3
+                                : brick.hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
+                                : BREAKOUT_BRICK_COLOR_HP1;
+                    brick.flashTimer = 0.12;
+                }
+
+                // Only one brick per collision event (AC).
+                break;
+            }
+
+            // Decay brick flash timers (set on damaged hits above).
+            for (var fi = 0; fi < breakoutBricks.length; fi++) {
+                if (breakoutBricks[fi].flashTimer > 0) {
+                    breakoutBricks[fi].flashTimer -= dt;
+                    if (breakoutBricks[fi].flashTimer < 0) {
+                        breakoutBricks[fi].flashTimer = 0;
+                    }
+                }
+            }
+
+            // Update brick-burst particles: drift, fade, expire.
+            for (var bpIdx = breakoutParticles.length - 1; bpIdx >= 0; bpIdx--) {
+                var bp = breakoutParticles[bpIdx];
+                bp.x += bp.vx * dt;
+                bp.y += bp.vy * dt;
+                bp.life -= dt;
+                if (bp.life <= 0) breakoutParticles.splice(bpIdx, 1);
             }
 
             // Bottom-out: ball is lost. Full life/ball decrement lives in US-009;
