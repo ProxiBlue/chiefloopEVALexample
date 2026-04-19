@@ -1024,6 +1024,28 @@ function spawnDriveSparkBurst(x, y) {
     }
 }
 
+// Feature Drive US-009: sparkle burst at pickup collection. Omnidirectional
+// green/cyan/white spray at (x,y) screen-space, lighter + longer-lived than
+// the rock spark burst so the "collected" read is distinct from "hit".
+function spawnDrivePickupSparkle(x, y) {
+    var colors = ['#4CAF50', '#8BC34A', '#9cf', '#FFFFFF'];
+    for (var i = 0; i < 12; i++) {
+        var angle = Math.random() * Math.PI * 2;
+        var speed = 40 + Math.random() * 120;
+        var life = 0.35 + Math.random() * 0.35;
+        driveParticles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: life,
+            maxLife: life,
+            size: 1.5 + Math.random() * 2,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+}
+
 // Red/orange debris burst for a destroyed building or battery (AC#2). Emits a
 // fan of particles with downward gravity so they settle like rubble.
 function spawnMissileDestructionBurst(x, y) {
@@ -2371,6 +2393,44 @@ function update(dt) {
                 if (typeof playDriveRockHitSound === 'function') {
                     playDriveRockHitSound();
                 }
+            }
+        }
+
+        // US-009: Pickup collection. Ground-level + elevated pickups sit at
+        // pu.y (center) with pu.size as the sprite bound. A pickup is collected
+        // when the buggy's AABB (SHIP_SIZE wide × SHIP_SIZE/2 above + wheel
+        // offset below the center) overlaps the pickup's AABB — whether the
+        // buggy is grounded OR airborne (elevated pickups need a jump). Reverse
+        // iterate + splice so multiple same-frame overlaps are safe. Each
+        // collection awards DRIVE_PICKUP_POINTS to driveScore and global score,
+        // restores DRIVE_PICKUP_FUEL_RESTORE (capped at FUEL_MAX), increments
+        // drivePickupsCollected, spawns a sparkle burst at the pickup's screen
+        // position, and plays a pleasant chime.
+        var pickupBuggyHalfW = SHIP_SIZE / 2;
+        var pickupBuggyTop = driveBuggyY - SHIP_SIZE / 2;
+        var pickupBuggyBottom = driveBuggyY + DRIVE_WHEEL_OFFSET_Y;
+        var pickupBuggyLeft = buggyWorldX - pickupBuggyHalfW;
+        var pickupBuggyRight = buggyWorldX + pickupBuggyHalfW;
+        for (var puIdx = drivePickups.length - 1; puIdx >= 0; puIdx--) {
+            var pup = drivePickups[puIdx];
+            if (pup.collected) continue;
+            var puLeft = pup.x - pup.size / 2;
+            var puRight = pup.x + pup.size / 2;
+            var puTop = pup.y - pup.size / 2;
+            var puBottom = pup.y + pup.size / 2;
+            if (pickupBuggyRight < puLeft || pickupBuggyLeft > puRight) continue;
+            if (pickupBuggyBottom < puTop || pickupBuggyTop > puBottom) continue;
+            pup.collected = true;
+            drivePickups.splice(puIdx, 1);
+            driveScore += DRIVE_PICKUP_POINTS;
+            score += DRIVE_PICKUP_POINTS;
+            ship.fuel += DRIVE_PICKUP_FUEL_RESTORE;
+            if (ship.fuel > FUEL_MAX) ship.fuel = FUEL_MAX;
+            drivePickupsCollected++;
+            var puScreenX = pup.x - driveScrollX;
+            spawnDrivePickupSparkle(puScreenX, pup.y);
+            if (typeof playDrivePickupSound === 'function') {
+                playDrivePickupSound();
             }
         }
 

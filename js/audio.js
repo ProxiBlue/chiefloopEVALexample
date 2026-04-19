@@ -745,6 +745,27 @@ function playDriveRockHitSound() {
     noise.stop(t + 0.15);
 }
 
+// Feature Drive US-009: Pickup chime — short ascending two-note tone
+// (E5 → A5, 0.08s stagger). Pleasant and distinctly higher than the
+// landing chime so it reads as "collected" mid-drive without clashing.
+function playDrivePickupSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    [659.25, 880.00].forEach(function (freq, i) {
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + i * 0.08);
+        var gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t + i * 0.08);
+        gain.gain.linearRampToValueAtTime(0.18, t + i * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + i * 0.08);
+        osc.stop(t + i * 0.08 + 0.22);
+    });
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;
