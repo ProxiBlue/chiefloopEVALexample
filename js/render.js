@@ -1620,7 +1620,7 @@ function renderTechdebtPlaying() {
         ctx.restore();
     }
 
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, false);
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, ship.thrusting, ship.rotating, ship.retroThrusting || false);
 
     // Shield ring around the ship (US-013 AC#1). Translucent blue circle,
     // radius ~25px, pulsing alpha driven by a sine on the shield timer so the

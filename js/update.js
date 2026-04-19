@@ -127,12 +127,14 @@ function crashShipInTechdebt(reason) {
     ship.vx = 0;
     ship.vy = 0;
     ship.thrusting = false;
-    landingResult = reason;
     spawnExplosion(ship.x, ship.y);
     startScreenShake();
     stopThrustSound();
     playExplosionSound();
-    gameState = STATES.CRASHED;
+    // Skip crash screen — go straight to complete with partial score
+    techdebtFuelBonus = 0;
+    techdebtCompleteTimer = 0;
+    gameState = STATES.TECHDEBT_COMPLETE;
 }
 
 // Reset all per-round missile-command state — entities, particle bursts, wave
@@ -1696,18 +1698,25 @@ function update(dt) {
         ship.rotating = rotatingLeft ? 'left' : rotatingRight ? 'right' : null;
 
         var wantsThrust = !!(keys['ArrowUp'] || keys['w'] || keys['W']);
+        var wantsRetro = !!(keys['ArrowDown'] || keys['s'] || keys['S']);
         ship.thrusting = wantsThrust && ship.fuel > 0;
+        ship.retroThrusting = wantsRetro && ship.fuel > 0;
         if (ship.thrusting) {
             ship.fuel -= FUEL_BURN_RATE * dt;
             if (ship.fuel < 0) ship.fuel = 0;
-            // Asteroids-style: thrust applies acceleration in screen-space
-            // px/s² along the ship's facing direction (nose = -Y at angle=0).
-            // No gravity scaling here — this is open space, not lander mode.
             var accel = THRUST_POWER * PIXELS_PER_METER * dt;
             ship.vx += Math.sin(ship.angle) * accel;
             ship.vy += -Math.cos(ship.angle) * accel;
             startThrustSound();
+        } else if (ship.retroThrusting) {
+            ship.fuel -= FUEL_BURN_RATE * dt;
+            if (ship.fuel < 0) ship.fuel = 0;
+            var retroAccel = THRUST_POWER * PIXELS_PER_METER * dt * 0.8;
+            ship.vx -= Math.sin(ship.angle) * retroAccel;
+            ship.vy -= -Math.cos(ship.angle) * retroAccel;
+            startThrustSound();
         } else {
+            ship.retroThrusting = false;
             stopThrustSound();
         }
 
