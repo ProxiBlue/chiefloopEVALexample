@@ -119,6 +119,49 @@ function crashShipInMissile(reason) {
     gameState = STATES.CRASHED;
 }
 
+// Route the ship to STATES.CRASHED from the Code Breaker mini-game (US-009 lose
+// path — all balls lost with no extras). Mirrors crashShipInBugfix/Missile so
+// the crash FX pipeline stays identical. Partial breakoutScore already
+// accumulated into `score` stays — we don't subtract it here.
+function crashShipInBreakout(reason) {
+    ship.vx = 0;
+    ship.vy = 0;
+    ship.thrusting = false;
+    landingResult = reason;
+    spawnExplosion(ship.x, ship.y);
+    startScreenShake();
+    stopThrustSound();
+    playExplosionSound();
+    gameState = STATES.CRASHED;
+}
+
+// US-009: Handle a Code Breaker ball loss (all balls off-screen). Cancels any
+// active timed power-up (Wide / Fire). If extra balls are banked, decrement
+// and respawn the primary on the paddle (stuck). Otherwise routes to CRASHED.
+function loseBreakoutBall() {
+    if (breakoutActivePowerup === 'wide') {
+        breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
+        if (breakoutPaddleX + breakoutPaddleWidth > canvas.width) {
+            breakoutPaddleX = canvas.width - breakoutPaddleWidth;
+        }
+    }
+    breakoutActivePowerup = null;
+    breakoutPowerupTimer = 0;
+
+    if (breakoutExtraBalls > 0) {
+        breakoutExtraBalls -= 1;
+        breakoutBalls = [];
+        breakoutBallStuck = true;
+        breakoutBallVX = 0;
+        breakoutBallVY = 0;
+        breakoutBallX = breakoutPaddleX + breakoutPaddleWidth / 2;
+        breakoutBallY = canvas.height - BREAKOUT_PADDLE_Y_OFFSET
+                      - SHIP_SIZE / 2 - BREAKOUT_BALL_RADIUS;
+    } else {
+        crashShipInBreakout('Ball lost');
+    }
+}
+
 // Route the ship to STATES.CRASHED from the tech-debt mini-game (US-009 lose path).
 // Mirrors crashShipInBugfix/crashShipInMissile so the crash FX pipeline stays
 // identical to other mini-games. Partial techdebtScore already accumulated into
@@ -2249,10 +2292,25 @@ function update(dt) {
                 }
             }
 
-            // Bottom-out: ball is lost. Full life/ball decrement lives in US-009;
-            // here we just re-stick the ball on the paddle so play can continue.
+            // US-009: Ball loss detection. Each ball (primary + every Multi-Ball
+            // extra) is independent — losing one does not end the round. Only
+            // when the last ball on screen exits the bottom do we trigger the
+            // ball-loss check. Extras that bottomed out this frame have already
+            // been spliced out of `breakoutBalls` by the loop above, so if the
+            // primary also bottoms out here and the array is empty, no balls
+            // remain on screen.
             if (breakoutBallY - BREAKOUT_BALL_RADIUS > canvas.height) {
-                breakoutBallStuck = true;
+                if (breakoutBalls.length > 0) {
+                    // A multi-ball is still on screen — promote it to primary so
+                    // physics continues on a live ball and the round stays alive.
+                    var promoted = breakoutBalls.shift();
+                    breakoutBallX = promoted.x;
+                    breakoutBallY = promoted.y;
+                    breakoutBallVX = promoted.vx;
+                    breakoutBallVY = promoted.vy;
+                } else {
+                    loseBreakoutBall();
+                }
             }
         }
     }
