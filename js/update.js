@@ -359,6 +359,7 @@ function setupBreakoutWorld() {
     breakoutExtraBalls = 0;
     breakoutBallVX = 0;
     breakoutBallVY = 0;
+    breakoutBallStuck = true;
 
     // Paddle sits BREAKOUT_PADDLE_Y_OFFSET px above canvas bottom, centered.
     var paddleCenterX = canvas.width / 2;
@@ -1780,11 +1781,52 @@ function update(dt) {
         }
     }
 
-    // Code Breaker playing: paddle/ball/brick gameplay wired by later stories.
-    // Placeholder handler keeps the state addressable so BREAKOUT_TRANSITION
-    // has a valid next-state target.
+    // Code Breaker playing (US-005 paddle movement): Left/A and Right/D move
+    // the paddle at BREAKOUT_PADDLE_SPEED px/s, clamped to canvas bounds. No
+    // fuel, no gravity, no vertical motion — the paddle only slides along its
+    // fixed Y. While `breakoutBallStuck` is true the ball rides on top of the
+    // paddle; Up/W/Space launches it straight up at the level-scaled speed.
+    // Brick collisions and ball bouncing are future stories.
     if (gameState === STATES.BREAKOUT_PLAYING) {
-        // intentionally empty — gameplay wiring deferred to future stories
+        var paddleLeft = !!(keys['ArrowLeft'] || keys['a'] || keys['A']);
+        var paddleRight = !!(keys['ArrowRight'] || keys['d'] || keys['D']);
+        if (paddleLeft) {
+            breakoutPaddleX -= BREAKOUT_PADDLE_SPEED * dt;
+        }
+        if (paddleRight) {
+            breakoutPaddleX += BREAKOUT_PADDLE_SPEED * dt;
+        }
+        if (breakoutPaddleX < 0) {
+            breakoutPaddleX = 0;
+        }
+        if (breakoutPaddleX + BREAKOUT_PADDLE_WIDTH > canvas.width) {
+            breakoutPaddleX = canvas.width - BREAKOUT_PADDLE_WIDTH;
+        }
+
+        // Keep the flipped M sprite aligned with the paddle hitbox.
+        ship.x = breakoutPaddleX + BREAKOUT_PADDLE_WIDTH / 2;
+        ship.y = canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2;
+        ship.angle = Math.PI;
+
+        if (breakoutBallStuck) {
+            breakoutBallX = ship.x;
+            breakoutBallY = ship.y - SHIP_SIZE / 2 - BREAKOUT_BALL_RADIUS;
+            breakoutBallVX = 0;
+            breakoutBallVY = 0;
+            var wantsLaunch = !!(
+                keys['ArrowUp'] || keys['w'] || keys['W'] ||
+                keys[' '] || keys['Space']
+            );
+            if (wantsLaunch) {
+                var launchSpeed = Math.min(
+                    BREAKOUT_BALL_SPEED_MAX,
+                    BREAKOUT_BALL_SPEED_BASE + currentLevel * BREAKOUT_BALL_SPEED_PER_LEVEL
+                );
+                breakoutBallVX = 0;
+                breakoutBallVY = -launchSpeed;
+                breakoutBallStuck = false;
+            }
+        }
     }
 
     // Tech debt playing: Asteroids-style ship physics (US-005).

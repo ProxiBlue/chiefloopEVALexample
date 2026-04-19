@@ -543,6 +543,7 @@ var breakoutBallY = 0;                    // active ball Y position
 var breakoutBallVX = 0;                   // active ball X velocity (px/s)
 var breakoutBallVY = 0;                   // active ball Y velocity (px/s)
 var breakoutPaddleX = 0;                  // paddle left-edge X position
+var breakoutBallStuck = true;             // ball rides on paddle until Up/W/Space launches it
 var breakoutExtraBalls = 0;               // bonus balls accumulated from power-ups
 
 // --- Code Breaker State Arrays ---

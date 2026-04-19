@@ -1842,8 +1842,11 @@ function drawBreakoutWorld() {
     }
     ctx.restore();
 
-    // Paddle = M ship drawn at its current (animated) angle + position.
-    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+    // Paddle = M ship drawn at its current (animated) angle + position. Size
+    // is derived from BREAKOUT_PADDLE_WIDTH so the rendered M exactly matches
+    // the paddle hitbox (drawShip draws at 2:1 aspect ratio via LOGO_DRAW_RATIO).
+    var paddleDrawSize = BREAKOUT_PADDLE_WIDTH / LOGO_DRAW_RATIO;
+    drawShip(ship.x, ship.y, ship.angle, paddleDrawSize, false, null, false);
 
     // Ball — stationary, resting on top of the paddle (set by update handler).
     ctx.save();
