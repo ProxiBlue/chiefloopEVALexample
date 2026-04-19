@@ -54,6 +54,7 @@ var sandbox = {
     spawnExplosion: function (x, y) { spawnExplosionCalls.push({ x: x, y: y }); },
     startScreenShake: function () { startScreenShakeCalls++; },
     playExplosionSound: function () { playExplosionSoundCalls++; },
+    spawnCelebration: function () {},
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
     resetShip: function () {},
@@ -136,6 +137,9 @@ function resetScenario() {
     sandbox.proxiblueShieldFlashTimer = 0;
     sandbox.landingResult = null;
     sandbox.ship = freshShip();
+    // Zero fuel so the US-010 win-condition fuel bonus evaluates to 0 —
+    // this test asserts tier point awards + crash pipeline, not fuel bonus.
+    sandbox.ship.fuel = 0;
     sandbox.keys = {};
     spawnExplosionCalls = [];
     startScreenShakeCalls = 0;
@@ -220,8 +224,11 @@ check('shielded hit: blue flash timer was armed (PROXIBLUE_SHIELD_FLASH_DURATION
     sandbox.proxiblueShieldFlashTimer > 0
     && sandbox.proxiblueShieldFlashTimer <= sandbox.PROXIBLUE_SHIELD_FLASH_DURATION,
     'flash timer: ' + sandbox.proxiblueShieldFlashTimer);
-check('shielded hit: gameState stays in TECHDEBT_PLAYING (ship safe)',
-    sandbox.gameState === sandbox.STATES.TECHDEBT_PLAYING);
+// US-010: clearing the last asteroid transitions to TECHDEBT_COMPLETE — either
+// TECHDEBT_PLAYING (more asteroids remaining) or TECHDEBT_COMPLETE (this was
+// the last one) means the ship survived. CRASHED would mean the shield failed.
+check('shielded hit: gameState NOT CRASHED (ship safe)',
+    sandbox.gameState !== sandbox.STATES.CRASHED);
 check('shielded hit: no explosion spawned (ship safe)',
     spawnExplosionCalls.length === 0);
 
@@ -272,7 +279,7 @@ sandbox.techdebtAsteroids.push(makeAsteroid({
 tick(0.001);
 check('first shielded hit consumed shield',
     sandbox.proxiblueShieldActive === false
-    && sandbox.gameState === sandbox.STATES.TECHDEBT_PLAYING);
+    && sandbox.gameState !== sandbox.STATES.CRASHED);
 
 sandbox.techdebtAsteroids.push(makeAsteroid({
     x: 400, y: 300, size: sandbox.TECHDEBT_SIZE_SMALL, sizeTier: 'small'

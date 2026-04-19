@@ -1613,6 +1613,51 @@ function renderTechdebtPlaying() {
     }
 }
 
+function renderTechdebtComplete() {
+    // Keep the play field visible underneath so celebration particles read in
+    // context. Trailing particles + ship remain on screen as they fade.
+    if (techdebtParticles.length > 0) {
+        ctx.save();
+        for (var pi = 0; pi < techdebtParticles.length; pi++) {
+            var p = techdebtParticles[pi];
+            var alpha = Math.max(0, p.life / p.maxLife);
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
+    drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null, false);
+
+    // Reuse the shared celebration particle system (spawned on entry in update.js).
+    drawCelebration();
+
+    // Results overlay
+    var cx = canvas.width / 2;
+    var cy = canvas.height / 2;
+
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 36px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('TECH DEBT CLEARED!', cx, cy - 60);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText('Asteroids Destroyed: ' + asteroidsDestroyed, cx, cy - 15);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('Fuel Bonus: +' + techdebtFuelBonus + ' pts', cx, cy + 25);
+
+    ctx.fillStyle = '#888';
+    ctx.font = '18px sans-serif';
+    ctx.fillText('Returning to mission...', cx, cy + 65);
+}
+
 function renderCrashed() {
     drawTerrain();
 
@@ -1784,6 +1829,9 @@ function render() {
             break;
         case STATES.TECHDEBT_PLAYING:
             renderTechdebtPlaying();
+            break;
+        case STATES.TECHDEBT_COMPLETE:
+            renderTechdebtComplete();
             break;
         case STATES.CRASHED:
             renderCrashed();

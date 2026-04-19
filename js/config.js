@@ -363,6 +363,7 @@ var securityMiniGameCount = 0;
 
 // --- Tech Debt Blaster Mini-Game Transition ---
 var TECHDEBT_TRANSITION_DURATION = 1.5;   // seconds — brief starfield zoom effect
+var TECHDEBT_COMPLETE_DELAY = 2.0;        // seconds to show results before returning
 
 // --- Tech Debt Asteroid Configuration ---
 var TECHDEBT_ASTEROID_BASE_COUNT = 4;     // base count of large asteroids
@@ -434,6 +435,7 @@ var techdebtScore = 0;                    // bonus points earned during tech deb
 var asteroidsDestroyed = 0;               // count of asteroids destroyed this round
 var asteroidsTotal = 0;                   // total asteroids to destroy this round
 var techdebtCompleteTimer = 0;            // elapsed time in TECHDEBT_COMPLETE state
+var techdebtFuelBonus = 0;                // fuel-remaining bonus awarded on win (shown in TECHDEBT_COMPLETE)
 var techdebtTransitionTimer = 0;          // elapsed time in TECHDEBT_TRANSITION state
 var techdebtBulletCooldownTimer = 0;      // seconds remaining before the ship can fire its next bullet
 

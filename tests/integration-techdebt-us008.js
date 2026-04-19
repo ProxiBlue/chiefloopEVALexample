@@ -48,6 +48,7 @@ var sandbox = {
     spawnExplosion: function () {},
     startScreenShake: function () {},
     playExplosionSound: function () {},
+    spawnCelebration: function () {},
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
     resetShip: function () {},
@@ -125,6 +126,9 @@ function resetCollisionScenario() {
     sandbox.asteroidsDestroyed = 0;
     sandbox.techdebtBulletCooldownTimer = 0;
     sandbox.ship = freshShip();
+    // Zero fuel so the US-010 win-condition fuel bonus (Math.round((fuel/FUEL_MAX)*200))
+    // evaluates to 0 — this test asserts tier point awards, not fuel bonus.
+    sandbox.ship.fuel = 0;
     sandbox.keys = {};
 }
 

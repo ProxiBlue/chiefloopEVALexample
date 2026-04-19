@@ -238,6 +238,7 @@ function setupTechdebtWorld() {
     techdebtScore = 0;
     asteroidsDestroyed = 0;
     techdebtCompleteTimer = 0;
+    techdebtFuelBonus = 0;
     techdebtBulletCooldownTimer = 0;
     proxiblueShieldActive = false;
     proxiblueShieldTimer = 0;
@@ -1820,6 +1821,39 @@ function update(dt) {
         if (proxiblueShieldFlashTimer > 0) {
             proxiblueShieldFlashTimer -= dt;
             if (proxiblueShieldFlashTimer < 0) proxiblueShieldFlashTimer = 0;
+        }
+
+        // --- Win condition (US-010) ---
+        // When the last asteroid is destroyed, enter TECHDEBT_COMPLETE and
+        // apply the fuel-remaining bonus. Guard on gameState === TECHDEBT_PLAYING
+        // so this can't double-apply in a single tick if the block re-enters.
+        if (gameState === STATES.TECHDEBT_PLAYING && techdebtAsteroids.length === 0) {
+            gameState = STATES.TECHDEBT_COMPLETE;
+            techdebtCompleteTimer = 0;
+            var fuelBonus = Math.round((ship.fuel / FUEL_MAX) * 200);
+            techdebtFuelBonus = fuelBonus;
+            techdebtScore += fuelBonus;
+            score += fuelBonus;
+            stopThrustSound();
+            spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
+        }
+    }
+
+    // Tech debt complete: brief results window (asteroids destroyed, fuel bonus),
+    // then transition to TECHDEBT_RETURN. Particles + celebration tick so the
+    // last flashes of the round finish visually during the delay.
+    if (gameState === STATES.TECHDEBT_COMPLETE) {
+        for (var tcPIdx = techdebtParticles.length - 1; tcPIdx >= 0; tcPIdx--) {
+            var tcPar = techdebtParticles[tcPIdx];
+            tcPar.x += tcPar.vx * dt;
+            tcPar.y += tcPar.vy * dt;
+            tcPar.life -= dt;
+            if (tcPar.life <= 0) techdebtParticles.splice(tcPIdx, 1);
+        }
+        updateCelebration(dt);
+        techdebtCompleteTimer += dt;
+        if (techdebtCompleteTimer >= TECHDEBT_COMPLETE_DELAY) {
+            gameState = STATES.TECHDEBT_RETURN;
         }
     }
 

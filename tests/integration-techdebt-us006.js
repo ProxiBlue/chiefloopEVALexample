@@ -45,6 +45,7 @@ var sandbox = {
     stopThrustSound: function () { soundCalls.thrustStop++; },
     startThrustSound: function () { soundCalls.thrustStart++; },
     playTechdebtShootSound: function () { soundCalls.shoot++; },
+    spawnCelebration: function () {},
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
     setupTechdebtWorld: function () {},
@@ -104,6 +105,10 @@ function reset(over) {
 function tick(over) {
     if (over && over.keys !== undefined) sandbox.keys = over.keys;
     if (over && over.dt !== undefined) sandbox.dt = over.dt;
+    // Keep gameState pinned to TECHDEBT_PLAYING between ticks — the US-010 win
+    // condition at the tail of the block will otherwise flip us to
+    // TECHDEBT_COMPLETE on the first tick (no asteroids seeded in this test).
+    sandbox.gameState = sandbox.STATES.TECHDEBT_PLAYING;
     playReplay.runInContext(sandbox);
 }
 
