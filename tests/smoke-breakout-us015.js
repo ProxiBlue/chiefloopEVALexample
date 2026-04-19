@@ -317,19 +317,21 @@ padRoutingScript.runInContext(sandbox);
 check('AC#5 bugfix scroll → BUGFIX_TRANSITION',
     sandbox.gameState === sandbox.STATES.BUGFIX_TRANSITION);
 
-// ====== AC#6 `feature` pad → Feature Drive (not implemented) / normal descent ======
-// `feature` pads are NOT routed through a pad-scroll flag (no isFeatureScroll)
-// so they fall through to the `else` branch → SCENE_DESCENT.
-check('AC#6 no isFeatureScroll path in pad-routing (Feature Drive unimplemented)',
+// ====== AC#6 `feature` pad → Feature Drive (DRIVE_TRANSITION) ======
+// `feature` pads are NOT routed through a pad-scroll flag (no isFeatureScroll);
+// detection is via landedPRType === 'feature' directly in the SCENE_SCROLL end
+// branch, then the state flips to DRIVE_TRANSITION.
+check('AC#6 no isFeatureScroll path in pad-routing (detection is landedPRType)',
     !/isFeatureScroll/.test(padRoutingBody));
-check('AC#6 fallthrough branch routes to STATES.SCENE_DESCENT',
+check('AC#6 fallthrough branch still routes to STATES.SCENE_DESCENT for unknown pads',
     /else[\s\S]*?STATES\.SCENE_DESCENT/.test(padRoutingBody));
 
 sandbox.landedPRType = 'feature';
+sandbox.driveTransitionTimer = 999;
 freshScrollState();
 padRoutingScript.runInContext(sandbox);
-check('AC#6 feature pad → SCENE_DESCENT (normal descent)',
-    sandbox.gameState === sandbox.STATES.SCENE_DESCENT);
+check('AC#6 feature pad → DRIVE_TRANSITION',
+    sandbox.gameState === sandbox.STATES.DRIVE_TRANSITION);
 
 // ====== AC#7 Code Breaker: paddle moves, ball launches, bounces ======
 check('AC#7 PLAYING: ArrowLeft/A moves paddle left',

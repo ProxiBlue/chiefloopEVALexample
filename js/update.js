@@ -1041,6 +1041,7 @@ function update(dt) {
             // collision.js from landedPad.prType when the ship touched down) rather
             // than a pre-computed routing flag — acceptance criterion for US-003.
             var isOtherPad = (landedPRType === 'other');
+            var isFeaturePad = (landedPRType === 'feature');
             terrain = [];
             for (var i = 0; i < newT.length; i++) {
                 terrain.push({ x: newT[i].x, y: newT[i].y });
@@ -1121,6 +1122,20 @@ function update(dt) {
                     setupBreakoutWorld();
                     gameState = STATES.BREAKOUT_TRANSITION;
                 }
+            } else if (isFeaturePad) {
+                // Feature pad: enter Feature Drive transition directly (no
+                // pre-computed scroll flag — detection is via landedPRType).
+                ship.x = canvas.width / 2;
+                ship.y = canvas.height / 2;
+                ship.angle = 0;
+                ship.vx = 0;
+                ship.vy = 0;
+                ship.thrusting = false;
+                ship.rotating = null;
+                stopThrustSound();
+                ship.fuel = FUEL_MAX;
+                driveTransitionTimer = 0;
+                gameState = STATES.DRIVE_TRANSITION;
             } else {
                 // Normal pad: begin final descent settle from current position
                 sceneDescentStartY = ship.y;

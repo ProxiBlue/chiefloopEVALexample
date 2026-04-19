@@ -7,7 +7,7 @@
 //   security (odd)  → STATES.INVADER_SCROLL_ROTATE
 //   security (even) → STATES.MISSILE_TRANSITION   (via missilePadScroll route)
 //   bugfix          → STATES.BUGFIX_TRANSITION
-//   feature         → STATES.SCENE_DESCENT        (normal/fall-through path)
+//   feature         → STATES.DRIVE_TRANSITION     (Feature Drive US-003)
 //   other           → STATES.TECHDEBT_TRANSITION  (US-003 under test)
 //
 // Runtime (not static): config.js is loaded into a vm context. The actual
@@ -148,11 +148,15 @@ check('`other` pad → sceneScrollState cleared',
     sandbox.sceneScrollState === null,
     'sceneScrollState: ' + sandbox.sceneScrollState);
 
-// AC#5: Feature pads → SCENE_DESCENT (normal path, no *Scroll flag set).
+// AC#5: Feature pads → DRIVE_TRANSITION (Feature Drive US-003).
+sandbox.driveTransitionTimer = 999;
 runScrollEnd({ landedPRType: 'feature' });
-check('feature pad → STATES.SCENE_DESCENT (unchanged normal-pad path)',
-    sandbox.gameState === sandbox.STATES.SCENE_DESCENT,
+check('feature pad → STATES.DRIVE_TRANSITION',
+    sandbox.gameState === sandbox.STATES.DRIVE_TRANSITION,
     'gameState: ' + sandbox.gameState);
+check('feature pad → driveTransitionTimer reset to 0',
+    sandbox.driveTransitionTimer === 0,
+    'driveTransitionTimer: ' + sandbox.driveTransitionTimer);
 
 console.log('\n' + passed + ' passed, ' + failed + ' failed.');
 process.exit(failed === 0 ? 0 : 1);
