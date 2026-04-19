@@ -1,0 +1,12 @@
+name = "chiefloop-leaderboard-proxy"
+main = "leaderboard-proxy.js"
+compatibility_date = "2026-04-19"
+
+[vars]
+DREAMLO_PUBLIC_KEY = "69e4f5048f40bb10683d39fb"
+ALLOWED_ORIGIN = "https://proxiblue.github.io"
+DREAMLO_BASE_URL = "http://www.dreamlo.com/lb"
+
+[[kv_namespaces]]
+binding = "SESSION_KV"
+id = "95655c80795440a4b5ba245af7622191"

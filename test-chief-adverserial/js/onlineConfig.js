@@ -11,13 +11,13 @@
 // implementation.
 var ONLINE_LEADERBOARD_CONFIG = {
     // dreamlo public key (used for reading scores — safe to expose)
-    publicKey: 'your-public-key-here',
+    publicKey: '69e4f5048f40bb10683d39fb',
     // Base URL for the dreamlo API (read-only operations)
     baseUrl: 'https://www.dreamlo.com/lb',
     // URL of the server-side score submission proxy.
     // Deploy server/leaderboard-proxy.js as a Cloudflare Worker and set
     // this to your worker URL (e.g. https://leaderboard-proxy.yourname.workers.dev)
-    submitProxyUrl: 'https://leaderboard-proxy.example.workers.dev',
+    submitProxyUrl: 'https://chiefloop-leaderboard-proxy.proxiblue.workers.dev',
     // Maximum plausible score — based on game mechanics: points per landing
     // pad × maximum conceivable levels. Adjust this as game balance changes.
     // Enforced both client-side (prevents submission) and server-side (rejects).

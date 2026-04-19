@@ -206,8 +206,11 @@ var RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // sliding window duration in ms (5 mi
         if (isNaN(count) || count < 1) count = 10;
         if (count > 100) count = 100;
 
-        var url = ONLINE_LEADERBOARD_CONFIG.baseUrl + '/' +
-            encodeURIComponent(ONLINE_LEADERBOARD_CONFIG.publicKey) + '/json/' + count;
+        // Reads go through the Worker proxy (which fetches dreamlo over HTTP
+        // server-side) so the browser does not hit a mixed-content block when
+        // the game is served over HTTPS. baseUrl + publicKey are kept in
+        // config in case a future direct-read path is needed.
+        var url = ONLINE_LEADERBOARD_CONFIG.submitProxyUrl + '/scores?count=' + count;
 
         var timeoutMs = ONLINE_LEADERBOARD_CONFIG.fetchTimeoutMs || 10000;
 

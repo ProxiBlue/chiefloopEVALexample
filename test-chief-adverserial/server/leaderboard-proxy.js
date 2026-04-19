@@ -5,8 +5,9 @@
  * the browser. Deploy as a Cloudflare Worker with the following env vars
  * and bindings:
  *
- *   DREAMLO_PRIVATE_KEY  — your dreamlo private key (required)
- *   DREAMLO_BASE_URL     — https://www.dreamlo.com/lb (default)
+ *   DREAMLO_PRIVATE_KEY  — your dreamlo private key (required, used for /submit writes)
+ *   DREAMLO_PUBLIC_KEY   — your dreamlo public key (required, used for /scores reads)
+ *   DREAMLO_BASE_URL     — http://www.dreamlo.com/lb (default; HTTPS on dreamlo is a paid add-on)
  *   ALLOWED_ORIGIN       — your game's origin for CORS (required, e.g. https://yourgame.com)
  *   SESSION_KV           — KV namespace binding for session/rate-limit storage (required)
  *
@@ -74,8 +75,8 @@ async function isRateLimited(kv, ip, endpoint) {
     if (last && now - parseInt(last, 10) < RATE_LIMIT_WINDOW_MS) {
         return true;
     }
-    // Store with short TTL (rate limit window * 2 in seconds, minimum 1)
-    var ttlSeconds = Math.max(1, Math.ceil((RATE_LIMIT_WINDOW_MS * 2) / 1000));
+    // Store with short TTL (rate limit window * 2 in seconds, minimum 60 — Cloudflare KV minimum)
+    var ttlSeconds = Math.max(60, Math.ceil((RATE_LIMIT_WINDOW_MS * 2) / 1000));
     await kv.put(key, String(now), { expirationTtl: ttlSeconds });
     return false;
 }
@@ -109,7 +110,7 @@ async function decrementSessionCount(kv, ip) {
 function corsHeaders(allowedOrigin) {
     return {
         'Access-Control-Allow-Origin': allowedOrigin,
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '86400'
     };
@@ -159,6 +160,34 @@ export default {
 
         var url = new URL(request.url);
         var clientIp = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+        // --- GET /scores — Proxy a read of top scores from dreamlo ---
+        // Worker fetches dreamlo over HTTP server-side, so the browser never
+        // makes a mixed-content request when the game is served over HTTPS.
+        if (url.pathname === '/scores' && request.method === 'GET') {
+            var publicKey = env.DREAMLO_PUBLIC_KEY;
+            if (!publicKey) {
+                return jsonResponse({ error: 'Server misconfigured: DREAMLO_PUBLIC_KEY' }, 500, headers);
+            }
+            var count = parseInt(url.searchParams.get('count'), 10);
+            if (isNaN(count) || count < 1) count = 10;
+            if (count > 100) count = 100;
+
+            var readBaseUrl = env.DREAMLO_BASE_URL || 'http://www.dreamlo.com/lb';
+            var dreamloReadUrl = readBaseUrl + '/' + encodeURIComponent(publicKey) + '/json/' + count;
+
+            try {
+                var readResp = await fetch(dreamloReadUrl);
+                if (!readResp.ok) {
+                    return jsonResponse({ error: 'Upstream error' }, 502, headers);
+                }
+                var readData = await readResp.json();
+                return jsonResponse(readData, 200, headers);
+            } catch (e) {
+                console.error('dreamlo read failed', e);
+                return jsonResponse({ error: 'Upstream error' }, 502, headers);
+            }
+        }
 
         // --- POST /session — Issue a one-time-use game session token ---
         if (url.pathname === '/session' && request.method === 'POST') {
@@ -258,7 +287,7 @@ export default {
                 return jsonResponse({ error: 'Server misconfigured' }, 500, headers);
             }
 
-            var baseUrl = env.DREAMLO_BASE_URL || 'https://www.dreamlo.com/lb';
+            var baseUrl = env.DREAMLO_BASE_URL || 'http://www.dreamlo.com/lb';
             var dreamloUrl = baseUrl + '/' +
                 encodeURIComponent(privateKey) + '/add/' +
                 encodeURIComponent(name) + '/' + score;
