@@ -51,11 +51,15 @@ const LABEL_RULES = [
 ];
 
 const TITLE_RULES = [
-  { type: "security", patterns: ["security", "cve", "vulnerability", "vuln"] },
+  { type: "security", patterns: ["security", "cve", "vulnerability", "vuln", "merge conflict"] },
   { type: "bugfix", patterns: ["fix", "bugfix", "hotfix", "bug"] },
   {
     type: "feature",
-    patterns: ["feat", "feature", "enhancement", "add ", "added ", "adds ", "new "],
+    patterns: [
+      "feat", "feature", "enhancement", "add ", "added ", "adds ", "new ",
+      "migrate", "expand", "generalize", "integrate", "implement", "support",
+      "introduce", "enable", "allow", "extend",
+    ],
   },
   {
     type: "other",
@@ -72,6 +76,14 @@ const TITLE_RULES = [
       "bump",
     ],
   },
+];
+
+// Description-based rules — checked after title, before default.
+// Catches PRs with generic titles but descriptive bodies.
+const DESCRIPTION_RULES = [
+  { type: "security", patterns: ["rce", "payload", "attacker", "exploit", "injection", "xss", "csrf", "vulnerability", "cve-"] },
+  { type: "feature", patterns: ["migrate", "integration", "new api", "new endpoint", "implements", "adds support"] },
+  { type: "bugfix", patterns: ["fixes #", "resolves #", "crash when", "error when", "broken", "regression"] },
 ];
 
 // ── Classification functions ────────────────────────
@@ -107,10 +119,25 @@ function classifyByTitle(title) {
 }
 
 /**
- * Classify a single PR object. Tries labels first, then title, then defaults to "other".
+ * Classify a PR by checking its description against known patterns.
+ * Returns the type string or null if no match.
+ */
+function classifyByDescription(description) {
+  if (!description) return null;
+  const lowerDesc = description.toLowerCase();
+  for (const rule of DESCRIPTION_RULES) {
+    if (rule.patterns.some((p) => lowerDesc.includes(p))) {
+      return rule.type;
+    }
+  }
+  return null;
+}
+
+/**
+ * Classify a single PR object. Tries labels first, then title, then description, then defaults to "other".
  */
 function classifyPR(pr) {
-  return classifyByLabels(pr.labels || []) || classifyByTitle(pr.title || "") || "other";
+  return classifyByLabels(pr.labels || []) || classifyByTitle(pr.title || "") || classifyByDescription(pr.description || "") || "other";
 }
 
 // ── Main ────────────────────────────────────────────

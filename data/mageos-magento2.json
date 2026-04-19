@@ -1632,7 +1632,7 @@
       "labels": [],
       "mergeCommitHash": "c26b4eebad53828344f4111d428b4543b3545c2a",
       "mergedDate": "2026-03-18T02:07:34Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 208,
@@ -1672,7 +1672,7 @@
       "labels": [],
       "mergeCommitHash": "62ae6fe6571908e02a0a8bd839942c0c90d20406",
       "mergedDate": "2026-02-18T04:03:04Z",
-      "type": "other"
+      "type": "feature"
     },
     {
       "number": 200,
@@ -1682,7 +1682,7 @@
       "labels": [],
       "mergeCommitHash": "029bfed3f43ea90d271123737ca8b9e0b12d192d",
       "mergedDate": "2026-02-18T03:59:29Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 194,
@@ -1702,7 +1702,7 @@
       "labels": [],
       "mergeCommitHash": "a8f4c8a36d42088a41305595b8a81dfe37a70f19",
       "mergedDate": "2026-02-10T01:21:41Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 195,
@@ -1712,7 +1712,7 @@
       "labels": [],
       "mergeCommitHash": "aa287101ccbfac42970166db6d153eeb83afdfeb",
       "mergedDate": "2026-01-27T02:53:01Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 188,
@@ -1732,7 +1732,7 @@
       "labels": [],
       "mergeCommitHash": "d247efa32de28458c253b14413af9f6cf047d4b2",
       "mergedDate": "2026-01-11T02:31:42Z",
-      "type": "other"
+      "type": "feature"
     },
     {
       "number": 153,
@@ -1752,7 +1752,7 @@
       "labels": [],
       "mergeCommitHash": "a41cf3cca6b3a80544729204c6aff189e09279cd",
       "mergedDate": "2025-07-14T19:16:43Z",
-      "type": "bugfix"
+      "type": "security"
     },
     {
       "number": 193,
@@ -1762,7 +1762,7 @@
       "labels": [],
       "mergeCommitHash": "fec76fc6bb42f3d629d4fbcddcce2a8437752b5f",
       "mergedDate": "2026-01-11T22:12:40Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 186,
@@ -1782,7 +1782,7 @@
       "labels": [],
       "mergeCommitHash": "aedcac91901ea2cc191545dd9ee10124edcf8b3e",
       "mergedDate": "2025-12-13T03:50:10Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 181,
@@ -1832,7 +1832,7 @@
       "labels": [],
       "mergeCommitHash": "6e3a202ad4f4d43345b0e537b99676fe8438e418",
       "mergedDate": "2025-12-02T01:22:40Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 182,
@@ -1852,7 +1852,7 @@
       "labels": [],
       "mergeCommitHash": "49b88728de902cb185bf801f83a9f38d01b3d2cd",
       "mergedDate": "2025-11-30T23:01:56Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 176,
@@ -1862,7 +1862,7 @@
       "labels": [],
       "mergeCommitHash": "81d158244d35ad2fcd27c50314ae690bb5f6946d",
       "mergedDate": "2025-11-23T00:07:55Z",
-      "type": "other"
+      "type": "bugfix"
     },
     {
       "number": 174,
@@ -1912,7 +1912,7 @@
       "labels": [],
       "mergeCommitHash": "b8ab937b19787b828d2fef0c81a090d043591cc5",
       "mergedDate": "2025-10-15T00:04:14Z",
-      "type": "other"
+      "type": "feature"
     },
     {
       "number": 171,
@@ -1932,7 +1932,7 @@
       "labels": [],
       "mergeCommitHash": "5b666fdd63503126617dd07e339c490628ed4521",
       "mergedDate": "2025-10-12T00:44:32Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 169,
@@ -1972,7 +1972,7 @@
       "labels": [],
       "mergeCommitHash": "7a5848b5c8b6d44540cb7f150634192f19eb3e09",
       "mergedDate": "2025-09-18T00:43:20Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 157,
@@ -2002,7 +2002,7 @@
       "labels": [],
       "mergeCommitHash": "df3c637e3a91f3285ef60590c37c0b0fdcb530b9",
       "mergedDate": "2025-09-16T01:21:13Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 159,
@@ -2012,7 +2012,7 @@
       "labels": [],
       "mergeCommitHash": "73d5fe26ee36307cdecd6915583336f7cd099d9e",
       "mergedDate": "2025-09-16T01:12:51Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 160,
@@ -2062,7 +2062,7 @@
       "labels": [],
       "mergeCommitHash": "84200ef44fbccf29118332da0af32fff58238923",
       "mergedDate": "2025-08-13T13:50:18Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 134,
@@ -2082,7 +2082,7 @@
       "labels": [],
       "mergeCommitHash": "4f16b29e32e4fef484b1c7acbcebf37861e95793",
       "mergedDate": "2025-07-21T14:29:31Z",
-      "type": "other"
+      "type": "feature"
     },
     {
       "number": 146,
@@ -2092,7 +2092,7 @@
       "labels": [],
       "mergeCommitHash": "7d3ffdca808e580b6d311705a43398a269d2ea03",
       "mergedDate": "2025-07-14T19:24:34Z",
-      "type": "other"
+      "type": "security"
     },
     {
       "number": 147,
