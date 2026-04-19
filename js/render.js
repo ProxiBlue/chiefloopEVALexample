@@ -1383,13 +1383,23 @@ function renderMissileComplete() {
     ctx.fillText('Returning to mission...', cx, cy + 80);
 }
 
-// Missile return is a one-tick pass-through (clearMissileState + level++ +
-// resetShip + gameState = PLAYING all happen in the same update call), so this
-// render is defensive — in practice the switch reaches PLAYING before the next
-// frame. Draws a plain terrain + ship so a stalled frame never shows garbage.
+// Missile return: ship rotates counter-clockwise from π/2 (sideways) back to 0
+// (upright) over MISSILE_RETURN_ROTATION_DURATION seconds before the state
+// machine advances to PLAYING. Mirrors renderInvaderReturn.
 function renderMissileReturn() {
     drawTerrain();
     drawShip(ship.x, ship.y, ship.angle, SHIP_SIZE, false, null);
+
+    ctx.fillStyle = '#4FC3F7';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('RETURNING TO MISSION', canvas.width / 2, 60);
+
+    if (missileEndBonus > 0) {
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('Bonus: +' + missileEndBonus + ' pts', canvas.width / 2, 95);
+    }
 }
 
 function renderInvaderReturn() {

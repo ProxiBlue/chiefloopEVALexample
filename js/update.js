@@ -142,6 +142,7 @@ function clearMissileState() {
     missileEndBonus = 0;
     missileBuildingSurvivors = 0;
     missileAmmoBonusPoints = 0;
+    missileReturnRotationTimer = 0;
 }
 
 // Reset all per-round bugfix state — entities, particle bursts, and counters.
@@ -208,6 +209,7 @@ function setupMissileWorld() {
     missileEndBonus = 0;
     missileBuildingSurvivors = 0;
     missileAmmoBonusPoints = 0;
+    missileReturnRotationTimer = 0;
     missileIncoming = [];
     missileInterceptors = [];
     missileExplosions = [];
@@ -1282,22 +1284,33 @@ function update(dt) {
         }
         missileCompleteTimer += dt;
         if (missileCompleteTimer >= MISSILE_COMPLETE_DELAY) {
+            missileReturnRotationTimer = 0;
             gameState = STATES.MISSILE_RETURN;
         }
     }
 
-    // Missile return: clear mini-game state, advance to the next level, reset
-    // ship + wind + terrain, then resume normal flight. Mirrors BUGFIX_RETURN —
-    // no ship-rotation animation since the missile mini-game hides the ship.
+    // Missile return: rotate ship back from π/2 (facing right) to 0 (facing up)
+    // over MISSILE_RETURN_ROTATION_DURATION seconds, then clear mini-game state,
+    // advance to the next level, reset ship + wind + terrain, and resume normal
+    // flight. Mirrors INVADER_RETURN byte-for-byte (AC#4 "reuse as much of the
+    // invader return transition code as possible") swapping the invader-state
+    // cleanup for clearMissileState().
     if (gameState === STATES.MISSILE_RETURN) {
-        clearMissileState();
-        currentLevel++;
-        GRAVITY = getLevelConfig(currentLevel).gravity;
-        THRUST_POWER = GRAVITY * 2.5;
-        resetShip();
-        resetWind();
-        generateTerrain();
-        gameState = STATES.PLAYING;
+        missileReturnRotationTimer += dt;
+        var tMR = Math.min(missileReturnRotationTimer / MISSILE_RETURN_ROTATION_DURATION, 1);
+        var easedMR = tMR < 0.5 ? 2 * tMR * tMR : 1 - Math.pow(-2 * tMR + 2, 2) / 2;
+        ship.angle = (Math.PI / 2) * (1 - easedMR);
+
+        if (tMR >= 1) {
+            clearMissileState();
+            currentLevel++;
+            GRAVITY = getLevelConfig(currentLevel).gravity;
+            THRUST_POWER = GRAVITY * 2.5;
+            resetShip();
+            resetWind();
+            generateTerrain();
+            gameState = STATES.PLAYING;
+        }
     }
 
     if (gameState === STATES.PLAYING) {

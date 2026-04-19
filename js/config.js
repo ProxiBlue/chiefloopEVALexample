@@ -275,6 +275,10 @@ var MISSILE_WAVE_COUNT_MAX = 3;           // hard cap on waves per round
 var MISSILE_WAVE_DELAY = 1.5;             // seconds between waves
 var MISSILE_WAVE_ANNOUNCE_DURATION = 1.5; // seconds the "WAVE N/M" banner stays visible
 
+// --- Missile Return Transition (mirrors INVADER_RETURN_ROTATION_DURATION) ---
+var MISSILE_RETURN_ROTATION_DURATION = 1; // seconds for 90-degree counter-clockwise rotation
+var missileReturnRotationTimer = 0;       // elapsed time in MISSILE_RETURN rotation
+
 // --- Missile Scoring ---
 var MISSILE_POINTS_PER_INTERCEPT = 25;            // points per intercepted incoming missile
 var MISSILE_POINTS_PER_BUILDING_SURVIVING = 100;  // points per building still standing at end
