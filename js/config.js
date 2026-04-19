@@ -370,9 +370,9 @@ var TECHDEBT_TRANSITION_DURATION = 1.5;   // seconds — brief starfield zoom ef
 var TECHDEBT_COMPLETE_DELAY = 2.0;        // seconds to show results before returning
 
 // --- Tech Debt Asteroid Configuration ---
-var TECHDEBT_ASTEROID_BASE_COUNT = 4;     // base count of large asteroids
-var TECHDEBT_ASTEROID_PER_LEVEL = 2;      // extra asteroids per level
-var TECHDEBT_ASTEROID_MAX = 16;           // hard cap on asteroids per round
+var TECHDEBT_ASTEROID_BASE_COUNT = 6;     // base count of large asteroids
+var TECHDEBT_ASTEROID_PER_LEVEL = 3;      // extra asteroids per level
+var TECHDEBT_ASTEROID_MAX = 24;           // hard cap on asteroids per round
 
 // --- Tech Debt Asteroid Size Tiers ---
 var TECHDEBT_SIZE_LARGE = 40;             // large asteroid radius in px
@@ -447,3 +447,75 @@ var techdebtBulletCooldownTimer = 0;      // seconds remaining before the ship c
 var proxiblueShieldActive = false;        // true while shield power-up is protecting ship
 var proxiblueShieldTimer = 0;             // seconds remaining on active shield
 var proxiblueShieldFlashTimer = 0;        // seconds remaining on the blue shield-absorb flash effect (US-009)
+
+// --- Code Breaker Mini-Game Transition ---
+var BREAKOUT_TRANSITION_DURATION = 1.5;   // seconds — transition into mini-game
+var BREAKOUT_COMPLETE_DELAY = 2.0;        // seconds to show results before returning
+
+// --- Code Breaker Brick Configuration ---
+var BREAKOUT_COLS = 10;                   // columns of bricks
+var BREAKOUT_ROWS_BASE = 4;               // base row count at level 0
+var BREAKOUT_ROWS_PER_LEVEL = 0.5;        // 1 extra row every 2 levels (floor(level * 0.5))
+var BREAKOUT_ROWS_MAX = 8;                // hard cap on rows
+var BREAKOUT_BRICK_HEIGHT = 20;           // brick height in px
+var BREAKOUT_BRICK_GAP = 4;               // gap between bricks in px
+var BREAKOUT_BRICK_TOP_OFFSET = 60;       // px from top of canvas to first brick row (below HUD)
+// Brick width depends on live canvas size — read at build-time via this helper.
+function getBreakoutBrickWidth() {
+    return canvas.width / BREAKOUT_COLS - BREAKOUT_BRICK_GAP;
+}
+
+// --- Code Breaker Brick HP Distribution ---
+var BREAKOUT_BRICK_HP_1_CHANCE = 0.6;     // 60% of bricks are 1-hit
+var BREAKOUT_BRICK_HP_2_CHANCE = 0.3;     // 30% of bricks are 2-hit
+var BREAKOUT_BRICK_HP_3_CHANCE = 0.1;     // 10% of bricks are 3-hit; higher levels shift toward more multi-hit
+
+// --- Code Breaker Ball Configuration ---
+var BREAKOUT_BALL_RADIUS = 5;             // ball radius in px
+var BREAKOUT_BALL_SPEED_BASE = 250;       // base ball speed in px/s
+var BREAKOUT_BALL_SPEED_PER_LEVEL = 15;   // additional ball speed per level in px/s
+var BREAKOUT_BALL_SPEED_MAX = 450;        // hard cap on ball speed in px/s
+var BREAKOUT_BALL_SPEED_INCREMENT = 5;    // px/s added after each brick hit to ramp tension
+
+// --- Code Breaker Paddle Configuration ---
+var BREAKOUT_PADDLE_WIDTH = 80;           // paddle width in px (wider than ship M char for playability)
+var BREAKOUT_PADDLE_HEIGHT = 16;          // paddle height in px
+var BREAKOUT_PADDLE_SPEED = 400;          // paddle move speed in px/s
+var BREAKOUT_PADDLE_Y_OFFSET = 40;        // px from canvas bottom to paddle top
+
+// --- Code Breaker Power-Up Configuration ---
+var BREAKOUT_POWERUP_CHANCE = 0.15;       // 15% of bricks drop a power-up
+var BREAKOUT_POWERUP_FALL_SPEED = 100;    // power-up fall speed in px/s
+var BREAKOUT_POWERUP_SIZE = 16;           // power-up sprite size in px
+
+// --- Code Breaker Scoring ---
+var BREAKOUT_POINTS_PER_BRICK = 10;       // base points per brick destroyed
+var BREAKOUT_POINTS_BONUS_HP = 5;         // extra points per HP the brick originally had
+var BREAKOUT_POINTS_COMPLETION = 300;     // bonus awarded for clearing all bricks
+var BREAKOUT_POINTS_BALLS_REMAINING = 50; // bonus per remaining extra ball at completion
+
+// --- Code Breaker Ball / Paddle State ---
+var breakoutBallX = 0;                    // active ball X position
+var breakoutBallY = 0;                    // active ball Y position
+var breakoutBallVX = 0;                   // active ball X velocity (px/s)
+var breakoutBallVY = 0;                   // active ball Y velocity (px/s)
+var breakoutPaddleX = 0;                  // paddle left-edge X position
+var breakoutExtraBalls = 0;               // bonus balls accumulated from power-ups
+
+// --- Code Breaker State Arrays ---
+var breakoutBricks = [];                  // active bricks on the field
+var breakoutPowerups = [];                // falling power-ups
+var breakoutParticles = [];               // visual particles from destroyed bricks
+
+// --- Code Breaker Per-Game Counters ---
+var breakoutScore = 0;                    // bonus points earned during breakout phase
+var breakoutBricksDestroyed = 0;          // count of bricks destroyed this round
+var breakoutBricksTotal = 0;              // total bricks spawned this round
+var breakoutCompleteTimer = 0;            // elapsed time in BREAKOUT_COMPLETE state
+var breakoutTransitionTimer = 0;          // elapsed time in BREAKOUT_TRANSITION state
+
+// --- Other Pad Mini-Game Cycling Counter ---
+// Increments on each `other` pad landing. Reset to 0 on game over / new game
+// (see startNewGame in js/input.js). Odd value -> Tech Debt Blaster,
+// even value -> Code Breaker.
+var otherMiniGameCount = 0;

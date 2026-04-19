@@ -41,6 +41,7 @@ function startNewGame() {
     bugfixPadScroll = false;
     missilePadScroll = false;
     securityMiniGameCount = 0;
+    otherMiniGameCount = 0;
     GRAVITY = getLevelConfig(currentLevel).gravity;
     THRUST_POWER = GRAVITY * 2.5;
     resetShip();
@@ -207,6 +208,7 @@ function handleKeyPress(key) {
             // startNewGame for the menu/restart paths; this entry guarantees
             // the counter is 0 the moment GAMEOVER is reached.)
             securityMiniGameCount = 0;
+            otherMiniGameCount = 0;
             stopThrustSound();
             gameState = STATES.GAMEOVER;
         } else if (gameState === STATES.GAMEOVER && !gameOverEnteringName) {
