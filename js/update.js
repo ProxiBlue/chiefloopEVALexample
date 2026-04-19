@@ -1857,6 +1857,14 @@ function update(dt) {
             stopThrustSound();
             spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
         }
+
+        // Loss-path cleanup (US-011 AC#4): if the ship-vs-asteroid collision
+        // above routed us to CRASHED this tick, clear mini-game entities so
+        // the crash/gameover screens don't render stale asteroids/bullets/
+        // particles from the dead round. Mirrors BUGFIX_PLAYING's tail cleanup.
+        if (gameState === STATES.CRASHED) {
+            clearTechdebtState();
+        }
     }
 
     // Tech debt complete: brief results window (asteroids destroyed, fuel bonus),

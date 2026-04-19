@@ -55,6 +55,7 @@ var sandbox = {
     startScreenShake: function () { startScreenShakeCalls++; },
     playExplosionSound: function () { playExplosionSoundCalls++; },
     spawnCelebration: function () {},
+    clearTechdebtState: function () {},
     spawnBugWave: function () {},
     setupMissileWorld: function () {},
     resetShip: function () {},
