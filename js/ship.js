@@ -7,9 +7,12 @@ var ship = {
     y: 0,
     vx: 0,              // velocity in pixels/s
     vy: 0,              // velocity in pixels/s
+    invaderVX: 0,       // horizontal velocity (px/s) for invader mode physics
+    invaderVY: 0,       // vertical velocity (px/s) for invader mode physics
     angle: 0,           // radians, 0 = upright
     rotationSpeed: ROTATION_SPEED,   // radians per second
     thrusting: false,   // whether thrust is currently active
+    retroThrusting: false, // whether retro thrust is active (invader mode, for render)
     rotating: null,     // current rotation direction: 'left', 'right', or null
     fuel: FUEL_MAX      // remaining fuel
 };
@@ -59,8 +62,11 @@ function resetShip() {
     ship.y = canvas.height / 3;
     ship.vx = 0;
     ship.vy = 0;
+    ship.invaderVX = 0;
+    ship.invaderVY = 0;
     ship.angle = 0;
     ship.thrusting = false;
+    ship.retroThrusting = false;
     ship.rotating = null;
     ship.fuel = FUEL_MAX;
 }

@@ -36,8 +36,8 @@ function getLevelConfig(level) {
     var gravity = Math.min(1.6 + level * 0.2, 5.0);
     // Pad count: starts at 3, decreases by 1 every 2 levels, minimum 1
     var padCount = Math.max(1, 3 - Math.floor(level / 2));
-    // Wind: starts at 0, increases by 0.75 per level, caps at 8.0
-    var maxWind = Math.min(level * 0.75, 8.0);
+    // Wind: starts at 0, increases by 0.4 per level, caps at 5.0
+    var maxWind = Math.min(level * 0.4, 5.0);
     return { gravity: gravity, padCount: padCount, maxWind: maxWind };
 }
 var currentLevel = 0;
@@ -147,6 +147,12 @@ var terrainOriginalPoints = [];         // snapshot of terrain Y values before f
 
 // --- Invader Player Movement ---
 var INVADER_MOVE_SPEED = 200;           // pixels per second (direct movement, all 4 directions)
+
+// --- Invader Physics (velocity-based, thruster-driven) ---
+var INVADER_THRUST_POWER = 300;         // px/s² — acceleration when thrusting
+var INVADER_RETRO_POWER = 250;          // px/s² — slightly weaker retro thrust
+var INVADER_DRAG = 0.97;                // per-frame drag to prevent infinite drift
+var INVADER_MAX_SPEED = 220;            // px/s — velocity cap
 
 // --- Alien Wave Configuration ---
 var ALIEN_SPEED = 120;                  // pixels per second (leftward)

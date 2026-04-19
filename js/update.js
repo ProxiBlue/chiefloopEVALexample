@@ -562,7 +562,10 @@ function update(dt) {
                 ship.angle = 0;
                 ship.vx = 0;
                 ship.vy = 0;
+                ship.invaderVX = 0;
+                ship.invaderVY = 0;
                 ship.thrusting = false;
+                ship.retroThrusting = false;
                 ship.rotating = null;
                 stopThrustSound();
                 ship.fuel = FUEL_MAX;
