@@ -25,7 +25,11 @@ var STATES = {
     TECHDEBT_TRANSITION: 'techdebt_transition',
     TECHDEBT_PLAYING: 'techdebt_playing',
     TECHDEBT_COMPLETE: 'techdebt_complete',
-    TECHDEBT_RETURN: 'techdebt_return'
+    TECHDEBT_RETURN: 'techdebt_return',
+    BREAKOUT_TRANSITION: 'breakout_transition',
+    BREAKOUT_PLAYING: 'breakout_playing',
+    BREAKOUT_COMPLETE: 'breakout_complete',
+    BREAKOUT_RETURN: 'breakout_return'
 };
 
 var gameState = STATES.MENU;
