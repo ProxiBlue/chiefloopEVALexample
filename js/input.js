@@ -109,11 +109,10 @@ function handleKeyPress(key) {
             securityPadScroll = (landedPRType === 'security');
             bugfixPadScroll = (landedPRType === 'bugfix');
             missilePadScroll = false;
-            // Security pads alternate mini-games: odd count -> invaders, even -> missile command.
-            // Overrides the securityPadScroll set above on even landings.
+            // Security pads alternate mini-games: odd count -> missile command, even -> invaders.
             if (securityPadScroll) {
                 securityMiniGameCount++;
-                if (securityMiniGameCount % 2 === 0) {
+                if (securityMiniGameCount % 2 !== 0) {
                     securityPadScroll = false;
                     missilePadScroll = true;
                 }
