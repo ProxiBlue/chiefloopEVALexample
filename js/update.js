@@ -139,6 +139,9 @@ function crashShipInBreakout(reason) {
 // active timed power-up (Wide / Fire). If extra balls are banked, decrement
 // and respawn the primary on the paddle (stuck). Otherwise routes to CRASHED.
 function loseBreakoutBall() {
+    if (typeof playBreakoutBallLostSound === 'function') {
+        playBreakoutBallLostSound();
+    }
     if (breakoutActivePowerup === 'wide') {
         breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
         if (breakoutPaddleX + breakoutPaddleWidth > canvas.width) {
@@ -2063,16 +2066,23 @@ function update(dt) {
             }
 
             // Left / right / top wall reflections.
+            var pbWallBounced = false;
             if (breakoutBallX - BREAKOUT_BALL_RADIUS < 0) {
                 breakoutBallX = BREAKOUT_BALL_RADIUS;
                 breakoutBallVX = -breakoutBallVX;
+                pbWallBounced = true;
             } else if (breakoutBallX + BREAKOUT_BALL_RADIUS > canvas.width) {
                 breakoutBallX = canvas.width - BREAKOUT_BALL_RADIUS;
                 breakoutBallVX = -breakoutBallVX;
+                pbWallBounced = true;
             }
             if (breakoutBallY - BREAKOUT_BALL_RADIUS < 0) {
                 breakoutBallY = BREAKOUT_BALL_RADIUS;
                 breakoutBallVY = -breakoutBallVY;
+                pbWallBounced = true;
+            }
+            if (pbWallBounced && typeof playBreakoutWallBounceSound === 'function') {
+                playBreakoutWallBounceSound();
             }
 
             // Paddle collision — reflect + directional control via hit position.
@@ -2099,6 +2109,9 @@ function update(dt) {
                     Math.max(0, ballSpeed * ballSpeed - breakoutBallVX * breakoutBallVX)
                 );
                 breakoutBallY = paddleTop - BREAKOUT_BALL_RADIUS;
+                if (typeof playBreakoutPaddleBounceSound === 'function') {
+                    playBreakoutPaddleBounceSound();
+                }
             }
 
             // Brick collisions (US-007): AABB ball-vs-brick, first-hit only.
@@ -2162,6 +2175,9 @@ function update(dt) {
                         brick.y + brick.h / 2,
                         brick.color
                     );
+                    if (typeof playBreakoutBrickDestroySound === 'function') {
+                        playBreakoutBrickDestroySound();
+                    }
                     if (Math.random() < BREAKOUT_POWERUP_CHANCE) {
                         var puDef = BREAKOUT_POWERUP_TYPES[
                             Math.floor(Math.random() * BREAKOUT_POWERUP_TYPES.length)
@@ -2199,6 +2215,9 @@ function update(dt) {
                                 : brick.hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
                                 : BREAKOUT_BRICK_COLOR_HP1;
                     brick.flashTimer = 0.12;
+                    if (typeof playBreakoutBrickHitSound === 'function') {
+                        playBreakoutBrickHitSound();
+                    }
                 }
 
                 // Only one brick per collision event for normal play.
@@ -2243,16 +2262,23 @@ function update(dt) {
                 if (eb.trail.length > BREAKOUT_BALL_TRAIL_LEN) {
                     eb.trail.length = BREAKOUT_BALL_TRAIL_LEN;
                 }
+                var ebWallBounced = false;
                 if (eb.x - BREAKOUT_BALL_RADIUS < 0) {
                     eb.x = BREAKOUT_BALL_RADIUS;
                     eb.vx = -eb.vx;
+                    ebWallBounced = true;
                 } else if (eb.x + BREAKOUT_BALL_RADIUS > canvas.width) {
                     eb.x = canvas.width - BREAKOUT_BALL_RADIUS;
                     eb.vx = -eb.vx;
+                    ebWallBounced = true;
                 }
                 if (eb.y - BREAKOUT_BALL_RADIUS < 0) {
                     eb.y = BREAKOUT_BALL_RADIUS;
                     eb.vy = -eb.vy;
+                    ebWallBounced = true;
+                }
+                if (ebWallBounced && typeof playBreakoutWallBounceSound === 'function') {
+                    playBreakoutWallBounceSound();
                 }
                 // Paddle bounce — same formula as primary ball.
                 if (eb.vy > 0 &&
@@ -2269,6 +2295,9 @@ function update(dt) {
                     eb.vx = ebHitNorm * ebMaxComp;
                     eb.vy = -Math.sqrt(Math.max(0, ebSpeed * ebSpeed - eb.vx * eb.vx));
                     eb.y = paddleTopXb - BREAKOUT_BALL_RADIUS;
+                    if (typeof playBreakoutPaddleBounceSound === 'function') {
+                        playBreakoutPaddleBounceSound();
+                    }
                 }
                 // Brick collision — same face-detection + destroy pipeline as
                 // the primary ball, honoring the active Fireball power-up.
@@ -2320,6 +2349,9 @@ function update(dt) {
                             ebBrick.y + ebBrick.h / 2,
                             ebBrick.color
                         );
+                        if (typeof playBreakoutBrickDestroySound === 'function') {
+                            playBreakoutBrickDestroySound();
+                        }
                         if (Math.random() < BREAKOUT_POWERUP_CHANCE) {
                             var ebPuDef = BREAKOUT_POWERUP_TYPES[
                                 Math.floor(Math.random() * BREAKOUT_POWERUP_TYPES.length)
@@ -2352,6 +2384,9 @@ function update(dt) {
                                       : ebBrick.hp === 2 ? BREAKOUT_BRICK_COLOR_HP2
                                       : BREAKOUT_BRICK_COLOR_HP1;
                         ebBrick.flashTimer = 0.12;
+                        if (typeof playBreakoutBrickHitSound === 'function') {
+                            playBreakoutBrickHitSound();
+                        }
                     }
                     if (!ebFire) break;
                 }
@@ -2412,6 +2447,9 @@ function update(dt) {
                     breakoutPaddleX + breakoutPaddleWidth / 2,
                     canvas.height - BREAKOUT_PADDLE_Y_OFFSET - SHIP_SIZE / 2
                 );
+                if (typeof playBreakoutVictorySound === 'function') {
+                    playBreakoutVictorySound();
+                }
             }
         }
 

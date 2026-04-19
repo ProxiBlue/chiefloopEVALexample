@@ -603,6 +603,126 @@ function playWaveCompleteChime() {
     });
 }
 
+// Code Breaker US-013 AC#1: Ball-paddle bounce — classic Pong/Breakout blip.
+// Square wave, 440Hz, 0.05s. Fresh nodes per call so rapid bounces don't share
+// state (AC#8 anti-glitch).
+function playBreakoutPaddleBounceSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(440, t);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.10, t + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.06);
+}
+
+// Code Breaker US-013 AC#2: Ball-brick hit (no destroy) — higher blip than
+// the paddle bounce. Square wave, 660Hz, 0.04s.
+function playBreakoutBrickHitSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(660, t);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.09, t + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.05);
+}
+
+// Code Breaker US-013 AC#3: Brick destroyed — short bandpass-filtered noise
+// burst (0.1s). The bandpass centre frequency jitters per call (750–1250 Hz)
+// so successive destructions have slight pitch variety.
+function playBreakoutBrickDestroySound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var noiseBuffer = createNoiseBuffer(ctx, 0.12);
+    var noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    var bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    var centreFreq = 750 + Math.random() * 500;
+    bp.frequency.setValueAtTime(centreFreq, t);
+    bp.Q.setValueAtTime(2.5, t);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+    noise.connect(bp);
+    bp.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + 0.12);
+}
+
+// Code Breaker US-013 AC#4: Ball-wall bounce — very short quiet tick. Square
+// wave, 220Hz, 0.02s. Intentionally low gain so rapid wall bounces aren't
+// obnoxious.
+function playBreakoutWallBounceSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(220, t);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.05, t + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.02);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.03);
+}
+
+// Code Breaker US-013 AC#6: Ball lost — descending sine tone, 400→100Hz
+// exponential sweep over 0.3s.
+function playBreakoutBallLostSound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.exponentialRampToValueAtTime(100, t + 0.3);
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.20, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.32);
+}
+
+// Code Breaker US-013 AC#7: Victory fanfare — three ascending sine notes
+// (C5 → E5 → G5), reusing the playLandingSound two-note pattern extended to
+// three for "all bricks cleared". ~0.12s stagger between notes.
+function playBreakoutVictorySound() {
+    var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
+    [523.25, 659.25, 783.99].forEach(function (freq, i) {
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t + i * 0.12);
+        var gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t + i * 0.12);
+        gain.gain.linearRampToValueAtTime(0.22, t + i * 0.12 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + i * 0.12);
+        osc.stop(t + i * 0.12 + 0.55);
+    });
+}
+
 function playClickSound() {
     var ctx = ensureAudioCtx();
     var t = ctx.currentTime;
