@@ -2,6 +2,8 @@
 
 A browser-based lunar lander game built with vanilla HTML/CSS/JS (no frameworks).
 
+**[▶ Play the eval-built version on GitHub Pages](https://proxiblue.github.io/chiefloopEVALexample/test-chief-adverserial/)**
+
 ## The Game
 
 The player controls a Mage-OS "M" logo as a spacecraft, landing it safely on randomly placed landing pads across a procedurally generated terrain. The game should feel like the classic Lunar Lander arcade game but with modern polish.
