@@ -23,6 +23,7 @@ function startNewGame() {
     levelCommits = [];
     repoFallbackNotice = '';
     score = 0;
+    landings = 0;
     securityPadScroll = false;
     bugfixPadScroll = false;
     missilePadScroll = false;
@@ -48,12 +49,12 @@ function handleKeyPress(key) {
             var name = gameOverName.trim() || 'AAA';
             // Save to local leaderboard only if it qualifies as a local high score
             if (isHighScore(score)) {
-                addToLeaderboard(name, score);
+                addToLeaderboard(name, score, gameOverLevel, landings);
             }
             // Submit to online leaderboard asynchronously (fire-and-forget).
             // All positive scores are eligible regardless of local ranking.
             if (score > 0 && typeof submitOnlineScore === 'function') {
-                submitOnlineScore(name, score);
+                submitOnlineScore(name, score, gameOverLevel, landings);
             }
             gameOverEnteringName = false;
             return;

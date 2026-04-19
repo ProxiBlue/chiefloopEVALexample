@@ -138,6 +138,7 @@ function checkCollision() {
                 landedFuelBonus = Math.round((ship.fuel / FUEL_MAX) * 100);
                 landedTotalPoints = landedPadPoints + landedFuelBonus;
                 score += landedTotalPoints;
+                landings++;
                 spawnCelebration(ship.x, ship.y - SHIP_SIZE * 0.3);
                 stopThrustSound();
                 playLandingSound();

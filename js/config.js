@@ -28,6 +28,7 @@ var gameState = STATES.MENU;
 
 // --- Score ---
 var score = 0;
+var landings = 0; // successful landings (mini-games completed)
 
 // --- Level Configuration (endless scaling) ---
 function getLevelConfig(level) {

@@ -564,6 +564,8 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
+                stopThrustSound();
+                ship.fuel = FUEL_MAX;
                 invaderScrollRotateTimer = 0;
                 gameState = STATES.INVADER_SCROLL_ROTATE;
             } else if (wasBugfixScroll) {
@@ -575,6 +577,7 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
+                stopThrustSound();
                 ship.fuel = FUEL_MAX;
                 bugfixTransitionTimer = 0;
                 spawnBugWave();
@@ -588,6 +591,8 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
+                stopThrustSound();
+                ship.fuel = FUEL_MAX;
                 missileTransitionTimer = 0;
                 setupMissileWorld();
                 gameState = STATES.MISSILE_TRANSITION;
@@ -603,7 +608,8 @@ function update(dt) {
                 ship.vy = 0;
                 ship.thrusting = false;
                 ship.rotating = null;
-                // Fuel carries over from previous level — do NOT reset
+                stopThrustSound();
+                ship.fuel = FUEL_MAX;
                 gameState = STATES.SCENE_DESCENT;
             }
         } else {
@@ -784,11 +790,27 @@ function update(dt) {
             }
         }
 
+        // --- Ship-Alien collision: contact ends the mini-game ---
+        var shipHalfSize = SHIP_SIZE * 0.5;
+        for (var a = aliens.length - 1; a >= 0; a--) {
+            var ax = aliens[a].x;
+            var ay = aliens[a].y;
+            var halfSize = ALIEN_SIZE / 2;
+            if (ship.x + shipHalfSize > ax - halfSize && ship.x - shipHalfSize < ax + halfSize &&
+                ship.y + shipHalfSize > ay - halfSize && ship.y - shipHalfSize < ay + halfSize) {
+                spawnExplosion(ship.x, ship.y);
+                playExplosionSound();
+                invaderCompleteTimer = 0;
+                gameState = STATES.INVADER_COMPLETE;
+                break;
+            }
+        }
+
         // --- Update alien explosion particles ---
         updateAlienExplosions(dt);
 
         // --- End condition: all aliens gone (destroyed or scrolled off) ---
-        if (aliensSpawned && aliens.length === 0) {
+        if (gameState === STATES.INVADER_PLAYING && aliensSpawned && aliens.length === 0) {
             // Wave complete — transition to results screen
             invaderCompleteTimer = 0;
             gameState = STATES.INVADER_COMPLETE;

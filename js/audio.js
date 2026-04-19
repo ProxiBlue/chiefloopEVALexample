@@ -4,6 +4,11 @@ var thrustOsc = null;
 var thrustGain = null;
 var thrustNoiseSource = null;
 var thrustNoiseGain = null;
+var thrustRumbleSource = null;
+var thrustRumbleGain = null;
+var thrustCrackleSource = null;
+var thrustCrackleGain = null;
+var thrustFlutterLfo = null;
 var isThrustSoundPlaying = false;
 
 function ensureAudioCtx() {
@@ -27,37 +32,95 @@ function createNoiseBuffer(ctx, duration) {
     return buffer;
 }
 
+function createBrownNoiseBuffer(ctx, duration) {
+    var sampleRate = ctx.sampleRate;
+    var length = sampleRate * duration;
+    var buffer = ctx.createBuffer(1, length, sampleRate);
+    var data = buffer.getChannelData(0);
+    var lastOut = 0;
+    for (var i = 0; i < length; i++) {
+        var white = Math.random() * 2 - 1;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        data[i] = lastOut * 3.5;
+    }
+    return buffer;
+}
+
 function startThrustSound() {
     if (isThrustSoundPlaying) return;
     var ctx = ensureAudioCtx();
+    var t = ctx.currentTime;
     isThrustSoundPlaying = true;
 
-    // Low rumble oscillator
-    thrustOsc = ctx.createOscillator();
-    thrustOsc.type = 'sawtooth';
-    thrustOsc.frequency.setValueAtTime(55, ctx.currentTime);
-    thrustGain = ctx.createGain();
-    thrustGain.gain.setValueAtTime(0, ctx.currentTime);
-    thrustGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
-    thrustOsc.connect(thrustGain);
-    thrustGain.connect(ctx.destination);
-    thrustOsc.start();
+    // Layer 1: Brown noise rumble (deep rocket exhaust body)
+    var brownBuffer = createBrownNoiseBuffer(ctx, 2);
+    thrustRumbleSource = ctx.createBufferSource();
+    thrustRumbleSource.buffer = brownBuffer;
+    thrustRumbleSource.loop = true;
+    var rumbleLp = ctx.createBiquadFilter();
+    rumbleLp.type = 'lowpass';
+    rumbleLp.frequency.setValueAtTime(250, t);
+    thrustRumbleGain = ctx.createGain();
+    thrustRumbleGain.gain.setValueAtTime(0, t);
+    thrustRumbleGain.gain.linearRampToValueAtTime(0.22, t + 0.08);
+    thrustRumbleSource.connect(rumbleLp);
+    rumbleLp.connect(thrustRumbleGain);
+    thrustRumbleGain.connect(ctx.destination);
+    thrustRumbleSource.start();
 
-    // White noise hiss layer
-    thrustNoiseGain = ctx.createGain();
-    thrustNoiseGain.gain.setValueAtTime(0, ctx.currentTime);
-    thrustNoiseGain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 0.05);
+    // Layer 2: Bandpass noise crackle (mid-range turbulence)
+    var crackleBuffer = createNoiseBuffer(ctx, 2);
+    thrustCrackleSource = ctx.createBufferSource();
+    thrustCrackleSource.buffer = crackleBuffer;
+    thrustCrackleSource.loop = true;
+    var crackBp = ctx.createBiquadFilter();
+    crackBp.type = 'bandpass';
+    crackBp.frequency.setValueAtTime(300, t);
+    crackBp.Q.setValueAtTime(0.8, t);
+    thrustCrackleGain = ctx.createGain();
+    thrustCrackleGain.gain.setValueAtTime(0, t);
+    thrustCrackleGain.gain.linearRampToValueAtTime(0.06, t + 0.08);
+    thrustCrackleSource.connect(crackBp);
+    crackBp.connect(thrustCrackleGain);
+    thrustCrackleGain.connect(ctx.destination);
+    thrustCrackleSource.start();
+
+    // Layer 3: High hiss (exhaust gas)
     var noiseBuffer = createNoiseBuffer(ctx, 2);
     thrustNoiseSource = ctx.createBufferSource();
     thrustNoiseSource.buffer = noiseBuffer;
     thrustNoiseSource.loop = true;
     var hipass = ctx.createBiquadFilter();
     hipass.type = 'highpass';
-    hipass.frequency.setValueAtTime(800, ctx.currentTime);
+    hipass.frequency.setValueAtTime(2000, t);
+    thrustNoiseGain = ctx.createGain();
+    thrustNoiseGain.gain.setValueAtTime(0, t);
+    thrustNoiseGain.gain.linearRampToValueAtTime(0.04, t + 0.08);
     thrustNoiseSource.connect(hipass);
     hipass.connect(thrustNoiseGain);
     thrustNoiseGain.connect(ctx.destination);
     thrustNoiseSource.start();
+
+    // Layer 4: Sub-bass oscillator (engine core tone)
+    thrustOsc = ctx.createOscillator();
+    thrustOsc.type = 'sine';
+    thrustOsc.frequency.setValueAtTime(42, t);
+    thrustGain = ctx.createGain();
+    thrustGain.gain.setValueAtTime(0, t);
+    thrustGain.gain.linearRampToValueAtTime(0.10, t + 0.08);
+    thrustOsc.connect(thrustGain);
+    thrustGain.connect(ctx.destination);
+    thrustOsc.start();
+
+    // Layer 5: LFO flutter (turbulence modulation on the rumble gain)
+    thrustFlutterLfo = ctx.createOscillator();
+    thrustFlutterLfo.type = 'sine';
+    thrustFlutterLfo.frequency.setValueAtTime(7, t);
+    var lfoGain = ctx.createGain();
+    lfoGain.gain.setValueAtTime(0.04, t);
+    thrustFlutterLfo.connect(lfoGain);
+    lfoGain.connect(thrustRumbleGain.gain);
+    thrustFlutterLfo.start();
 }
 
 function stopThrustSound() {
@@ -66,22 +129,30 @@ function stopThrustSound() {
     var ctx = audioCtx;
     if (!ctx) return;
     var t = ctx.currentTime;
-    if (thrustGain) {
-        thrustGain.gain.cancelScheduledValues(t);
-        thrustGain.gain.setValueAtTime(thrustGain.gain.value, t);
-        thrustGain.gain.linearRampToValueAtTime(0, t + 0.05);
-    }
-    if (thrustNoiseGain) {
-        thrustNoiseGain.gain.cancelScheduledValues(t);
-        thrustNoiseGain.gain.setValueAtTime(thrustNoiseGain.gain.value, t);
-        thrustNoiseGain.gain.linearRampToValueAtTime(0, t + 0.05);
+    var fadeOut = 0.08;
+    var gains = [thrustGain, thrustNoiseGain, thrustRumbleGain, thrustCrackleGain];
+    for (var i = 0; i < gains.length; i++) {
+        if (gains[i]) {
+            gains[i].gain.cancelScheduledValues(t);
+            gains[i].gain.setValueAtTime(gains[i].gain.value, t);
+            gains[i].gain.linearRampToValueAtTime(0, t + fadeOut);
+        }
     }
     setTimeout(function () {
-        if (thrustOsc) { try { thrustOsc.stop(); } catch(e){} thrustOsc = null; }
-        if (thrustNoiseSource) { try { thrustNoiseSource.stop(); } catch(e){} thrustNoiseSource = null; }
+        var sources = [thrustOsc, thrustNoiseSource, thrustRumbleSource, thrustCrackleSource, thrustFlutterLfo];
+        for (var i = 0; i < sources.length; i++) {
+            if (sources[i]) { try { sources[i].stop(); } catch(e){} }
+        }
+        thrustOsc = null;
+        thrustNoiseSource = null;
+        thrustRumbleSource = null;
+        thrustCrackleSource = null;
+        thrustFlutterLfo = null;
         thrustGain = null;
         thrustNoiseGain = null;
-    }, 80);
+        thrustRumbleGain = null;
+        thrustCrackleGain = null;
+    }, 120);
 }
 
 function playExplosionSound() {

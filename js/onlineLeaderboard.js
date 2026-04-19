@@ -116,7 +116,7 @@ var RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // sliding window duration in ms (5 mi
      * @param {number} playerScore - Score (positive integer)
      * @returns {Promise<boolean>} true if submission succeeded, false otherwise
      */
-    window.submitOnlineScore = function submitOnlineScore(playerName, playerScore) {
+    window.submitOnlineScore = function submitOnlineScore(playerName, playerScore, playerLevel, playerLandings) {
         // --- Require a valid session token (proves a game was started normally) ---
         if (!_gameSessionToken) {
             console.warn('submitOnlineScore: no game session token — score not submitted');
@@ -180,7 +180,7 @@ var RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // sliding window duration in ms (5 mi
         return _fetchWithTimeout(proxyUrl + '/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, score: scoreInt, token: token })
+            body: JSON.stringify({ name: name, score: scoreInt, level: playerLevel || 0, landings: playerLandings || 0, token: token })
         }, timeoutMs)
             .then(function (response) {
                 if (!response.ok) {

@@ -26,9 +26,9 @@ function isHighScore(s) {
     return s > board[board.length - 1].score;
 }
 
-function addToLeaderboard(name, s) {
+function addToLeaderboard(name, s, lvl, lands) {
     var board = getLeaderboard();
-    board.push({ name: name, score: s });
+    board.push({ name: name, score: s, level: lvl, landings: lands });
     board.sort(function(a, b) { return b.score - a.score; });
     if (board.length > LEADERBOARD_MAX) {
         board = board.slice(0, LEADERBOARD_MAX);
@@ -56,6 +56,9 @@ function drawLeaderboard(cx, startY, highlight) {
         // Pad name to align scores
         while (line.length < 18) line += ' ';
         line += entry.score;
+        // Append level and landings stats if available
+        if (entry.level != null) line += '  Lvl ' + entry.level;
+        if (entry.landings != null) line += '  L:' + entry.landings;
 
         if (highlight && entry.score === score && entry.name === highlight) {
             ctx.fillStyle = '#FFD700';

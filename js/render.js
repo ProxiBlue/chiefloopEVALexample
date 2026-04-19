@@ -9,7 +9,7 @@ function renderMenu() {
     ctx.fillStyle = '#666';
     ctx.font = '12px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('This is a fan-made game. It is not official or associated with Mage-OS.', cx, canvas.height - 16);
+    ctx.fillText('This is a fan-made game compilation by ProxiBlue. It is not official or associated with Mage-OS.', cx, canvas.height - 16);
 
     // Draw ship logo on menu (Mage-OS "M" logo)
     drawShip(cx, baseY, 0, 60);
