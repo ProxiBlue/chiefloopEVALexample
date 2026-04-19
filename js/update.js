@@ -2677,7 +2677,7 @@ function update(dt) {
             driveScore += DRIVE_PICKUP_POINTS;
             score += DRIVE_PICKUP_POINTS;
             ship.fuel += DRIVE_PICKUP_FUEL_RESTORE;
-            if (ship.fuel > FUEL_MAX) ship.fuel = FUEL_MAX;
+            if (ship.fuel > FUEL_MAX + FUEL_EXTENSION_MAX) ship.fuel = FUEL_MAX + FUEL_EXTENSION_MAX;
             drivePickupsCollected++;
             var puScreenX = pup.x - driveScrollX;
             spawnDrivePickupSparkle(puScreenX, pup.y);
