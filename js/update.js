@@ -239,6 +239,35 @@ function clearTechdebtState() {
     proxiblueShieldFlashTimer = 0;
 }
 
+// Reset all per-round Code Breaker entities + timers + display bonuses. Called
+// from BREAKOUT_RETURN (next-level cleanup) and the BREAKOUT_PLAYING loss path
+// (CRASHED entry) so the crash/gameover screens don't render stale bricks /
+// balls / power-ups / particles from the dead round. breakoutScore is NOT
+// reset here — it was already banked into the global `score` by the US-007
+// brick-destruction path, and setupBreakoutWorld() re-zeroes it on the next
+// round entry. Same reasoning for ball X/Y position (setupBreakoutWorld seeds
+// them on entry).
+function clearBreakoutState() {
+    breakoutBricks = [];
+    breakoutPowerups = [];
+    breakoutParticles = [];
+    breakoutBalls = [];
+    breakoutBricksDestroyed = 0;
+    breakoutBricksTotal = 0;
+    breakoutCompleteTimer = 0;
+    breakoutTransitionTimer = 0;
+    breakoutReturnRotationTimer = 0;
+    breakoutCompletionBonus = 0;
+    breakoutExtraBallBonus = 0;
+    breakoutExtraBalls = 0;
+    breakoutActivePowerup = null;
+    breakoutPowerupTimer = 0;
+    breakoutPaddleWidth = BREAKOUT_PADDLE_WIDTH;
+    breakoutBallVX = 0;
+    breakoutBallVY = 0;
+    breakoutBallStuck = true;
+}
+
 // Best-effort filename extraction for missile-command building labels.
 // Order per AC#4: landedPRTitle -> levelCommits messages -> generic fallbacks.
 // Returns exactly `count` labels (pads with fallback list when sources dry up).
@@ -2338,14 +2367,22 @@ function update(dt) {
                 );
             }
         }
+
+        // Loss-path cleanup (US-011 AC#4): if the ball-loss / no-extras branch
+        // above flipped us to CRASHED this tick, wipe all breakout state so
+        // the CRASHED → GAMEOVER → new-run flow doesn't render stale bricks /
+        // balls / power-ups / particles from the dead round. Mirrors the
+        // equivalent BUGFIX_PLAYING guard at the tail of that block.
+        if (gameState === STATES.CRASHED) {
+            clearBreakoutState();
+        }
     }
 
     // Code Breaker complete (US-010): hold the results screen for
     // BREAKOUT_COMPLETE_DELAY seconds. Keep brick-burst particles + the
     // shared celebration sparkles ticking so they finish out visually.
-    // Advance to BREAKOUT_RETURN once the delay elapses (US-011 wires that
-    // state; until then the game sits here — acceptable for this story
-    // because the AC only covers up to results display).
+    // Advance to BREAKOUT_RETURN once the delay elapses; the rotation timer
+    // is zeroed here so the flip animation starts from t=0 (US-011).
     if (gameState === STATES.BREAKOUT_COMPLETE) {
         for (var bcPIdx = breakoutParticles.length - 1; bcPIdx >= 0; bcPIdx--) {
             var bcPar = breakoutParticles[bcPIdx];
@@ -2357,7 +2394,36 @@ function update(dt) {
         updateCelebration(dt);
         breakoutCompleteTimer += dt;
         if (breakoutCompleteTimer >= BREAKOUT_COMPLETE_DELAY) {
+            breakoutReturnRotationTimer = 0;
             gameState = STATES.BREAKOUT_RETURN;
+        }
+    }
+
+    // Code Breaker return (US-011): reverse the 180° paddle flip from
+    // BREAKOUT_TRANSITION over BREAKOUT_PADDLE_FLIP_DURATION (0.5s) with the
+    // same easeInOutCubic curve, then clear all breakout state, advance the
+    // level, reset the ship (full fuel) + wind + terrain, and resume normal
+    // flight. Mirrors INVADER_RETURN / MISSILE_RETURN's animation-then-reset
+    // shape, but uses the breakout flip duration instead.
+    if (gameState === STATES.BREAKOUT_RETURN) {
+        breakoutReturnRotationTimer += dt;
+        var tBR = Math.min(breakoutReturnRotationTimer / BREAKOUT_PADDLE_FLIP_DURATION, 1);
+        // easeInOutCubic — same curve used on the way in for visual symmetry
+        var easedBR = tBR < 0.5
+            ? 4 * tBR * tBR * tBR
+            : 1 - Math.pow(-2 * tBR + 2, 3) / 2;
+        // Rotate back from π (upside-down paddle) to 0 (upright nose-up ship)
+        ship.angle = Math.PI * (1 - easedBR);
+
+        if (tBR >= 1) {
+            clearBreakoutState();
+            currentLevel++;
+            GRAVITY = getLevelConfig(currentLevel).gravity;
+            THRUST_POWER = GRAVITY * 2.5;
+            resetShip();
+            resetWind();
+            generateTerrain();
+            gameState = STATES.PLAYING;
         }
     }
 

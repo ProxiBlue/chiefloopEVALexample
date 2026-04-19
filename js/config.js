@@ -579,6 +579,7 @@ var breakoutCompleteTimer = 0;            // elapsed time in BREAKOUT_COMPLETE s
 var breakoutTransitionTimer = 0;          // elapsed time in BREAKOUT_TRANSITION state
 var breakoutCompletionBonus = 0;          // BREAKOUT_POINTS_COMPLETION awarded on win (US-010)
 var breakoutExtraBallBonus = 0;           // per-extra-ball points banked on win (US-010)
+var breakoutReturnRotationTimer = 0;      // elapsed time in BREAKOUT_RETURN flip animation (US-011)
 
 // --- Other Pad Mini-Game Cycling Counter ---
 // Increments on each `other` pad landing. Reset to 0 on game over / new game

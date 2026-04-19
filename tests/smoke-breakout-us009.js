@@ -101,12 +101,19 @@ var crashSrc = extractFunction('function crashShipInBreakout(');
 var loseSrc = extractFunction('function loseBreakoutBall(');
 var activateSrc = extractFunction('function activateBreakoutPowerup(');
 var particlesSrc = extractFunction('function spawnBreakoutBrickParticles(');
+var clearSrc = extractFunction('function clearBreakoutState(');
 check('update.js: crashShipInBreakout defined', !!crashSrc);
 check('update.js: loseBreakoutBall defined', !!loseSrc);
 check('update.js: activateBreakoutPowerup defined', !!activateSrc);
 check('update.js: spawnBreakoutBrickParticles defined', !!particlesSrc);
 vm.runInContext(particlesSrc, sandbox, { filename: 'spawnBreakoutBrickParticles' });
 vm.runInContext(activateSrc, sandbox, { filename: 'activateBreakoutPowerup' });
+// US-011 added a clearBreakoutState() call in the BREAKOUT_PLAYING CRASHED
+// tail. Load it so the replayed PLAYING body doesn't ReferenceError when the
+// loss-path tests deliberately route through CRASHED.
+if (clearSrc) {
+    vm.runInContext(clearSrc, sandbox, { filename: 'clearBreakoutState' });
+}
 vm.runInContext(crashSrc, sandbox, { filename: 'crashShipInBreakout' });
 vm.runInContext(loseSrc, sandbox, { filename: 'loseBreakoutBall' });
 
