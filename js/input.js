@@ -16,6 +16,19 @@ window.addEventListener('keyup', function (e) {
     keys[e.key] = false;
 });
 
+// ProxiBlue branding link — hit-test canvas clicks against the box stored by
+// renderGameOver so the text-only branding is clickable without DOM overlay.
+canvas.addEventListener('click', function (e) {
+    if (gameState !== STATES.GAMEOVER || !proxiblueBrandHitBox) return;
+    var rect = canvas.getBoundingClientRect();
+    var cxp = e.clientX - rect.left;
+    var cyp = e.clientY - rect.top;
+    var b = proxiblueBrandHitBox;
+    if (cxp >= b.x && cxp <= b.x + b.w && cyp >= b.y && cyp <= b.y + b.h) {
+        window.open('https://github.com/ProxiBlue/chiefloopEVALexample/tree/main/test-chief-adverserial', '_blank');
+    }
+});
+
 function startNewGame() {
     currentLevel = 0;
     unplacedPRs = [];

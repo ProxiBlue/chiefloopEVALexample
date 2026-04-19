@@ -1,6 +1,10 @@
 // --- Render Module ---
 // Extracted from IIFE: all screen rendering functions and HUD drawing logic
 
+// Hit-box for ProxiBlue branding on the Game Over screen; set on each render
+// frame while the leaderboard is visible, read by the canvas click handler.
+var proxiblueBrandHitBox = null;
+
 function renderMenu() {
     var cx = canvas.width / 2;
     var baseY = canvas.height / 2 - 120;
@@ -100,6 +104,11 @@ function renderMenu() {
     ctx.fillText('Left / A  =  Rotate Left', cx, controlsY + 24);
     ctx.fillText('Right / D  =  Rotate Right', cx, controlsY + 48);
     ctx.fillText('R  =  Restart', cx, controlsY + 72);
+
+    // ProxiBlue branding — subtle, unobtrusive
+    ctx.fillStyle = '#667';
+    ctx.font = '12px monospace';
+    ctx.fillText('Crafted with \u2615 by ProxiBlue', cx, controlsY + 94);
 
     // Fallback notice (when data has no commits or no PRs)
     if (repoFallbackNotice) {
@@ -1829,6 +1838,7 @@ function renderCrashed() {
 function renderGameOver() {
     var cx = canvas.width / 2;
     var y = canvas.height / 2 - 120;
+    proxiblueBrandHitBox = null;
 
     ctx.fillStyle = '#f44336';
     ctx.font = 'bold 36px sans-serif';
@@ -1882,6 +1892,15 @@ function renderGameOver() {
         ctx.fillStyle = '#888';
         ctx.font = '20px sans-serif';
         ctx.fillText('Press Space to Play Again', cx, y);
+
+        // ProxiBlue branding — below the high-score table, clickable
+        y += 32;
+        ctx.fillStyle = '#556';
+        ctx.font = '11px monospace';
+        var brandText = 'Powered by ProxiBlue \u2014 github.com/ProxiBlue';
+        ctx.fillText(brandText, cx, y);
+        var bw = ctx.measureText(brandText).width;
+        proxiblueBrandHitBox = { x: cx - bw / 2, y: y - 10, w: bw, h: 14 };
     }
 }
 
