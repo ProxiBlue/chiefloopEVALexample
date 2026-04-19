@@ -303,6 +303,72 @@ check('score-breakdown: techdebtFuelBonus stored (75% fuel → 150)',
     sandbox.techdebtFuelBonus === 150,
     'fuel bonus: ' + sandbox.techdebtFuelBonus);
 
+// =========================================================================
+// Completion flow: TECHDEBT_RETURN → PLAYING. The RETURN handler must clear
+// mini-game state, advance the level, reset ship/wind/terrain, and resume
+// normal flight (mirrors BUGFIX_RETURN / MISSILE_RETURN).
+// =========================================================================
+var returnSrc = extractBlock(updateSrc, 'if (gameState === STATES.TECHDEBT_RETURN) {');
+check('found TECHDEBT_RETURN handler block', typeof returnSrc === 'string' && returnSrc.length > 0);
+if (returnSrc) {
+    var returnReplay = new vm.Script('(function () {\n' + returnSrc + '\n}).call(this);',
+        { filename: 'techdebt-return-extracted' });
+
+    // Also pull in clearTechdebtState body so the replay can execute it.
+    function extractFn(haystack, signature) {
+        var start = haystack.indexOf(signature);
+        if (start < 0) return null;
+        var open = haystack.indexOf('{', start + signature.length - 1);
+        var depth = 0, close = -1;
+        for (var i = open; i < haystack.length; i++) {
+            if (haystack[i] === '{') depth++;
+            else if (haystack[i] === '}') { depth--; if (depth === 0) { close = i; break; } }
+        }
+        return haystack.slice(start, close + 1);
+    }
+    var clearSrc = extractFn(updateSrc, 'function clearTechdebtState() {');
+    check('found clearTechdebtState function', typeof clearSrc === 'string' && clearSrc.length > 0);
+    if (clearSrc) vm.runInContext(clearSrc, sandbox, { filename: 'clearTechdebtState-extracted' });
+
+    var resetShipCalls = 0, resetWindCalls = 0, generateTerrainCalls = 0;
+    sandbox.resetShip = function () { resetShipCalls++; };
+    sandbox.resetWind = function () { resetWindCalls++; };
+    sandbox.generateTerrain = function () { generateTerrainCalls++; };
+
+    resetScenario();
+    sandbox.techdebtAsteroids = [{ x: 1, y: 1, size: 5, sizeTier: 'small',
+        label: 'x', isProxiblue: false, vx: 0, vy: 0, rotation: 0, rotationSpeed: 0 }];
+    sandbox.techdebtBullets = [{ x: 0, y: 0, vx: 0, vy: 0, age: 0 }];
+    sandbox.techdebtParticles = [{ x: 0, y: 0, vx: 0, vy: 0, life: 1, maxLife: 1, size: 1, color: '#5D4037' }];
+    sandbox.techdebtFuelBonus = 200;
+    sandbox.proxiblueShieldActive = true;
+    sandbox.proxiblueShieldTimer = 3.5;
+    sandbox.proxiblueShieldFlashTimer = 0.1;
+    sandbox.techdebtBulletCooldownTimer = 0.15;
+    sandbox.asteroidsDestroyed = 7;
+    sandbox.asteroidsTotal = 7;
+    var levelBefore = sandbox.currentLevel;
+    sandbox.gameState = sandbox.STATES.TECHDEBT_RETURN;
+    returnReplay.runInContext(sandbox);
+
+    check('flow: TECHDEBT_RETURN → PLAYING (game is not stuck)',
+        sandbox.gameState === sandbox.STATES.PLAYING,
+        'gameState: ' + sandbox.gameState);
+    check('flow: currentLevel advanced by 1',
+        sandbox.currentLevel === levelBefore + 1,
+        'before: ' + levelBefore + ' after: ' + sandbox.currentLevel);
+    check('flow: resetShip called', resetShipCalls === 1);
+    check('flow: resetWind called', resetWindCalls === 1);
+    check('flow: generateTerrain called', generateTerrainCalls === 1);
+    check('flow: techdebtAsteroids cleared', sandbox.techdebtAsteroids.length === 0);
+    check('flow: techdebtBullets cleared', sandbox.techdebtBullets.length === 0);
+    check('flow: techdebtParticles cleared', sandbox.techdebtParticles.length === 0);
+    check('flow: techdebtFuelBonus reset to 0', sandbox.techdebtFuelBonus === 0);
+    check('flow: proxiblueShieldActive reset to false', sandbox.proxiblueShieldActive === false);
+    check('flow: asteroidsDestroyed reset to 0', sandbox.asteroidsDestroyed === 0);
+    check('flow: asteroidsTotal reset to 0', sandbox.asteroidsTotal === 0);
+}
+
 // --- Summary ---
 console.log('');
 console.log(passed + ' passed, ' + failed + ' failed');

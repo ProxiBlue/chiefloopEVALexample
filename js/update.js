@@ -174,6 +174,26 @@ function clearBugfixState() {
     bugfixFuelBonus = 0;
 }
 
+// Reset all per-round tech-debt state — entities, counters, cooldowns, and
+// shield flags. Called from TECHDEBT_RETURN so the next round (or the normal
+// PLAYING state) starts with a clean slate. setupTechdebtWorld() also resets
+// most of these on entry; this helper makes the cleanup explicit at exit time
+// (mirrors clearBugfixState / clearMissileState).
+function clearTechdebtState() {
+    techdebtAsteroids = [];
+    techdebtBullets = [];
+    techdebtParticles = [];
+    asteroidsDestroyed = 0;
+    asteroidsTotal = 0;
+    techdebtCompleteTimer = 0;
+    techdebtFuelBonus = 0;
+    techdebtTransitionTimer = 0;
+    techdebtBulletCooldownTimer = 0;
+    proxiblueShieldActive = false;
+    proxiblueShieldTimer = 0;
+    proxiblueShieldFlashTimer = 0;
+}
+
 // Best-effort filename extraction for missile-command building labels.
 // Order per AC#4: landedPRTitle -> levelCommits messages -> generic fallbacks.
 // Returns exactly `count` labels (pads with fallback list when sources dry up).
@@ -1855,6 +1875,20 @@ function update(dt) {
         if (techdebtCompleteTimer >= TECHDEBT_COMPLETE_DELAY) {
             gameState = STATES.TECHDEBT_RETURN;
         }
+    }
+
+    // Tech debt return: clear mini-game state, advance to next level, reset
+    // ship + wind + terrain, then resume normal flight. Mirrors BUGFIX_RETURN's
+    // tail (no rotation animation — techdebt entry kept the ship upright).
+    if (gameState === STATES.TECHDEBT_RETURN) {
+        clearTechdebtState();
+        currentLevel++;
+        GRAVITY = getLevelConfig(currentLevel).gravity;
+        THRUST_POWER = GRAVITY * 2.5;
+        resetShip();
+        resetWind();
+        generateTerrain();
+        gameState = STATES.PLAYING;
     }
 
     if (gameState === STATES.PLAYING) {
