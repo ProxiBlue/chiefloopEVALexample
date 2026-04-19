@@ -1075,7 +1075,18 @@ function drawBugfixHUD() {
     }
 
     ctx.fillStyle = '#fff';
-    ctx.fillText('Fuel: ' + Math.round(fuelPct * 100) + '%', fuelBarX + fuelBarW + fuelExtW + 8, fuelBarY + 12);
+    var fuelText = 'Fuel: ' + Math.round(fuelPct * 100) + '%';
+    var fuelTextX = fuelBarX + fuelBarW + fuelExtW + 8;
+    ctx.fillText(fuelText, fuelTextX, fuelBarY + 12);
+
+    if (ship.fuel > FUEL_MAX) {
+        var extFuel = Math.round(ship.fuel - FUEL_MAX);
+        var fuelTextW = ctx.measureText(fuelText).width;
+        ctx.font = '12px monospace';
+        ctx.fillStyle = '#29B6F6';
+        ctx.fillText('EXT +' + extFuel, fuelTextX + fuelTextW + 8, fuelBarY + 12);
+        ctx.font = '14px monospace';
+    }
 
     // Level indicator
     ctx.fillStyle = '#fff';
